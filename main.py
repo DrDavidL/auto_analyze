@@ -77,7 +77,7 @@ def process_dataframe(df):
 if demo_or_custom == 'Demo':
     col1, col2 = st.columns(2)
     df = pd.read_csv("data/predictdm.csv")
-    num_df = process_dataframe(df)
+    # num_df = process_dataframe(df)
     with col1:
         header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
         summary = st.checkbox("Show summary of numerical data", key = "show data")
