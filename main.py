@@ -150,7 +150,7 @@ if demo_or_custom == 'CSV Upload':
         with col2:
             
             histogram = st.checkbox("Show histogram (numerical data)", key = "show histogram")
-            full_analysis = st.checkbox("Show automated analysis", key = "show analysis")
+            full_analysis = st.checkbox("Show automated analysis - be sure to view *alerts*!", key = "show analysis")
         
         
         if summary:
