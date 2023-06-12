@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b29e3bf653c7b96a0c3692b47363cf994009e7b5ec5596b058663e9b1d3b967f"
+            "sha256": "19bcc6f01f5d2fee608748c0fdc026f638fa11230a695a13b91f1526087fa38b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -23,13 +23,6 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==5.0.1"
-        },
-        "analytics-python": {
-            "hashes": [
-                "sha256:33ab660150d0f37bb2fefc93fd19c9e7bd85e5b17db44df5e7e1139f63c14246",
-                "sha256:b083e69c149c39e7ad17067f0e5c1742fbd15fdc469ade36c4d1ad5edf31ee5e"
-            ],
-            "version": "==1.4.post1"
         },
         "appnope": {
             "hashes": [
@@ -88,14 +81,6 @@
                 "sha256:fbbce6a29f263178a1f7915c1940bde0ec2b2a967566fe1c65c1dfb7422bd255"
             ],
             "version": "==0.2.0"
-        },
-        "backoff": {
-            "hashes": [
-                "sha256:5e73e2cbe780e1915a204799dba0a01896f45f4385e636bcca7a0614d879d0cd",
-                "sha256:b8fba021fac74055ac05eb7c7bfce4723aedde6cd0a504e5326bcb0bdd6d19a4"
-            ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'",
-            "version": "==1.10.0"
         },
         "blinker": {
             "hashes": [
@@ -209,14 +194,6 @@
             ],
             "markers": "python_version >= '3.7'",
             "version": "==8.1.3"
-        },
-        "colorama": {
-            "hashes": [
-                "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44",
-                "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"
-            ],
-            "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6'",
-            "version": "==0.4.6"
         },
         "comm": {
             "hashes": [
@@ -689,20 +666,6 @@
                 "sha256:55782621ce09ba0f0a1d08e5bd6d6fe1946469fb03951fadf7d209911ca5b072"
             ],
             "version": "==0.5.2"
-        },
-        "mitoinstaller": {
-            "hashes": [
-                "sha256:2cbaf979fb58f0d23f471e36fe10bc89d4a102cb5dff071849a88bd148c44e68"
-            ],
-            "index": "pypi",
-            "version": "==0.0.220"
-        },
-        "monotonic": {
-            "hashes": [
-                "sha256:3a55207bcfed53ddd5c5bae174524062935efed17792e9de2ad0205ce9ad63f7",
-                "sha256:68687e19a14f11f26d140dd5c86f3dba4bf5df58003000ed467e0e2a69bca96c"
-            ],
-            "version": "==1.6"
         },
         "multimethod": {
             "hashes": [
@@ -1515,14 +1478,6 @@
             ],
             "markers": "python_version >= '3.6'",
             "version": "==8.2.2"
-        },
-        "termcolor": {
-            "hashes": [
-                "sha256:3afb05607b89aed0ffe25202399ee0867ad4d3cb4180d98aaf8eefa6a5f7d475",
-                "sha256:b5b08f68937f138fe92f6c089b99f1e2da0ae56c52b78bf7075fd95420fd9a5a"
-            ],
-            "markers": "python_version >= '3.7'",
-            "version": "==2.3.0"
         },
         "toml": {
             "hashes": [
