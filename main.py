@@ -34,7 +34,7 @@ def plot_categorical(df, col_name):
     plt.bar(freq.index, freq.values)
 
     # Add title and labels
-    plt.title(f'Frequency of Categories for {col_name}')
+    plt.title(f'Frequency of Categories fpipenv --python 3.9or {col_name}')
     plt.xlabel('Category')
     plt.ylabel('Frequency')
 
