@@ -505,6 +505,19 @@ with tab2:
                 st.write(plot_confusion_matrix(y_test, predictions))
                 y_scores = model.predict_proba(X_test)[:, 1]
                 st.write(plot_roc_curve(y_test, y_scores))
+                # After training the logistic regression model, assuming the model's name is "model"
+
+                coeff = model.coef_[0]
+                features = X_train.columns
+
+                equation = "Logit(P) = " + str(model.intercept_[0])
+
+                for c, feature in zip(coeff, features):
+                    equation += " + " + str(c) + " * " + feature
+
+                st.write("The equation of the logistic regression model is:")
+                st.write(equation)
+
 
             elif model_option == "Decision Tree":
                 model = DecisionTreeClassifier()
