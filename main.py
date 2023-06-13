@@ -317,21 +317,27 @@ if demo_or_custom == 'Demo' or uploaded_file:
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
         numeric_cols.sort()  # sort the list of columns alphabetically
         # Dropdown to select columns to visualize
-        scatter_x = st.selectbox('Select column for x axis:', numeric_cols)
-        scatter_y = st.selectbox('Select column for y axis:', numeric_cols)
+        col1, col2 = st.columns(2)
+        with col1:
+            scatter_x = st.selectbox('Select column for x axis:', numeric_cols)
+        with col2:
+            scatter_y = st.selectbox('Select column for y axis:', numeric_cols)
+            
+        filter = st.checkbox('Filter data')
 
         # Filter for the remaining numerical column
         remaining_cols = [col for col in numeric_cols if col != scatter_x and col != scatter_y]
         if remaining_cols:
-            filter_col = st.selectbox('Select a column to filter data:', remaining_cols)
-            if filter_col:
-                min_val, max_val = int(df[filter_col].min()), int(df[filter_col].max())
-                if np.isnan(min_val) or np.isnan(max_val):
-                    st.write(f"Cannot filter by {filter_col} because it contains NaN values.")
-                else:
-                    filter_range = st.slider('Select a range to filter data:', min_val, max_val, (min_val, max_val))
-                    df_filtered = df[(df[filter_col] >= filter_range[0]) & (df[filter_col] <= filter_range[1])]
-                    create_scatterplot(df_filtered, scatter_x, scatter_y)
+            if filter:
+                filter_col = st.selectbox('Select a column to filter by other numeric variables:', remaining_cols)
+                if filter_col:
+                    min_val, max_val = int(df[filter_col].min()), int(df[filter_col].max())
+                    if np.isnan(min_val) or np.isnan(max_val):
+                        st.write(f"Cannot filter by {filter_col} because it contains NaN values.")
+                    else:
+                        filter_range = st.slider('Select a range to filter data:', min_val, max_val, (min_val, max_val))
+                        df_filtered = df[(df[filter_col] >= filter_range[0]) & (df[filter_col] <= filter_range[1])]
+                        create_scatterplot(df_filtered, scatter_x, scatter_y)
             else:
                 create_scatterplot(df, scatter_x, scatter_y)
         else:
