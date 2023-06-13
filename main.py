@@ -9,6 +9,52 @@ import plotly.figure_factory as ff
 import matplotlib.pyplot as plt
 import seaborn as sns
 from statsmodels.imputation import mice
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+
+def plot_confusion_matrix(y_true, y_pred):
+    cm = confusion_matrix(y_true, y_pred)
+    fig, ax = plt.subplots()
+    sns.heatmap(cm, annot=True, fmt="d")
+    plt.ylabel('Actual')
+    plt.xlabel('Predicted')
+    return fig
+
+def plot_roc_curve(y_true, y_scores):
+    fpr, tpr, _ = roc_curve(y_true, y_scores)
+    fig, ax = plt.subplots()
+    ax.plot(fpr, tpr, label='ROC curve')
+    ax.plot([0, 1], [0, 1], 'k--', label='Random guess')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve')
+    plt.xlim([-0.02, 1])
+    plt.ylim([0, 1.02])
+    plt.legend(loc="lower right")
+    return fig
+
+def preprocess(df, target_col):
+    included_cols = []
+    excluded_cols = []
+
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            if len(df[col].unique()) == 2:
+                most_freq = df[col].value_counts().idxmax()
+                least_freq = df[col].value_counts().idxmin()
+                df[col] = df[col].map({most_freq: 0, least_freq: 1})
+                included_cols.append(col)
+            else:
+                excluded_cols.append(col)
+        else:
+            included_cols.append(col)
+
+    return df[included_cols], included_cols, excluded_cols
+
 
 def create_violinplot(df, numeric_col, categorical_col):
     if numeric_col and categorical_col:
@@ -58,7 +104,7 @@ def replace_missing_values(df, method):
         df[num_cols] = imp.data
     return df
 
-# @st.cache_data  # This function will be cached
+@st.cache_data  # This function will be cached
 def load_data(file_path):
     data = pd.read_csv(file_path)
     return data
@@ -82,59 +128,6 @@ def analyze_dataframe(df):
     cardinality = df.select_dtypes(include=['object', 'category']).nunique()
 
     return missing_values, outliers, data_types, skewness, cardinality
-
-
-st.title("Autoanalyzer")
-with st.expander('About Autoanalyzer'):
-    st.write("Author: David Liebovitz, MD, Northwestern University")
-    st.write("Last updated 6/11/23")
-st.info("""Be sure your data is first in a 'tidy' format. Use the demo dataset below to check out the top 5 rows for an example. (*See https://tidyr.tidyverse.org/ for more information.*)
-Be sure to check out the **automated analysis** option for a full report on your data.
-Additional information on the demo dataset: https://hbiostat.org/data/repo/diabetes.html""")
-
-# st.sidebar.subheader("Upload your data") 
-st.subheader("Step 1: Upload your data or choose our demo dataset")
-demo_or_custom = st.selectbox("Choose a demo or upload your CSV file. NO PHI - use only anonymized data", ("Select here!", "Demo", "CSV Upload"))
-if demo_or_custom == "CSV Upload":
-    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-    if uploaded_file:
-        df = load_data(uploaded_file)
-
-if demo_or_custom == 'Demo':
-    file_path = "data/predictdm.csv"
-    df = load_data(file_path)
-
-# else:
-#     if uploaded_file:            
-#         df = load_data(uploaded_file)
-#     # num_df = process_dataframe(df)
-
-
-
-with st.expander("Data Preprocessing Tools - *Use analysis tools **first** to check if needed.*"):
-    preprocess = st.checkbox("Assign bivariate categories into 1 or 0 based on frequency (0 most frequent) if needed for correlations, e.g.", key = "Preprocess")
-    st.info("Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
-    method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
-    if st.button('Apply the Method to Replace Missing Values'):
-            df = replace_missing_values(df, method)
-st.subheader("Step 2: Tools for Analysis")
-col1, col2 = st.columns(2)
-with col1:
-    check_preprocess = st.checkbox("Check if you need to preprocess data", key = "Preprocess needed")
-    header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
-    summary = st.checkbox("Show summary for numerical data", key = "show data")
-    summary_cat = st.checkbox("Show summary for categorical data", key = "show summary cat")
-    show_scatter  = st.checkbox("Show scatterplot", key = "show scatter")
-with col2:
-    barchart = st.checkbox("Show bar chart (categorical data)", key = "show barchart")
-    histogram = st.checkbox("Show histogram (numerical data)", key = "show histogram")
-    piechart = st.checkbox("Show pie chart (categorical data)", key = "show piechart")
-    show_corr = st.checkbox("Show correlation heatmap", key = "show corr")
-    violin_plot = st.checkbox("Show violin plot", key = "show violin")
-full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
-view_full_df = st.checkbox("The CSV file", key = "view full df")
-
-
 
 # Function to plot pie chart
 def plot_pie(df, col_name):
@@ -240,223 +233,281 @@ def process_dataframe(df):
                 
     return df
 
-
-# if demo_or_custom == 'Demo':
-#     enable_tools = 1
-# if demo_or_custom == 'CSV Upload':
-#     try:
-#         uploaded_file
-#     except NameError:
-#         enable_tools = 0
-#         st.warning("Please upload a CSV file or choose a demo dataset")
-#     else:
-#         enable_tools = 1
-
-try:
-    x = df
-except NameError:
-
-    st.warning("Please upload a CSV file or choose a demo dataset")
-else:
+st.title("Autoanalyzer")
+with st.expander('About Autoanalyzer'):
+    st.write("Author: David Liebovitz, MD, Northwestern University")
+    st.write("Last updated 6/11/23")
     
-    if preprocess:
-        df = process_dataframe(df)
-    
-    if summary:
-        st.info("Summary of data")
-        st.write(df.describe())
-        
-    if header:
-        st.info("Header of data")
-        st.write(df.head())
-        
-    if full_analysis:
-        st.info("Full analysis of data")
-        profile = make_profile(df)
-        # profile = ProfileReport(df, title="Profiling Report")
-        st_profile_report(profile)
-        
-    if histogram: 
-        st.info("Histogram of data")
-        options =[]
-        columns = list(df.columns)
-        for col in columns:
-            if df[col].dtype == np.float64 or df[col].dtype == np.int64:
-                options.append(col)
-        selected_col = st.selectbox("Choose a column", options)
-        if selected_col:
-            plt = plot_numeric(df, selected_col)
-            st.pyplot(plt)
-        # hist_data = [df[selected_col]]
-        # group_labels = [selected_col]
-        # fig = ff.create_distplot(hist_data, group_labels)
-        # st.plotly_chart(fig, use_container_width=True)
-    
-    if barchart: 
-        st.info("Barchart for categorical data")
-        cat_options =[]
-        columns = list(df.columns)
-        for col in columns:
-            if df[col].dtype != np.float64 and df[col].dtype != np.int64:
-                cat_options.append(col)
-        cat_selected_col = st.selectbox("Choose a column", cat_options)
-        if cat_selected_col:
-            plt = plot_categorical(df, cat_selected_col)
-            st.pyplot(plt)
+tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
 
-    if show_corr:
-        st.info("Correlation heatmap")
-        plt = plot_corr(df)
-        st.pyplot(plt)
+with tab1:
 
-    if summary_cat:
-        st.info("Summary of categorical data")
-        summary = summarize_categorical(df)
-        st.write(summary)
+    st.info("""Be sure your data is first in a 'tidy' format. Use the demo dataset below to check out the top 5 rows for an example. (*See https://tidyr.tidyverse.org/ for more information.*)
+    Be sure to check out the **automated analysis** option for a full report on your data.
+    Additional information on the demo dataset: https://hbiostat.org/data/repo/diabetes.html""")
+
+    # st.sidebar.subheader("Upload your data") 
+    st.subheader("Step 1: Upload your data or choose our demo dataset")
+    demo_or_custom = st.selectbox("Choose a demo or upload your CSV file. NO PHI - use only anonymized data", ("Select here!", "Demo", "CSV Upload"))
+    if demo_or_custom == "CSV Upload":
+        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+        if uploaded_file:
+            df = load_data(uploaded_file)
+
+    if demo_or_custom == 'Demo':
+        file_path = "data/predictdm.csv"
+        df = load_data(file_path)
+
+
+
+    with st.expander("Data Preprocessing Tools - *Use analysis tools **first** to check if needed.*"):
+        pre_process = st.checkbox("Assign bivariate categories into 1 or 0 based on frequency (0 most frequent) if needed for correlations, e.g.", key = "Preprocess")
+        st.info("Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
+        method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
+        if st.button('Apply the Method to Replace Missing Values'):
+                df = replace_missing_values(df, method)
+    st.subheader("Step 2: Tools for Analysis")
+    col1, col2 = st.columns(2)
+    with col1:
+        check_preprocess = st.checkbox("Check if you need to preprocess data", key = "Preprocess needed")
+        header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
+        summary = st.checkbox("Show summary for numerical data", key = "show data")
+        summary_cat = st.checkbox("Show summary for categorical data", key = "show summary cat")
+        show_scatter  = st.checkbox("Show scatterplot", key = "show scatter")
+    with col2:
+        barchart = st.checkbox("Show bar chart (categorical data)", key = "show barchart")
+        histogram = st.checkbox("Show histogram (numerical data)", key = "show histogram")
+        piechart = st.checkbox("Show pie chart (categorical data)", key = "show piechart")
+        show_corr = st.checkbox("Show correlation heatmap", key = "show corr")
+        violin_plot = st.checkbox("Show violin plot", key = "show violin")
+    full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
+    view_full_df = st.checkbox("The CSV file", key = "view full df")
+
+
+    try:
+        x = df
+    except NameError:
+
+        st.warning("Please upload a CSV file or choose a demo dataset")
+    else:
         
-    if piechart:
-        st.info("Pie chart for categorical data")
-        cat_options =[]
-        columns = list(df.columns)
-        for col in columns:
-            if df[col].dtype != np.float64 and df[col].dtype != np.int64:
-                cat_options.append(col)
-        cat_selected_col = st.selectbox("Choose a column", cat_options)
-        if cat_selected_col:
-            plt = plot_pie(df, cat_selected_col)
-            st.pyplot(plt)
+        if pre_process:
+            df = process_dataframe(df)
+        
+        if summary:
+            st.info("Summary of data")
+            st.write(df.describe())
             
-    if check_preprocess:
-        st.info("Check if you need to preprocess data")
-        missing_values, outliers, data_types, skewness, cardinality = analyze_dataframe(df)
-        st.write("Missing values")
-        st.write(missing_values)
-        st.write("Outliers")
-        st.write(outliers)
-        st.write("Data types")
-        st.write(data_types)
-        st.write("Skewness")
-        st.write(skewness)
-        st.write("Cardinality")
-        st.write(cardinality)
-        
-    if show_scatter:
-        st.info("Scatterplot")
-
-        # Filter numeric columns
-        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        numeric_cols.sort()  # sort the list of columns alphabetically
-        
-            # Filter categorical columns
-        categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
-        categorical_cols.sort()  # sort the list of columns alphabetically
-        # Dropdown to select columns to visualize
-        col1, col2 = st.columns(2)
-        with col1:
-            scatter_x = st.selectbox('Select column for x axis:', numeric_cols)
-        with col2:
-            scatter_y = st.selectbox('Select column for y axis:', numeric_cols)
+        if header:
+            st.info("Header of data")
+            st.write(df.head())
             
-        # Use st.beta_expander to hide or expand filtering options
-        with st.expander('Filter Options'):
-            # Filter for the remaining numerical column
-            remaining_cols = [col for col in numeric_cols if col != scatter_x and col != scatter_y]
-            if remaining_cols:
-                filter_col = st.selectbox('Select a numerical column to filter data:', remaining_cols)
-                if filter_col:
-                    min_val, max_val = float(df[filter_col].min()), float(df[filter_col].max())
-                    if np.isnan(min_val) or np.isnan(max_val):
-                        st.write(f"Cannot filter by {filter_col} because it contains NaN values.")
-                    else:
-                        filter_range = st.slider('Select a range to filter data:', min_val, max_val, (min_val, max_val))
-                        df = df[(df[filter_col] >= filter_range[0]) & (df[filter_col] <= filter_range[1])]
+        if full_analysis:
+            st.info("Full analysis of data")
+            profile = make_profile(df)
+            # profile = ProfileReport(df, title="Profiling Report")
+            st_profile_report(profile)
+            
+        if histogram: 
+            st.info("Histogram of data")
+            options =[]
+            columns = list(df.columns)
+            for col in columns:
+                if df[col].dtype == np.float64 or df[col].dtype == np.int64:
+                    options.append(col)
+            selected_col = st.selectbox("Choose a column", options)
+            if selected_col:
+                plt = plot_numeric(df, selected_col)
+                st.pyplot(plt)
 
-            # Filter for the remaining categorical column
-            if categorical_cols:
-                filter_cat_col = st.selectbox('Select a categorical column to filter data:', categorical_cols)
-                if filter_cat_col:
-                    categories = df[filter_cat_col].unique().tolist()
-                    selected_categories = st.multiselect('Select categories to include in the data:', categories, default=categories)
-                    df = df[df[filter_cat_col].isin(selected_categories)]
-        # Check if DataFrame is empty before creating scatterplot
-        if df.empty:
-            st.write("The current filter settings result in an empty dataset. Please adjust the filter settings.")
-        else:
-                create_scatterplot(df, scatter_x, scatter_y)
+        
+        if barchart: 
+            st.info("Barchart for categorical data")
+            cat_options =[]
+            columns = list(df.columns)
+            for col in columns:
+                if df[col].dtype != np.float64 and df[col].dtype != np.int64:
+                    cat_options.append(col)
+            cat_selected_col = st.selectbox("Choose a column", cat_options)
+            if cat_selected_col:
+                plt = plot_categorical(df, cat_selected_col)
+                st.pyplot(plt)
+
+        if show_corr:
+            st.info("Correlation heatmap")
+            plt = plot_corr(df)
+            st.pyplot(plt)
+
+        if summary_cat:
+            st.info("Summary of categorical data")
+            summary = summarize_categorical(df)
+            st.write(summary)
+            
+        if piechart:
+            st.info("Pie chart for categorical data")
+            cat_options =[]
+            columns = list(df.columns)
+            for col in columns:
+                if df[col].dtype != np.float64 and df[col].dtype != np.int64:
+                    cat_options.append(col)
+            cat_selected_col = st.selectbox("Choose a column", cat_options)
+            if cat_selected_col:
+                plt = plot_pie(df, cat_selected_col)
+                st.pyplot(plt)
                 
-    if violin_plot:
-           # Filter numeric columns
-        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-        numeric_cols.sort()  # sort the list of columns
+        if check_preprocess:
+            st.info("Check if you need to preprocess data")
+            missing_values, outliers, data_types, skewness, cardinality = analyze_dataframe(df)
+            st.write("Missing values")
+            st.write(missing_values)
+            st.write("Outliers")
+            st.write(outliers)
+            st.write("Data types")
+            st.write(data_types)
+            st.write("Skewness")
+            st.write(skewness)
+            st.write("Cardinality")
+            st.write(cardinality)
+            
+        if show_scatter:
+            st.info("Scatterplot")
+
+            # Filter numeric columns
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            numeric_cols.sort()  # sort the list of columns alphabetically
+            
+                # Filter categorical columns
+            categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
+            categorical_cols.sort()  # sort the list of columns alphabetically
+            # Dropdown to select columns to visualize
+            col1, col2 = st.columns(2)
+            with col1:
+                scatter_x = st.selectbox('Select column for x axis:', numeric_cols)
+            with col2:
+                scatter_y = st.selectbox('Select column for y axis:', numeric_cols)
+                
+            # Use st.beta_expander to hide or expand filtering options
+            with st.expander('Filter Options'):
+                # Filter for the remaining numerical column
+                remaining_cols = [col for col in numeric_cols if col != scatter_x and col != scatter_y]
+                if remaining_cols:
+                    filter_col = st.selectbox('Select a numerical column to filter data:', remaining_cols)
+                    if filter_col:
+                        min_val, max_val = float(df[filter_col].min()), float(df[filter_col].max())
+                        if np.isnan(min_val) or np.isnan(max_val):
+                            st.write(f"Cannot filter by {filter_col} because it contains NaN values.")
+                        else:
+                            filter_range = st.slider('Select a range to filter data:', min_val, max_val, (min_val, max_val))
+                            df = df[(df[filter_col] >= filter_range[0]) & (df[filter_col] <= filter_range[1])]
+
+                # Filter for the remaining categorical column
+                if categorical_cols:
+                    filter_cat_col = st.selectbox('Select a categorical column to filter data:', categorical_cols)
+                    if filter_cat_col:
+                        categories = df[filter_cat_col].unique().tolist()
+                        selected_categories = st.multiselect('Select categories to include in the data:', categories, default=categories)
+                        df = df[df[filter_cat_col].isin(selected_categories)]
+            # Check if DataFrame is empty before creating scatterplot
+            if df.empty:
+                st.write("The current filter settings result in an empty dataset. Please adjust the filter settings.")
+            else:
+                    create_scatterplot(df, scatter_x, scatter_y)
+                    
+        if violin_plot:
+            # Filter numeric columns
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            numeric_cols.sort()  # sort the list of columns
+
+            # Filter categorical columns
+            categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
+            categorical_cols.sort()  # sort the list of columns
+
+            # Dropdown to select columns to visualize
+            numeric_col = st.selectbox('Select a numerical column:', numeric_cols)
+            categorical_col = st.selectbox('Select a categorical column:', categorical_cols)
+
+            create_violinplot(df, numeric_col, categorical_col)
+            
+        if view_full_df:
+            st.write(df)
+
+with tab2:
+    try:
+        x = df
+    except NameError:
+        st.warning("First upload a CSV file or choose a demo dataset from the **Data Exploration** tab")
+    else:
 
         # Filter categorical columns
         categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
         categorical_cols.sort()  # sort the list of columns
 
-        # Dropdown to select columns to visualize
-        numeric_col = st.selectbox('Select a numerical column:', numeric_cols)
-        categorical_col = st.selectbox('Select a categorical column:', categorical_cols)
+        st.write("""
+        # Choose the Target Column
+        """)
+        target_col = st.selectbox('Select a categorical column as the target:', categorical_cols)
 
-        create_violinplot(df, numeric_col, categorical_col)
+        st.write("""
+        # Choose the Value to Predict
+        """)
+        categories_to_predict = st.multiselect('Select one or more categories:', df[target_col].unique().tolist())
+
+        # Preprocess the data and exclude the target column from preprocessing
+        df_processed, included_cols, excluded_cols = preprocess(df.drop(columns=[target_col]), target_col)
+        df_processed[target_col] = df[target_col]  # Include the target column back into the dataframe
+
+        st.write(f"Included columns: {included_cols}")
+        st.write(f"Excluded columns: {excluded_cols}")
+
+        # Create binary target variable based on the selected categories
+        df_processed[target_col] = df_processed[target_col].apply(lambda x: 1 if x in categories_to_predict else 0)
+
+
+        # Split the dataframe into data and labels
+        X = df_processed.drop(columns=[target_col])
+        y = df_processed[target_col]
+
+        # Split into training and test sets
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        st.write("""
+        # Choose the Machine Learning Model
+        """)
+        model_option = st.selectbox(
+            "Which machine learning model would you like to use?",
+            ("Logistic Regression", "Decision Tree", "Random Forest")
+        )
+
+        if st.button("Predict"):
+            if model_option == "Logistic Regression":
+                model = LogisticRegression()
+                model.fit(X_train, y_train)
+                predictions = model.predict(X_test)
+                accuracy = accuracy_score(y_test, predictions)
+                st.write(f"Accuracy: {accuracy}")
+                st.write(plot_confusion_matrix(y_test, predictions))
+                y_scores = model.predict_proba(X_test)[:, 1]
+                st.write(plot_roc_curve(y_test, y_scores))
+
+            elif model_option == "Decision Tree":
+                model = DecisionTreeClassifier()
+                model.fit(X_train, y_train)
+                predictions = model.predict(X_test)
+                accuracy = accuracy_score(y_test, predictions)
+                st.write(f"Accuracy: {accuracy}")
+                st.write(plot_confusion_matrix(y_test, predictions))
+                y_scores = model.predict_proba(X_test)[:, 1]
+                st.write(plot_roc_curve(y_test, y_scores))
+
+            elif model_option == "Random Forest":
+                model = RandomForestClassifier()
+                model.fit(X_train, y_train)
+                predictions = model.predict(X_test)
+                accuracy = accuracy_score(y_test, predictions)
+                st.write(f"Accuracy: {accuracy}")
+                st.write(plot_confusion_matrix(y_test, predictions))
+                y_scores = model.predict_proba(X_test)[:, 1]
+                st.write(plot_roc_curve(y_test, y_scores))
+
+                
         
-    if view_full_df:
-        st.write(df)
-
-
-        
-    
-# if demo_or_custom == 'CSV Upload':
-#     if uploaded_file:            
-#         df = load_data(uploaded_file)
-#         # df
-#         # profile = make_profile(df)
-#         # # profile = ProfileReport(df, title="Profiling Report")
-#         # st_profile_report(profile)
-
-        
-#         if preprocess:
-#             df = process_dataframe(df)
-
-        
-#         if summary:
-#             st.info("Summary of data")
-#             st.write(df.describe())
-#         if header:
-#             st.info("Header of data")
-#             st.write(df.head())
-#         if full_analysis:
-#             st.info("Full analysis of data")
-#             profile = make_profile(df)
-#             # profile = ProfileReport(df, title="Profiling Report")
-#             st_profile_report(profile)
-#         if histogram: 
-#             st.info("Histogram of data")
-#             options =[]
-#             columns = list(df.columns)
-#             for col in columns:
-#                 if df[col].dtype == np.float64 or df[col].dtype == np.int64:
-#                     options.append(col)
-#             selected_col = st.selectbox("Choose a column", options)
-#             if selected_col:
-#                 plt = plot_numeric(df, selected_col)
-#                 st.pyplot(plt)
-            
-#             # hist_data = [df[selected_col]]
-#             # group_labels = [selected_col]
-#             # fig = ff.create_distplot(hist_data, group_labels)
-#             # st.plotly_chart(fig, use_container_width=True)
-        
-#         if barchart: 
-#             st.info("Barchart for categorical data")
-#             cat_options =[]
-#             columns = list(df.columns)
-#             for col in columns:
-#                 if df[col].dtype != np.float64 and df[col].dtype != np.int64:
-#                     cat_options.append(col)
-#             cat_selected_col = st.selectbox("Choose a column", cat_options)
-#             if cat_selected_col:
-#                 plt = plot_categorical(df, cat_selected_col)
-#                 st.pyplot(plt)
-
-
-

@@ -12,6 +12,7 @@ plotly = "*"
 numpy = "*"
 seaborn = "*"
 statsmodels = "*"
+scikit-learn = "*"
 
 [dev-packages]
 
