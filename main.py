@@ -15,6 +15,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.impute import SimpleImputer
 
 def plot_confusion_matrix(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
@@ -42,17 +43,25 @@ def preprocess(df, target_col):
     excluded_cols = []
 
     for col in df.columns:
-        if df[col].dtype == 'object':
-            if len(df[col].unique()) == 2:
-                most_freq = df[col].value_counts().idxmax()
-                least_freq = df[col].value_counts().idxmin()
-                df[col] = df[col].map({most_freq: 0, least_freq: 1})
+        if col != target_col:  # Exclude target column from preprocessing
+            if df[col].dtype == 'object':
+                if len(df[col].unique()) == 2:  # Bivariate case
+                    most_freq = df[col].value_counts().idxmax()
+                    least_freq = df[col].value_counts().idxmin()
+                    df[col] = df[col].map({most_freq: 0, least_freq: 1})
+                    included_cols.append(col)
+                else:  # Multivariate case
+                    excluded_cols.append(col)
+            elif df[col].dtype in ['int64', 'float64']:  # Numerical case
+                if df[col].isnull().values.any():
+                    mean_imputer = SimpleImputer(strategy='mean')
+                    df[col] = mean_imputer.fit_transform(df[[col]])
+                    print(f"Imputed missing values in {col} with mean.")
                 included_cols.append(col)
-            else:
-                excluded_cols.append(col)
-        else:
-            included_cols.append(col)
 
+    print(f"Included Columns: {included_cols}")
+    print(f"Excluded Columns: {excluded_cols}")
+    
     return df[included_cols], included_cols, excluded_cols
 
 
@@ -438,9 +447,17 @@ with tab2:
         st.warning("First upload a CSV file or choose a demo dataset from the **Data Exploration** tab")
     else:
 
-        # Filter categorical columns
+        # Filter categorical columns and numerical bivariate columns
         categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
+
+        # Add bivariate numerical columns
+        numerical_bivariate_cols = [col for col in df.select_dtypes(include=['int64', 'float64']).columns 
+                                    if df[col].nunique() == 2]
+
+        # Combine the two lists and sort them
+        categorical_cols = categorical_cols + numerical_bivariate_cols
         categorical_cols.sort()  # sort the list of columns
+
 
         st.write("""
         # Choose the Target Column
