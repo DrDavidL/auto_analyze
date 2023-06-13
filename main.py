@@ -100,7 +100,7 @@ with col2:
     histogram = st.checkbox("Show histogram (numerical data)", key = "show histogram")
     piechart = st.checkbox("Show pie chart (categorical data)", key = "show piechart")
     show_corr = st.checkbox("Show correlation heatmap", key = "show corr")
-full_analysis = st.checkbox("**Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
+full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
 
 
 
