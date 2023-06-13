@@ -10,6 +10,8 @@ pandas-profiling = "*"
 ydata-profiling = "*"
 plotly = "*"
 numpy = "*"
+seaborn = "*"
+statsmodels = "*"
 
 [dev-packages]
 
