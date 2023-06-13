@@ -10,6 +10,16 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from statsmodels.imputation import mice
 
+def create_violinplot(df, numeric_col, categorical_col):
+    if numeric_col and categorical_col:
+        fig, ax = plt.subplots()
+
+        # Plot the violin plot
+        sns.violinplot(x=categorical_col, y=numeric_col, data=df, ax=ax)
+
+        st.pyplot(fig)
+
+
 def create_scatterplot(df, scatter_x, scatter_y):
     if scatter_x and scatter_y:
         fig, ax = plt.subplots()
@@ -112,15 +122,17 @@ col1, col2 = st.columns(2)
 with col1:
     check_preprocess = st.checkbox("Check if you need to preprocess data", key = "Preprocess needed")
     header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
-    summary = st.checkbox("Show summary of numerical data", key = "show data")
-    summary_cat = st.checkbox("Show summary (categorical data)", key = "show summary cat")
+    summary = st.checkbox("Show summary for numerical data", key = "show data")
+    summary_cat = st.checkbox("Show summary for categorical data", key = "show summary cat")
+    show_scatter  = st.checkbox("Show scatterplot", key = "show scatter")
 with col2:
     barchart = st.checkbox("Show bar chart (categorical data)", key = "show barchart")
     histogram = st.checkbox("Show histogram (numerical data)", key = "show histogram")
     piechart = st.checkbox("Show pie chart (categorical data)", key = "show piechart")
     show_corr = st.checkbox("Show correlation heatmap", key = "show corr")
-    show_scatter  = st.checkbox("Show scatterplot", key = "show scatter")
+    violin_plot = st.checkbox("Show violin plot", key = "show violin")
 full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
+view_full_df = st.checkbox("The CSV file", key = "view full df")
 
 
 
@@ -241,7 +253,7 @@ def process_dataframe(df):
 #         enable_tools = 1
 
 try:
-    df
+    x = df
 except NameError:
 
     st.warning("Please upload a CSV file or choose a demo dataset")
@@ -371,6 +383,27 @@ else:
             st.write("The current filter settings result in an empty dataset. Please adjust the filter settings.")
         else:
                 create_scatterplot(df, scatter_x, scatter_y)
+                
+    if violin_plot:
+           # Filter numeric columns
+        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        numeric_cols.sort()  # sort the list of columns
+
+        # Filter categorical columns
+        categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
+        categorical_cols.sort()  # sort the list of columns
+
+        # Dropdown to select columns to visualize
+        numeric_col = st.selectbox('Select a numerical column:', numeric_cols)
+        categorical_col = st.selectbox('Select a categorical column:', categorical_cols)
+
+        create_violinplot(df, numeric_col, categorical_col)
+        
+    if view_full_df:
+        st.write(df)
+
+
+        
     
 # if demo_or_custom == 'CSV Upload':
 #     if uploaded_file:            
