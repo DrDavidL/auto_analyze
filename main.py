@@ -48,7 +48,7 @@ def replace_missing_values(df, method):
         df[num_cols] = imp.data
     return df
 
-@st.cache_data  # This function will be cached
+# @st.cache_data  # This function will be cached
 def load_data(file_path):
     data = pd.read_csv(file_path)
     return data
@@ -229,8 +229,23 @@ def process_dataframe(df):
     return df
 
 
+# if demo_or_custom == 'Demo':
+#     enable_tools = 1
+# if demo_or_custom == 'CSV Upload':
+#     try:
+#         uploaded_file
+#     except NameError:
+#         enable_tools = 0
+#         st.warning("Please upload a CSV file or choose a demo dataset")
+#     else:
+#         enable_tools = 1
 
-if demo_or_custom == 'Demo' or "CSV Upload":
+try:
+    df
+except NameError:
+
+    st.warning("Please upload a CSV file or choose a demo dataset")
+else:
     
     if preprocess:
         df = process_dataframe(df)
