@@ -10,6 +10,22 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from statsmodels.imputation import mice
 
+def create_scatterplot(df, scatter_x, scatter_y):
+    if scatter_x and scatter_y:
+        fig, ax = plt.subplots()
+
+        # Plot the scatter plot
+        sns.regplot(x=scatter_x, y=scatter_y, data=df, ax=ax)
+
+        # Calculate the slope and intercept of the regression line
+        slope, intercept = np.polyfit(df[scatter_x], df[scatter_y], 1)
+
+        # Add the slope and intercept as a text annotation on the plot
+        ax.text(0.05, 0.95, f'y={slope:.2f}x+{intercept:.2f}', transform=ax.transAxes)
+
+        st.pyplot(fig)
+
+
 # Function to replace missing values
 @st.cache_data
 def replace_missing_values(df, method):
@@ -100,6 +116,7 @@ with col2:
     histogram = st.checkbox("Show histogram (numerical data)", key = "show histogram")
     piechart = st.checkbox("Show pie chart (categorical data)", key = "show piechart")
     show_corr = st.checkbox("Show correlation heatmap", key = "show corr")
+    show_scatter  = st.checkbox("Show scatterplot", key = "show scatter")
 full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
 
 
@@ -293,6 +310,32 @@ if demo_or_custom == 'Demo' or uploaded_file:
         st.write("Cardinality")
         st.write(cardinality)
         
+    if show_scatter:
+        st.info("Scatterplot")
+
+        # Filter numeric columns
+        numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+        numeric_cols.sort()  # sort the list of columns alphabetically
+        # Dropdown to select columns to visualize
+        scatter_x = st.selectbox('Select column for x axis:', numeric_cols)
+        scatter_y = st.selectbox('Select column for y axis:', numeric_cols)
+
+        # Filter for the remaining numerical column
+        remaining_cols = [col for col in numeric_cols if col != scatter_x and col != scatter_y]
+        if remaining_cols:
+            filter_col = st.selectbox('Select a column to filter data:', remaining_cols)
+            if filter_col:
+                min_val, max_val = int(df[filter_col].min()), int(df[filter_col].max())
+                if np.isnan(min_val) or np.isnan(max_val):
+                    st.write(f"Cannot filter by {filter_col} because it contains NaN values.")
+                else:
+                    filter_range = st.slider('Select a range to filter data:', min_val, max_val, (min_val, max_val))
+                    df_filtered = df[(df[filter_col] >= filter_range[0]) & (df[filter_col] <= filter_range[1])]
+                    create_scatterplot(df_filtered, scatter_x, scatter_y)
+            else:
+                create_scatterplot(df, scatter_x, scatter_y)
+        else:
+            create_scatterplot(df, scatter_x, scatter_y)
     
 # if demo_or_custom == 'CSV Upload':
 #     if uploaded_file:            
