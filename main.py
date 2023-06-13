@@ -316,6 +316,10 @@ if demo_or_custom == 'Demo' or uploaded_file:
         # Filter numeric columns
         numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
         numeric_cols.sort()  # sort the list of columns alphabetically
+        
+            # Filter categorical columns
+        categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
+        categorical_cols.sort()  # sort the list of columns alphabetically
         # Dropdown to select columns to visualize
         col1, col2 = st.columns(2)
         with col1:
@@ -323,25 +327,32 @@ if demo_or_custom == 'Demo' or uploaded_file:
         with col2:
             scatter_y = st.selectbox('Select column for y axis:', numeric_cols)
             
-        filter = st.checkbox('Filter data')
-
-        # Filter for the remaining numerical column
-        remaining_cols = [col for col in numeric_cols if col != scatter_x and col != scatter_y]
-        if remaining_cols:
-            if filter:
-                filter_col = st.selectbox('Select a column to filter by other numeric variables:', remaining_cols)
+        # Use st.beta_expander to hide or expand filtering options
+        with st.expander('Filter Options'):
+            # Filter for the remaining numerical column
+            remaining_cols = [col for col in numeric_cols if col != scatter_x and col != scatter_y]
+            if remaining_cols:
+                filter_col = st.selectbox('Select a numerical column to filter data:', remaining_cols)
                 if filter_col:
-                    min_val, max_val = int(df[filter_col].min()), int(df[filter_col].max())
+                    min_val, max_val = float(df[filter_col].min()), float(df[filter_col].max())
                     if np.isnan(min_val) or np.isnan(max_val):
                         st.write(f"Cannot filter by {filter_col} because it contains NaN values.")
                     else:
                         filter_range = st.slider('Select a range to filter data:', min_val, max_val, (min_val, max_val))
-                        df_filtered = df[(df[filter_col] >= filter_range[0]) & (df[filter_col] <= filter_range[1])]
-                        create_scatterplot(df_filtered, scatter_x, scatter_y)
-            else:
-                create_scatterplot(df, scatter_x, scatter_y)
+                        df = df[(df[filter_col] >= filter_range[0]) & (df[filter_col] <= filter_range[1])]
+
+            # Filter for the remaining categorical column
+            if categorical_cols:
+                filter_cat_col = st.selectbox('Select a categorical column to filter data:', categorical_cols)
+                if filter_cat_col:
+                    categories = df[filter_cat_col].unique().tolist()
+                    selected_categories = st.multiselect('Select categories to include in the data:', categories, default=categories)
+                    df = df[df[filter_cat_col].isin(selected_categories)]
+        # Check if DataFrame is empty before creating scatterplot
+        if df.empty:
+            st.write("The current filter settings result in an empty dataset. Please adjust the filter settings.")
         else:
-            create_scatterplot(df, scatter_x, scatter_y)
+                create_scatterplot(df, scatter_x, scatter_y)
     
 # if demo_or_custom == 'CSV Upload':
 #     if uploaded_file:            
