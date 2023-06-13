@@ -82,19 +82,22 @@ st.info("""Be sure your data is first in a 'tidy' format. Use the demo dataset b
 Be sure to check out the **automated analysis** option for a full report on your data.
 Additional information on the demo dataset: https://hbiostat.org/data/repo/diabetes.html""")
 
-st.sidebar.subheader("Upload your data") 
+# st.sidebar.subheader("Upload your data") 
 st.subheader("Step 1: Upload your data or choose our demo dataset")
 demo_or_custom = st.selectbox("Choose a demo or upload your CSV file. NO PHI - use only anonymized data", ("Select here!", "Demo", "CSV Upload"))
-uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
+if demo_or_custom == "CSV Upload":
+    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+    if uploaded_file:
+        df = load_data(uploaded_file)
 
 if demo_or_custom == 'Demo':
     file_path = "data/predictdm.csv"
     df = load_data(file_path)
 
-else:
-    if uploaded_file:            
-        df = load_data(uploaded_file)
-    # num_df = process_dataframe(df)
+# else:
+#     if uploaded_file:            
+#         df = load_data(uploaded_file)
+#     # num_df = process_dataframe(df)
 
 
 
