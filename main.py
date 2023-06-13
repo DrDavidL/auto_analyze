@@ -230,7 +230,7 @@ def process_dataframe(df):
 
 
 
-if demo_or_custom == 'Demo' or uploaded_file:
+if demo_or_custom == 'Demo' or "CSV Upload":
     
     if preprocess:
         df = process_dataframe(df)
