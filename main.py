@@ -383,7 +383,7 @@ with tab1:
             # for col in columns:
             #     if df[col].dtype != np.float64 and df[col].dtype != np.int64:
             #         cat_options.append(col)
-            cat_selected_col = st.selectbox("Choose a column", categorical_cols)
+            cat_selected_col = st.selectbox("Choose a column", categorical_cols, key = "pie_category")
             if cat_selected_col:
                 plt = plot_pie(df, cat_selected_col)
                 st.pyplot(plt)
