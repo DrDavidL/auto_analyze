@@ -441,6 +441,9 @@ with tab1:
             st.write(df)
 
 with tab2:
+    st.info("""N.B. This merely shows a glimpse of what is possible. Any model shown is not yet optimized and requires ML and domain level expertise.
+            Yet, this is a good start to get a sense of what is possible."""
+            )
     try:
         x = df
     except NameError:
