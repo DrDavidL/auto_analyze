@@ -462,13 +462,13 @@ with tab2:
         categorical_cols.sort()  # sort the list of columns
 
 
-        st.write("""
-        # Choose the Target Column
+        st.subheader("""
+        Choose the Target Column
         """)
         target_col = st.selectbox('Select a categorical column as the target:', categorical_cols)
 
-        st.write("""
-        # Choose the Value to Predict
+        st.subheader("""
+        Choose the Value to Predict
         """)
         categories_to_predict = st.multiselect('Select one or more categories:', df[target_col].unique().tolist())
 
@@ -490,8 +490,8 @@ with tab2:
         # Split into training and test sets
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-        st.write("""
-        # Choose the Machine Learning Model
+        st.subheader("""
+        Choose the Machine Learning Model
         """)
         model_option = st.selectbox(
             "Which machine learning model would you like to use?",
