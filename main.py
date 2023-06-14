@@ -224,7 +224,7 @@ def plot_categorical(df, col_name):
     plt.bar(freq.index, freq.values)
 
     # Add title and labels
-    plt.title(f'Frequency of Categories fpipenv --python 3.9or {col_name}')
+    plt.title(f'Frequency of Categories for {col_name}')
     plt.xlabel('Category')
     plt.ylabel('Frequency')
 
@@ -360,7 +360,7 @@ with tab1:
             # for col in columns:
             #     if df[col].dtype != np.float64 and df[col].dtype != np.int64:
             #         cat_options.append(col)
-            cat_selected_col = st.selectbox("Choose a column", categorical_cols)
+            cat_selected_col = st.selectbox("Choose a column", categorical_cols, key = "bar_category")
             if cat_selected_col:
                 plt = plot_categorical(df, cat_selected_col)
                 st.pyplot(plt)
