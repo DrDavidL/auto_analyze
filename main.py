@@ -14,8 +14,29 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
+from sklearn import svm
+
+def get_categorical_and_numerical_cols(df):
+    # Initialize empty lists for categorical and numerical columns
+    categorical_cols = []
+    numeric_cols = []
+
+    # Go through each column in the dataframe
+    for col in df.columns:
+        # If the column data type is numerical and has more than two unique values, add it to the numeric list
+        if np.issubdtype(df[col].dtype, np.number) and len(df[col].unique()) > 2:
+            numeric_cols.append(col)
+        # Otherwise, add it to the categorical list
+        else:
+            categorical_cols.append(col)
+
+    # Sort the lists
+    numeric_cols.sort()
+    categorical_cols.sort()
+
+    return numeric_cols, categorical_cols
 
 def plot_confusion_matrix(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
@@ -319,12 +340,13 @@ with tab1:
             
         if histogram: 
             st.info("Histogram of data")
-            options =[]
-            columns = list(df.columns)
-            for col in columns:
-                if df[col].dtype == np.float64 or df[col].dtype == np.int64:
-                    options.append(col)
-            selected_col = st.selectbox("Choose a column", options)
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
+            # options =[]
+            # columns = list(df.columns)
+            # for col in columns:
+            #     if df[col].dtype == np.float64 or df[col].dtype == np.int64:
+            #         options.append(col)
+            selected_col = st.selectbox("Choose a column", numeric_cols)
             if selected_col:
                 plt = plot_numeric(df, selected_col)
                 st.pyplot(plt)
@@ -332,12 +354,13 @@ with tab1:
         
         if barchart: 
             st.info("Barchart for categorical data")
-            cat_options =[]
-            columns = list(df.columns)
-            for col in columns:
-                if df[col].dtype != np.float64 and df[col].dtype != np.int64:
-                    cat_options.append(col)
-            cat_selected_col = st.selectbox("Choose a column", cat_options)
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
+            # cat_options =[]
+            # columns = list(df.columns)
+            # for col in columns:
+            #     if df[col].dtype != np.float64 and df[col].dtype != np.int64:
+            #         cat_options.append(col)
+            cat_selected_col = st.selectbox("Choose a column", categorical_cols)
             if cat_selected_col:
                 plt = plot_categorical(df, cat_selected_col)
                 st.pyplot(plt)
@@ -354,12 +377,13 @@ with tab1:
             
         if piechart:
             st.info("Pie chart for categorical data")
-            cat_options =[]
-            columns = list(df.columns)
-            for col in columns:
-                if df[col].dtype != np.float64 and df[col].dtype != np.int64:
-                    cat_options.append(col)
-            cat_selected_col = st.selectbox("Choose a column", cat_options)
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
+            # cat_options =[]
+            # columns = list(df.columns)
+            # for col in columns:
+            #     if df[col].dtype != np.float64 and df[col].dtype != np.int64:
+            #         cat_options.append(col)
+            cat_selected_col = st.selectbox("Choose a column", categorical_cols)
             if cat_selected_col:
                 plt = plot_pie(df, cat_selected_col)
                 st.pyplot(plt)
@@ -380,13 +404,13 @@ with tab1:
             
         if show_scatter:
             st.info("Scatterplot")
-
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
             # Filter numeric columns
-            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            # numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
             numeric_cols.sort()  # sort the list of columns alphabetically
             
                 # Filter categorical columns
-            categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
+            # categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
             categorical_cols.sort()  # sort the list of columns alphabetically
             # Dropdown to select columns to visualize
             col1, col2 = st.columns(2)
@@ -423,12 +447,15 @@ with tab1:
                     create_scatterplot(df, scatter_x, scatter_y)
                     
         if violin_plot:
+            
+            # Call the function to get the lists of numerical and categorical columns
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
             # Filter numeric columns
-            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            # numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
             numeric_cols.sort()  # sort the list of columns
 
             # Filter categorical columns
-            categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
+            # categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
             categorical_cols.sort()  # sort the list of columns
 
             # Dropdown to select columns to visualize
@@ -495,7 +522,7 @@ with tab2:
         """)
         model_option = st.selectbox(
             "Which machine learning model would you like to use?",
-            ("Logistic Regression", "Decision Tree", "Random Forest")
+            ("Logistic Regression", "Decision Tree", "Random Forest", "Gradient Boosting Machines (GBMs)", "Support Vector Machines (SVMs)")
         )
 
         if st.button("Predict"):
@@ -541,6 +568,25 @@ with tab2:
                 st.write(plot_confusion_matrix(y_test, predictions))
                 y_scores = model.predict_proba(X_test)[:, 1]
                 st.write(plot_roc_curve(y_test, y_scores))
-
                 
+                
+            elif model_option == "Gradient Boosting Machines (GBMs)":
+                model = GradientBoostingClassifier()
+                model.fit(X_train, y_train)
+                predictions = model.predict(X_test)
+                accuracy = accuracy_score(y_test, predictions)
+                st.write(f"Accuracy: {accuracy}")
+                st.write(plot_confusion_matrix(y_test, predictions))
+                y_scores = model.predict_proba(X_test)[:, 1]
+                st.write(plot_roc_curve(y_test, y_scores))
+
+            elif model_option == "Support Vector Machines (SVMs)":
+                model = svm.SVC(probability=True)
+                model.fit(X_train, y_train)
+                predictions = model.predict(X_test)
+                accuracy = accuracy_score(y_test, predictions)
+                st.write(f"Accuracy: {accuracy}")
+                st.write(plot_confusion_matrix(y_test, predictions))
+                y_scores = model.predict_proba(X_test)[:, 1]
+                st.write(plot_roc_curve(y_test, y_scores))
         
