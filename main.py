@@ -18,6 +18,7 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn import svm
 
+@st.cache_data 
 def get_categorical_and_numerical_cols(df):
     # Initialize empty lists for categorical and numerical columns
     categorical_cols = []
@@ -38,6 +39,7 @@ def get_categorical_and_numerical_cols(df):
 
     return numeric_cols, categorical_cols
 
+@st.cache_data 
 def plot_confusion_matrix(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
     fig, ax = plt.subplots()
@@ -46,6 +48,7 @@ def plot_confusion_matrix(y_true, y_pred):
     plt.xlabel('Predicted')
     return fig
 
+@st.cache_data 
 def plot_roc_curve(y_true, y_scores):
     fpr, tpr, _ = roc_curve(y_true, y_scores)
     fig, ax = plt.subplots()
@@ -59,6 +62,7 @@ def plot_roc_curve(y_true, y_scores):
     plt.legend(loc="lower right")
     return fig
 
+@st.cache_data 
 def preprocess(df, target_col):
     included_cols = []
     excluded_cols = []
@@ -85,7 +89,7 @@ def preprocess(df, target_col):
     
     return df[included_cols], included_cols, excluded_cols
 
-
+@st.cache_data 
 def create_violinplot(df, numeric_col, categorical_col):
     if numeric_col and categorical_col:
         fig, ax = plt.subplots()
@@ -95,7 +99,7 @@ def create_violinplot(df, numeric_col, categorical_col):
 
         st.pyplot(fig)
 
-
+@st.cache_data 
 def create_scatterplot(df, scatter_x, scatter_y):
     if scatter_x and scatter_y:
         fig, ax = plt.subplots()
@@ -139,6 +143,7 @@ def load_data(file_path):
     data = pd.read_csv(file_path)
     return data
 
+@st.cache_data 
 def analyze_dataframe(df):
     # Analyzing missing values
     missing_values = df.isnull().sum()
@@ -160,6 +165,7 @@ def analyze_dataframe(df):
     return missing_values, outliers, data_types, skewness, cardinality
 
 # Function to plot pie chart
+@st.cache_data 
 def plot_pie(df, col_name):
     plt.figure(figsize=(10, 8))  # set the size of the plot
     df[col_name].value_counts().plot(kind='pie', autopct='%1.1f%%')
@@ -171,6 +177,7 @@ def plot_pie(df, col_name):
 
 
 # Function to summarize categorical data
+@st.cache_data 
 def summarize_categorical(df):
     # Select only categorical columns
     cat_df = df.select_dtypes(include=['object', 'category'])
@@ -203,6 +210,7 @@ def summarize_categorical(df):
     return summary
 
 # Function to plot correlation heatmap
+@st.cache_data 
 def plot_corr(df):
     corr = df.corr()  # Compute pairwise correlation of columns
     plt.figure(figsize=(12, 10))  # set the size of the plot
@@ -213,7 +221,8 @@ def plot_corr(df):
 @st.cache_resource
 def make_profile(df):
     return ProfileReport(df, title="Profiling Report")
-    
+
+@st.cache_data    
 # Function to plot bar chart
 def plot_categorical(df, col_name):
     # Get frequency of categories
@@ -229,7 +238,7 @@ def plot_categorical(df, col_name):
     plt.ylabel('Frequency')
 
     return plt
-
+@st.cache_data 
 def plot_numeric(df, col_name):
     plt.figure(figsize=(10, 6))  # set the size of the plot
     plt.hist(df[col_name], bins=30, alpha=0.5, color='blue', edgecolor='black')
