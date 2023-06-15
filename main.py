@@ -60,38 +60,77 @@ if 'last_response' not in st.session_state:
                 
 #                 response = bardapi.core.Bard(token, timeout = 200).get_answer(helper_prefix + question_input)['content']
 #                 st.session_state.last_response = response
+
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # First run, show input for password.
+        st.sidebar.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        st.sidebar.write("*Please contact David Liebovitz, MD if you need an updated password for access.*")
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password not correct, show input + error.
+        st.sidebar.text_input(
+            "Password", type="password", on_change=password_entered, key="password"
+        )
+        st.sidebar.error("😕 Password incorrect")
+        return False
+    else:
+        # Password correct.
+        return True
+
                 
 def start_chatbot2():
+    
     with st.sidebar:
-        openai_api_key = st.text_input('OpenAI API Key',key='chatbot_api_key')
+        # openai_api_key = st.text_input('OpenAI API Key',key='chatbot_api_key')
+        prefix_teacher = """You are an expert on data science, statistics, and medicine and only answer questions from these domains. 
+        You explain step by step to help students at all levels. You are posted on a website next to an interactive tool that has a preloaded demo set of data and a button to upload their own CSV file. The 
+        tool can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for the sample dataset. Question:         
+        """
         st.write("💬 Chatbot Teacher")
-        #openai.api_key = st.secrets.openai_api_key
+        openai.api_key = st.secrets.openai_api_key
         if "messages" not in st.session_state:
-            st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
+            st.session_state["messages"] = [
+                {"role": "assistant", "content": "Hi! Ask me anything about data science and I'll try to answer it."}
+                ]
 
         with st.form("chat_input", clear_on_submit=True):
             a, b = st.columns([4, 1])
             user_input = a.text_input(
-                label="Your message:",
-                placeholder="What would you like to say?",
+                label="Your question:",
+                placeholder="e.g., teach me about violin plots",
                 label_visibility="collapsed",
             )
             b.form_submit_button("Send", use_container_width=True)
 
         for msg in st.session_state.messages:
-            message(msg["content"], is_user=msg["role"] == "user")
+            message(msg["content"], is_user=msg["role"] == "user", key = "message key: " + msg["content"])
 
-        if user_input and not openai_api_key:
-            st.info("Please add your OpenAI API key to continue.")
+        # if user_input and not openai_api_key:
+        #     st.info("Please add your OpenAI API key to continue.")
             
-        if user_input and openai_api_key:
-            openai.api_key = openai_api_key
+        if user_input:
             st.session_state.messages.append({"role": "user", "content": user_input})
-            message(user_input, is_user=True)
+            
             response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
             msg = response.choices[0].message
             st.session_state.messages.append(msg)
-            message(msg.content)
+            
+            
+            message(user_input, is_user=True, key = "using message")
+            message(msg.content, key = "last message")
                     
     
 
@@ -457,7 +496,8 @@ with tab1:
     else:
         
         if activate_chatbot:
-            start_chatbot2()
+            if check_password():
+                start_chatbot2()
             # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
 
         
