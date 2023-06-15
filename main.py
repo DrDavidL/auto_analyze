@@ -20,6 +20,9 @@ from sklearn import svm
 import asyncio
 import bardapi
 from bardapi import Bard
+import openai
+from streamlit_chat import message
+
 
 
 st.set_page_config(page_title='AutoAnalyzer', layout = 'centered', page_icon = ':chart_with_upwards_trend:', initial_sidebar_state = 'auto')
@@ -37,28 +40,59 @@ if 'last_response' not in st.session_state:
 # Prepare Chatbot Helper
 
 # async def start_chatbot():    
-def start_chatbot():   
+# def start_chatbot():   
+#     with st.sidebar:
+#         st.write("Chatbot Teacher")
+#         if 'sidebar_state' not in st.session_state:
+#             st.session_state.sidebar_state = 'expanded'
+#         token = st.secrets["BARD_TOKEN"]
+#         # Bard = Bard(token, timeout=10)
+#         helper_prefix = """You are a friendly teacher to medical students learning about data science. You answer all questions 
+#         through this lens and defer questions that are completely unrelated to this topic. Your responses cannot contain images or links.
+#         You are posted on a website next to an interactive tool that has a preloaded demo set of data. You can refer to the tool to ask students to make a checkbox selectio to view bar charts, 
+#         histograms, pie charts, violin plots, scatterplots, and summary statistics for the sample dataset. They also have an option to upload their own CSV file, although most probably won't do this.        
+#         Student question:        
+#         """
+#         # st.sidebar.info("Chatbot:", value="Hi! I'm your friendly chatbot. Ask me anything about data science and I'll try to answer it.", height=200, max_chars=None)
+#         question_input = st.sidebar.text_input("Your question, e.g., 'teach me about violin plots'", "")
+#         if st.button("Send"):
+#             if question_input:
+                
+#                 response = bardapi.core.Bard(token, timeout = 200).get_answer(helper_prefix + question_input)['content']
+#                 st.session_state.last_response = response
+                
+def start_chatbot2():
     with st.sidebar:
-        st.write("Chatbot Teacher")
-        if 'sidebar_state' not in st.session_state:
-            st.session_state.sidebar_state = 'expanded'
-        token = st.secrets["BARD_TOKEN"]
-        # Bard = Bard(token, timeout=10)
-        helper_prefix = """You are a friendly teacher to medical students learning about data science. You answer all questions 
-        through this lens and defer questions that are completely unrelated to this topic. Your responses cannot contain images or links.
-        You are posted on a website next to an interactive tool that has a preloaded demo set of data. You can refer to the tool to ask students to make a checkbox selectio to view bar charts, 
-        histograms, pie charts, violin plots, scatterplots, and summary statistics for the sample dataset. They also have an option to upload their own CSV file, although most probably won't do this.        
-        Student question:        
-        """
-        # st.sidebar.info("Chatbot:", value="Hi! I'm your friendly chatbot. Ask me anything about data science and I'll try to answer it.", height=200, max_chars=None)
-        question_input = st.sidebar.text_input("Your question, e.g., 'teach me about violin plots'", "")
-        if st.button("Send"):
-            if question_input:
-                
-                response = bardapi.core.Bard(token, timeout = 200).get_answer(helper_prefix + question_input)['content']
-                st.session_state.last_response = response
-                
-                
+        openai_api_key = st.text_input('OpenAI API Key',key='chatbot_api_key')
+        st.write("💬 Chatbot Teacher")
+        #openai.api_key = st.secrets.openai_api_key
+        if "messages" not in st.session_state:
+            st.session_state["messages"] = [{"role": "assistant", "content": "How can I help you?"}]
+
+        with st.form("chat_input", clear_on_submit=True):
+            a, b = st.columns([4, 1])
+            user_input = a.text_input(
+                label="Your message:",
+                placeholder="What would you like to say?",
+                label_visibility="collapsed",
+            )
+            b.form_submit_button("Send", use_container_width=True)
+
+        for msg in st.session_state.messages:
+            message(msg["content"], is_user=msg["role"] == "user")
+
+        if user_input and not openai_api_key:
+            st.info("Please add your OpenAI API key to continue.")
+            
+        if user_input and openai_api_key:
+            openai.api_key = openai_api_key
+            st.session_state.messages.append({"role": "user", "content": user_input})
+            message(user_input, is_user=True)
+            response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
+            msg = response.choices[0].message
+            st.session_state.messages.append(msg)
+            message(msg.content)
+                    
     
 
 
@@ -423,8 +457,8 @@ with tab1:
     else:
         
         if activate_chatbot:
-            start_chatbot()
-            st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
+            start_chatbot2()
+            # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
 
         
         if pre_process:
