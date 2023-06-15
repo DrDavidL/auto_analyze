@@ -55,7 +55,7 @@ def start_chatbot():
         if st.button("Send"):
             if question_input:
                 
-                response = bardapi.core.Bard(token, timeout = 10).get_answer(helper_prefix + question_input)['content']
+                response = bardapi.core.Bard(token, timeout = 200).get_answer(helper_prefix + question_input)['content']
                 st.session_state.last_response = response
                 
                 
