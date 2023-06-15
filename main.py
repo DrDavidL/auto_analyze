@@ -18,6 +18,7 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn import svm
 
+st.set_page_config(page_title='AutoAnalyzer', layout = 'centered', page_icon = ':chart_with_upwards_trend:', initial_sidebar_state = 'auto')
 
 def display_metrics(y_true, y_pred, y_scores):
     # Compute metrics
@@ -313,10 +314,10 @@ def process_dataframe(df):
                 
     return df
 
-st.title("Autoanalyzer")
-with st.expander('About Autoanalyzer'):
+st.title("AutoAnalyzer")
+with st.expander('About AutoAnalyzer'):
     st.write("Author: David Liebovitz, MD, Northwestern University")
-    st.write("Last updated 6/11/23")
+    st.write("Last updated 6/14/23")
     
 tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
 
