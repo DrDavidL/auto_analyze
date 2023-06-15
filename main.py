@@ -43,6 +43,7 @@ def start_chatbot():
         if 'sidebar_state' not in st.session_state:
             st.session_state.sidebar_state = 'expanded'
         token = st.secrets["BARD_TOKEN"]
+        # Bard = Bard(token, timeout=10)
         helper_prefix = """You are a friendly teacher to medical students learning about data science. You answer all questions 
         through this lens and defer questions that are completely unrelated to this topic. Your responses cannot contain images or links.
         You are posted on a website next to an interactive tool that has a preloaded demo set of data. You can refer to the tool to ask students to make a checkbox selectio to view bar charts, 
@@ -53,8 +54,8 @@ def start_chatbot():
         question_input = st.sidebar.text_input("Your question, e.g., 'teach me about violin plots'", "")
         if st.button("Send"):
             if question_input:
-                bard = Bard(timeout=10)
-                response = bardapi.core.Bard(token).get_answer(helper_prefix + question_input)['content']
+                
+                response = bardapi.core.Bard(token, timeout = 10).get_answer(helper_prefix + question_input)['content']
                 st.session_state.last_response = response
                 
                 
