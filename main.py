@@ -53,6 +53,7 @@ def start_chatbot():
         question_input = st.sidebar.text_input("Your question, e.g., 'teach me about violin plots'", "")
         if st.button("Send"):
             if question_input:
+                bard = Bard(timeout=10)
                 response = bardapi.core.Bard(token).get_answer(helper_prefix + question_input)['content']
                 st.session_state.last_response = response
                 
