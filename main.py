@@ -11,14 +11,51 @@ import seaborn as sns
 from statsmodels.imputation import mice
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve
+from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve, roc_auc_score, average_precision_score, precision_recall_curve, auc, f1_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn import svm
 
- 
+
+def display_metrics(y_true, y_pred, y_scores):
+    # Compute metrics
+    f1 = f1_score(y_true, y_pred)
+    accuracy = accuracy_score(y_true, y_pred)
+    roc_auc = roc_auc_score(y_true, y_scores)
+    precision, recall, _ = precision_recall_curve(y_true, y_scores)
+    pr_auc = auc(recall, precision)
+    
+    # Display metrics
+
+    st.info(f"**Your Model Metrics:** F1 score: {f1:.2f}, Accuracy: {accuracy:.2f}, ROC AUC: {roc_auc:.2f}, PR AUC: {pr_auc:.2f}")
+    st.info(
+        # Explain differences
+"""
+    ### Explanation of Metrics
+    - **F1 score** is the harmonic mean of precision and recall, and it tries to balance the two. It is a good metric when you have imbalanced classes.
+    - **Accuracy** is the ratio of correct predictions to the total number of predictions. It can be misleading if the classes are imbalanced.
+    - **ROC AUC** (Receiver Operating Characteristic Area Under Curve) represents the likelihood of the classifier distinguishing between a positive sample and a negative sample. It's equal to 0.5 for random predictions and 1.0 for perfect predictions.
+    - **PR AUC** (Precision-Recall Area Under Curve) is another way of summarizing the trade-off between precision and recall, and it gives more weight to precision. It's useful when the classes are imbalanced.
+    """)
+    # st.write(f"Accuracy: {accuracy}")
+    st.write(plot_confusion_matrix(y_true, y_pred))
+    st.write(plot_roc_curve(y_true, y_scores))
+    st.write(plot_pr_curve(y_true, y_scores))
+
+
+def plot_pr_curve(y_true, y_scores):
+    precision, recall, _ = precision_recall_curve(y_true, y_scores)
+    pr_auc = auc(recall, precision)
+
+    fig, ax = plt.subplots()
+    ax.plot(recall, precision, label=f'PR curve (AUC = {pr_auc:.2f})')
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall Curve')
+    plt.legend(loc="lower right")
+    st.pyplot(fig)    
 
 def get_categorical_and_numerical_cols(df):
     # Initialize empty lists for categorical and numerical columns
@@ -52,8 +89,10 @@ def plot_confusion_matrix(y_true, y_pred):
  
 def plot_roc_curve(y_true, y_scores):
     fpr, tpr, _ = roc_curve(y_true, y_scores)
+    roc_auc = roc_auc_score(y_true, y_scores)
+    
     fig, ax = plt.subplots()
-    ax.plot(fpr, tpr, label='ROC curve')
+    ax.plot(fpr, tpr, label='ROC curve (AUC = %0.2f)' % roc_auc)
     ax.plot([0, 1], [0, 1], 'k--', label='Random guess')
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
@@ -61,6 +100,7 @@ def plot_roc_curve(y_true, y_scores):
     plt.xlim([-0.02, 1])
     plt.ylim([0, 1.02])
     plt.legend(loc="lower right")
+    
     return fig
 
  
@@ -287,8 +327,8 @@ with tab1:
     Additional information on the demo dataset: https://hbiostat.org/data/repo/diabetes.html""")
 
     # st.sidebar.subheader("Upload your data") 
-    st.subheader("Step 1: Upload your data or choose our demo dataset")
-    demo_or_custom = st.selectbox("Choose a demo or upload your CSV file. NO PHI - use only anonymized data", ("Select here!", "Demo", "CSV Upload"))
+    st.subheader("Step 1: Upload your data or view a demo dataset")
+    demo_or_custom = st.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo", "CSV Upload"), horizontal=True)
     if demo_or_custom == "CSV Upload":
         uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file:
@@ -505,9 +545,9 @@ with tab2:
         target_col = st.selectbox('Select a categorical column as the target:', categorical_cols)
 
         st.subheader("""
-        Choose the Value to Predict
+        Set Criteria for the Binary Target Class
         """)
-        categories_to_predict = st.multiselect('Select one or more categories:', df[target_col].unique().tolist())
+        categories_to_predict = st.multiselect('Select one or more categories but not all. You need 2 options to predict a group, i.e, your target versus the rest.:', df[target_col].unique().tolist())
 
         # Preprocess the data and exclude the target column from preprocessing
         df_processed, included_cols, excluded_cols = preprocess(df.drop(columns=[target_col]), target_col)
@@ -541,10 +581,8 @@ with tab2:
                 model.fit(X_train, y_train)
                 predictions = model.predict(X_test)
                 accuracy = accuracy_score(y_test, predictions)
-                st.write(f"Accuracy: {accuracy}")
-                st.write(plot_confusion_matrix(y_test, predictions))
                 y_scores = model.predict_proba(X_test)[:, 1]
-                st.write(plot_roc_curve(y_test, y_scores))
+                display_metrics(y_test, predictions, y_scores)
                 # After training the logistic regression model, assuming the model's name is "model"
 
                 coeff = model.coef_[0]
@@ -564,20 +602,16 @@ with tab2:
                 model.fit(X_train, y_train)
                 predictions = model.predict(X_test)
                 accuracy = accuracy_score(y_test, predictions)
-                st.write(f"Accuracy: {accuracy}")
-                st.write(plot_confusion_matrix(y_test, predictions))
                 y_scores = model.predict_proba(X_test)[:, 1]
-                st.write(plot_roc_curve(y_test, y_scores))
+                display_metrics(y_test, predictions, y_scores)
 
             elif model_option == "Random Forest":
                 model = RandomForestClassifier()
                 model.fit(X_train, y_train)
                 predictions = model.predict(X_test)
                 accuracy = accuracy_score(y_test, predictions)
-                st.write(f"Accuracy: {accuracy}")
-                st.write(plot_confusion_matrix(y_test, predictions))
                 y_scores = model.predict_proba(X_test)[:, 1]
-                st.write(plot_roc_curve(y_test, y_scores))
+                display_metrics(y_test, predictions, y_scores)
                 
                 
             elif model_option == "Gradient Boosting Machines (GBMs)":
@@ -585,18 +619,18 @@ with tab2:
                 model.fit(X_train, y_train)
                 predictions = model.predict(X_test)
                 accuracy = accuracy_score(y_test, predictions)
-                st.write(f"Accuracy: {accuracy}")
-                st.write(plot_confusion_matrix(y_test, predictions))
                 y_scores = model.predict_proba(X_test)[:, 1]
-                st.write(plot_roc_curve(y_test, y_scores))
+                display_metrics(y_test, predictions, y_scores)
 
             elif model_option == "Support Vector Machines (SVMs)":
                 model = svm.SVC(probability=True)
                 model.fit(X_train, y_train)
                 predictions = model.predict(X_test)
                 accuracy = accuracy_score(y_test, predictions)
-                st.write(f"Accuracy: {accuracy}")
-                st.write(plot_confusion_matrix(y_test, predictions))
                 y_scores = model.predict_proba(X_test)[:, 1]
-                st.write(plot_roc_curve(y_test, y_scores))
+                display_metrics(y_test, predictions, y_scores)
+
+                
+
+
         
