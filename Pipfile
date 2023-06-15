@@ -13,6 +13,8 @@ numpy = "*"
 seaborn = "*"
 statsmodels = "*"
 scikit-learn = "*"
+asyncio = "*"
+bardapi = "*"
 
 [dev-packages]
 

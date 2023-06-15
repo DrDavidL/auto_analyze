@@ -17,8 +17,53 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn import svm
+import asyncio
+import bardapi
+from bardapi import Bard
+
 
 st.set_page_config(page_title='AutoAnalyzer', layout = 'centered', page_icon = ':chart_with_upwards_trend:', initial_sidebar_state = 'auto')
+# if st.button('Click to toggle sidebar state'):
+#     st.session_state.sidebar_state = 'collapsed' if st.session_state.sidebar_state == 'expanded' else 'expanded'
+#     # Force an app rerun after switching the sidebar state.
+#     st.experimental_rerun()
+    
+#     # Initialize a session state variable that tracks the sidebar state (either 'expanded' or 'collapsed').
+if 'last_response' not in st.session_state:
+     st.session_state.last_response = ''
+
+# Streamlit set_page_config method has a 'initial_sidebar_state' argument that controls sidebar state.
+# st.set_page_config(initial_sidebar_state=st.session_state.sidebar_state)
+# Prepare Chatbot Helper
+
+# async def start_chatbot():    
+def start_chatbot():   
+    with st.sidebar:
+        st.write("Chatbot Teacher")
+        if 'sidebar_state' not in st.session_state:
+            st.session_state.sidebar_state = 'expanded'
+        token = st.secrets["BARD_TOKEN"]
+        helper_prefix = """You are a friendly teacher to medical students learning about data science. You answer all questions 
+        through this lens and defer questions that are completely unrelated to this topic. Your responses cannot contain images or links.
+        You are posted on a website next to an interactive tool that has a preloaded demo set of data. You can refer to the tool to ask students to make a checkbox selectio to view bar charts, 
+        histograms, pie charts, violin plots, scatterplots, and summary statistics for the sample dataset. They also have an option to upload their own CSV file, although most probably won't do this.        
+        Student question:        
+        """
+        # st.sidebar.info("Chatbot:", value="Hi! I'm your friendly chatbot. Ask me anything about data science and I'll try to answer it.", height=200, max_chars=None)
+        question_input = st.sidebar.text_input("Your question, e.g., 'teach me about violin plots'", "")
+        if st.button("Send"):
+            if question_input:
+                response = bardapi.core.Bard(token).get_answer(helper_prefix + question_input)['content']
+                st.session_state.last_response = response
+                
+                
+    
+
+
+# def generate_response(helper_question):
+#     response = chatbot.ask(helper_prefix + helper_question)
+#     # You can use the OpenAI API or any other method to generate the response
+#     return response
 
 def display_metrics(y_true, y_pred, y_scores):
     # Compute metrics
@@ -348,21 +393,24 @@ with tab1:
         if st.button('Apply the Method to Replace Missing Values'):
                 df = replace_missing_values(df, method)
     st.subheader("Step 2: Tools for Analysis")
+    activate_chatbot = st.checkbox("Activate Chatbot Teacher", key = "activate chatbot")
     col1, col2 = st.columns(2)
     with col1:
-        check_preprocess = st.checkbox("Check if you need to preprocess data", key = "Preprocess needed")
+        check_preprocess = st.checkbox("Assess need to preprocess data", key = "Preprocess needed")
         header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
-        summary = st.checkbox("Show summary for numerical data", key = "show data")
-        summary_cat = st.checkbox("Show summary for categorical data", key = "show summary cat")
-        show_scatter  = st.checkbox("Show scatterplot", key = "show scatter")
+        summary = st.checkbox("Summary (numerical data)", key = "show data")
+        summary_cat = st.checkbox("Summary (categorical data)", key = "show summary cat")
+        show_scatter  = st.checkbox("Scatterplot", key = "show scatter")
+        view_full_df = st.checkbox("View Dataset", key = "view full df")
     with col2:
-        barchart = st.checkbox("Show bar chart (categorical data)", key = "show barchart")
-        histogram = st.checkbox("Show histogram (numerical data)", key = "show histogram")
-        piechart = st.checkbox("Show pie chart (categorical data)", key = "show piechart")
-        show_corr = st.checkbox("Show correlation heatmap", key = "show corr")
-        violin_plot = st.checkbox("Show violin plot", key = "show violin")
-    full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
-    view_full_df = st.checkbox("The CSV file", key = "view full df")
+        barchart = st.checkbox("Bar chart (categorical data)", key = "show barchart")
+        histogram = st.checkbox("Histogram (numerical data)", key = "show histogram")
+        piechart = st.checkbox("Pie chart (categorical data)", key = "show piechart")
+        show_corr = st.checkbox("Correlation heatmap", key = "show corr")
+        violin_plot = st.checkbox("Violin plot", key = "show violin")
+        full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
+    
+    
 
 
     try:
@@ -371,6 +419,11 @@ with tab1:
 
         st.warning("Please upload a CSV file or choose a demo dataset")
     else:
+        
+        if activate_chatbot:
+            start_chatbot()
+            st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
+
         
         if pre_process:
             df = process_dataframe(df)
