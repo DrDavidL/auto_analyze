@@ -123,7 +123,7 @@ def start_chatbot2():
             
         if user_input:
             st.session_state.messages.append({"role": "user", "content": user_input})
-            
+            openai.api_key = st.secrets.openai_api_key
             response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
             msg = response.choices[0].message
             st.session_state.messages.append(msg)
