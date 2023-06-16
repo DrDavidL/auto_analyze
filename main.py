@@ -101,8 +101,9 @@ def start_chatbot2():
         tool can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for the sample dataset. Question:         
         """
         st.write("💬 Chatbot Teacher")
-        os.environ['OPENAI_API_KEY'] = st.secrets['OPENAI_API_KEY']
-
+        key = st.secrets["openai_api_key"]
+        key = key.replace("'", "")
+        openai.api_key = key
 
 
         if "messages" not in st.session_state:
