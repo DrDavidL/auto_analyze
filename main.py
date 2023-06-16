@@ -22,6 +22,7 @@ from sklearn import svm
 # from bardapi import Bard
 import openai
 from streamlit_chat import message
+import os
 
 
 
@@ -100,7 +101,8 @@ def start_chatbot2():
         tool can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for the sample dataset. Question:         
         """
         st.write("💬 Chatbot Teacher")
-        openai.api_key = st.secrets["openai_api_key"]
+        os.environ['OPENAI_API_KEY'] = st.secrets['OPENAI_API_KEY']
+
 
 
         if "messages" not in st.session_state:
