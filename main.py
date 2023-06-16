@@ -17,9 +17,9 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn import svm
-import asyncio
-import bardapi
-from bardapi import Bard
+# import asyncio
+# import bardapi
+# from bardapi import Bard
 import openai
 from streamlit_chat import message
 
@@ -100,11 +100,9 @@ def start_chatbot2():
         tool can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for the sample dataset. Question:         
         """
         st.write("💬 Chatbot Teacher")
-        key = st.secrets["openai_api_key"]
-        key = key.replace("'", "")
-        openai.api_key = key
+        openai.api_key = st.secrets["openai_api_key"]
 
-        
+
         if "messages" not in st.session_state:
             st.session_state["messages"] = [
                 {"role": "assistant", "content": "Hi! Ask me anything about data science and I'll try to answer it."}
@@ -127,7 +125,6 @@ def start_chatbot2():
             
         if user_input:
             st.session_state.messages.append({"role": "user", "content": user_input})
-            openai.api_key = key 
             response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
             msg = response.choices[0].message
             st.session_state.messages.append(msg)      
