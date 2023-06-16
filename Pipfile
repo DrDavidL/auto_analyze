@@ -16,6 +16,7 @@ scikit-learn = "*"
 bardapi = "*"
 openai = "*"
 streamlit-chat = "*"
+importlib-resources = "*"
 
 [dev-packages]
 
