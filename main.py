@@ -62,7 +62,21 @@ if 'last_response' not in st.session_state:
 #                 response = bardapi.core.Bard(token, timeout = 200).get_answer(helper_prefix + question_input)['content']
 #                 st.session_state.last_response = response
 
+def is_valid_api_key(api_key):
+    openai.api_key = api_key
+
+    try:
+        # Send a test request to the OpenAI API
+        response = openai.Completion.create(model="text-davinci-003",                     
+                    prompt="Hello world")['choices'][0]['text']
+        return True
+    except Exception:
+        pass
+
+    return False
+
 def check_password():
+
     """Returns `True` if the user had the correct password."""
 
     def password_entered():
@@ -101,10 +115,24 @@ def start_chatbot2():
         tool can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for the sample dataset. Question:         
         """
         st.write("💬 Chatbot Teacher")
+        
+            # Check if the API key exists as an environmental variable
+        api_key = os.environ.get("OPENAI_API_KEY")
 
-        openai.api_key = os.getenv("openai_api_key")
+        if api_key:
+            st.write("*API key active - ready to respond!*")
+        else:
+            st.warning("API key not found as an environmental variable.")
+            api_key = st.text_input("Enter your OpenAI API key:")
 
+            if st.button("Save"):
+                if is_valid_api_key(api_key):
+                    os.environ["OPENAI_API_KEY"] = api_key
+                    st.success("API key saved as an environmental variable!")
+                else:
+                    st.error("Invalid API key. Please enter a valid API key.")
 
+            
         if "messages" not in st.session_state:
             st.session_state["messages"] = [
                 {"role": "assistant", "content": "Hi! Ask me anything about data science and I'll try to answer it."}
@@ -127,6 +155,39 @@ def start_chatbot2():
             
         if user_input:
             st.session_state.messages.append({"role": "user", "content": user_input})
+            try:
+                #Make your OpenAI API request here
+                response = openai.Completion.create(model="text-davinci-003",                     
+                            prompt="Hello world")['choices'][0]['text']
+            except openai.error.Timeout as e:
+                #Handle timeout error, e.g. retry or log
+                print(f"OpenAI API request timed out: {e}")
+                pass
+            except openai.error.APIError as e:
+                #Handle API error, e.g. retry or log
+                print(f"OpenAI API returned an API Error: {e}")
+                pass
+            except openai.error.APIConnectionError as e:
+                #Handle connection error, e.g. check network or log
+                print(f"OpenAI API request failed to connect: {e}")
+                pass
+            except openai.error.InvalidRequestError as e:
+                #Handle invalid request error, e.g. validate parameters or log
+                print(f"OpenAI API request was invalid: {e}")
+                pass
+            except openai.error.AuthenticationError as e:
+                #Handle authentication error, e.g. check credentials or log
+                print(f"OpenAI API request was not authorized: {e}")
+                pass
+            except openai.error.PermissionError as e:
+                #Handle permission error, e.g. check scope or log
+                print(f"OpenAI API request was not permitted: {e}")
+                pass
+            except openai.error.RateLimitError as e:
+                #Handle rate limit error, e.g. wait or log
+                print(f"OpenAI API request exceeded rate limit: {e}")
+                pass
+
             response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
             msg = response.choices[0].message
             st.session_state.messages.append(msg)      
