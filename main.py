@@ -67,7 +67,7 @@ def check_password():
 
     def password_entered():
         """Checks whether a password entered by the user is correct."""
-        if st.session_state["password"] == st.secrets["password"]:
+        if st.session_state["password"] == os.getenv("password"):
             st.session_state["password_correct"] = True
             del st.session_state["password"]  # don't store password
         else:
@@ -101,9 +101,8 @@ def start_chatbot2():
         tool can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for the sample dataset. Question:         
         """
         st.write("💬 Chatbot Teacher")
-        key = st.secrets["openai_api_key"]
-        key = key.replace("'", "")
-        openai.api_key = key
+
+        openai.api_key = os.getenv("openai_api_key")
 
 
         if "messages" not in st.session_state:
