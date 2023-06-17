@@ -164,8 +164,9 @@ def start_chatbot2():
             st.session_state.messages.append({"role": "user", "content": user_input})
             try:
                 #Make your OpenAI API request here
-                response = openai.Completion.create(model="gpt-3.5-turbo",                     
-                            prompt="Hello world")['choices'][0]['text']
+                # response = openai.Completion.create(model="gpt-3.5-turbo",                     
+                #             prompt="Hello world")['choices'][0]['text']
+                response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
             except openai.error.Timeout as e:
                 #Handle timeout error, e.g. retry or log
                 print(f"OpenAI API request timed out: {e}")
@@ -195,7 +196,7 @@ def start_chatbot2():
                 print(f"OpenAI API request exceeded rate limit: {e}")
                 pass
 
-            response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
+            # response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
             msg = response.choices[0].message
             st.session_state.messages.append(msg)      
             message(user_input, is_user=True, key = "using message")
