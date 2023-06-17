@@ -381,6 +381,42 @@ def preprocess(df, target_col):
     
     return df[included_cols], included_cols, excluded_cols
 
+def create_boxplot(df, numeric_col, categorical_col, show_points=False):
+    if numeric_col and categorical_col:
+        fig, ax = plt.subplots()
+
+        # Plot the notched box plot
+        sns.boxplot(x=categorical_col, y=numeric_col, data=df, notch=True, ax=ax)
+        
+        if show_points:
+            # Add the actual data points on the plot
+            sns.swarmplot(x=categorical_col, y=numeric_col, data=df, color=".25", ax=ax)
+            
+        st.pyplot(fig)
+        with st.expander('What is a box plot?'):
+            st.write("""Box plots (also known as box-and-whisker plots) are a great way to visually represent the distribution of data. They're particularly useful when you want to compare distributions between several groups. For example, you might want to compare the distribution of patients' ages across different diagnostic categories.
+(Check out age and diabetes in the sample dataset.)
+
+**Components of a box plot:**
+
+A box plot is composed of several parts:
+
+1. **Box:** The main part of the plot, the box, represents the interquartile range (IQR), which is the range between the 25th percentile (Q1, the lower edge of the box) and the 75th percentile (Q3, the upper edge of the box). The IQR contains the middle 50% of the data points.
+
+2. **Median:** The line (or sometimes a dot) inside the box represents the median of the data - the value separating the higher half from the lower half of a data sample. It's essentially the 50th percentile.
+
+3. **Whiskers:** The lines extending from the box (known as whiskers) indicate variability outside the IQR. Typically, they extend to the most extreme data point within 1.5 times the IQR from the box. 
+
+4. **Outliers:** Points plotted beyond the whiskers are considered outliers - unusually high or low values in comparison with the rest of the data.
+
+**What is the notch used for?**
+
+The notch in a notched box plot represents the confidence interval around the median. If the notches of two box plots do not overlap, it's a strong indication (though not absolute proof) that the medians differ. This can be a useful way to visually compare medians across groups. 
+
+For medical students, a good way to think about box plots might be in comparison to lab results. Just as lab results typically give a reference range and flag values outside of that range, a box plot gives a visual representation of the range of the data (through the box and whiskers) and flags outliers.
+
+The notch, meanwhile, is a bit like the statistical version of a normal range for the median. If a notch doesn't overlap with the notch from another box plot, it's a sign that the medians might be significantly different. But just like lab results, statistical tests are needed to definitively say whether a difference is significant.
+""")
  
 def create_violinplot(df, numeric_col, categorical_col):
     if numeric_col and categorical_col:
@@ -419,6 +455,29 @@ def create_scatterplot(df, scatter_x, scatter_y):
         ax.text(0.05, 0.95, f'y={slope:.2f}x+{intercept:.2f}', transform=ax.transAxes)
 
         st.pyplot(fig)
+        with st.expander('What is a scatter plot?'):
+            st.write("""
+A scatterplot is a type of plot that displays values for typically two variables for a set of data. It's used to visualize the relationship between two numerical variables, where one variable is on the x-axis and the other variable is on the y-axis. Each point on the plot represents an observation in your dataset.
+
+**Which types of variables are appropriate for the x and y axes?**
+
+Both the x and y axes of a scatterplot are typically numerical variables. For example, one might be "Patient Age" (on the x-axis) and the other might be "Blood Pressure" (on the y-axis). Each dot on the scatterplot then represents a patient's age and corresponding blood pressure. 
+
+However, the variables used do not have to be numerical. They could be ordinal categories, such as stages of a disease, which have a meaningful order. 
+
+The choice of which variable to place on each axis doesn't usually matter much for exploring relationships, but traditionally the independent variable (the one you control or think is influencing the other) is placed on the x-axis, and the dependent variable (the one you think is being influenced) is placed on the y-axis.
+
+**What does a regression line mean when added to a scatterplot?**
+
+A regression line (or line of best fit) is a straight line that best represents the data on a scatter plot. This line may pass through some of the points, none of the points, or all of the points. It's a way of modeling the relationship between the x and y variables. 
+
+In the context of a scatterplot, the regression line is used to identify trends and patterns between the two variables. If the data points and the line are close, it suggests a strong correlation between the variables.
+
+The slope of the regression line also tells you something important: for every unit increase in the variable on the x-axis, the variable on the y-axis changes by the amount of the slope. For example, if we have patient age on the x-axis and blood pressure on the y-axis, and the slope of the line is 2, it would suggest that for each year increase in age, we expect blood pressure to increase by 2 units, on average.
+
+However, keep in mind that correlation does not imply causation. Just because two variables move together, it doesn't mean that one is causing the other to change.
+
+For medical students, think of scatterplots as a way to visually inspect the correlation between two numerical variables. It's a way to quickly identify patterns, trends, and outliers, and to formulate hypotheses for further testing.""")
 
 
 # Function to replace missing values
@@ -587,19 +646,24 @@ tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
 with tab1:
 
     st.info("""Be sure your data is first in a 'tidy' format. Use the demo dataset below to check out the top 5 rows for an example. (*See https://tidyr.tidyverse.org/ for more information.*)
-    Be sure to check out the **automated analysis** option for a full report on your data.
-    Additional information on the demo dataset: https://hbiostat.org/data/repo/diabetes.html""")
+    Be sure to check out the **automated analysis** option for a full report on your data.""")
 
     # st.sidebar.subheader("Upload your data") 
     st.subheader("Step 1: Upload your data or view a demo dataset")
-    demo_or_custom = st.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo", "CSV Upload"), horizontal=True)
+    demo_or_custom = st.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "CSV Upload"), horizontal=True)
     if demo_or_custom == "CSV Upload":
         uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file:
             df = load_data(uploaded_file)
 
-    if demo_or_custom == 'Demo':
+    if demo_or_custom == 'Demo 1 (diabetes)':
         file_path = "data/predictdm.csv"
+        st.write("About Demo 1 dataset: https://data.world/informatics-edu/diabetes-prediction")
+        df = load_data(file_path)
+        
+    if demo_or_custom == 'Demo 2 (cancer)':
+        file_path = "data/breastcancernew.csv"
+        st.write("About Demo 2 dataset: https://data.world/marshalldatasolution/breast-cancer")
         df = load_data(file_path)
 
 
@@ -611,9 +675,10 @@ with tab1:
         if st.button('Apply the Method to Replace Missing Values'):
                 df = replace_missing_values(df, method)
     st.subheader("Step 2: Tools for Analysis")
-    activate_chatbot = st.checkbox("Activate Chatbot Teacher", key = "activate chatbot")
+    
     col1, col2 = st.columns(2)
     with col1:
+        activate_chatbot = st.checkbox("Activate Chatbot Teacher", key = "activate chatbot")
         check_preprocess = st.checkbox("Assess need to preprocess data", key = "Preprocess needed")
         header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
         summary = st.checkbox("Summary (numerical data)", key = "show data")
@@ -625,6 +690,7 @@ with tab1:
         histogram = st.checkbox("Histogram (numerical data)", key = "show histogram")
         piechart = st.checkbox("Pie chart (categorical data)", key = "show piechart")
         show_corr = st.checkbox("Correlation heatmap", key = "show corr")
+        box_plot = st.checkbox("Box plot", key = "show box")
         violin_plot = st.checkbox("Violin plot", key = "show violin")
         full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
     
@@ -669,7 +735,7 @@ with tab1:
             # for col in columns:
             #     if df[col].dtype == np.float64 or df[col].dtype == np.int64:
             #         options.append(col)
-            selected_col = st.selectbox("Choose a column", numeric_cols)
+            selected_col = st.selectbox("Choose a column", numeric_cols, key = "histogram")
             if selected_col:
                 plt = plot_numeric(df, selected_col)
                 st.pyplot(plt)
@@ -692,6 +758,30 @@ with tab1:
             st.info("Correlation heatmap")
             plt = plot_corr(df)
             st.pyplot(plt)
+            with st.expander("What is a correlation heatmap?"):
+                st.write("""A correlation heatmap is a graphical representation of the correlation matrix, which is a table showing correlation coefficients between sets of variables. Each cell in the table shows the correlation between two variables. In the heatmap, correlation coefficients are color-coded, where the intensity of the color represents the magnitude of the correlation coefficient. 
+
+In your demo dataset heatmap, red signifies a high positive correlation of 1.0, which means the variables move in the same direction. If one variable increases, the other variable also increases. Darker blue, at the other end, represents negative correlation (close to -0.06 in your case), meaning the variables move in opposite directions. If one variable increases, the other variable decreases. 
+
+The correlation values appear in each square, giving a precise numeric correlation coefficient along with the visualized color intensity.
+
+**Why are correlation heatmaps useful?**
+
+Correlation heatmaps are useful to determine the relationship between different variables. In the field of medicine, this can help identify risk factors for diseases, where variables could be different health indicators like age, cholesterol level, blood pressure, etc.
+
+**Understanding correlation values:**
+
+Correlation coefficients range from -1 to 1:
+- A correlation of 1 means a perfect positive correlation.
+- A correlation of -1 means a perfect negative correlation.
+- A correlation of 0 means there is no linear relationship between the variables.
+
+It's important to note that correlation doesn't imply causation. While a correlation can suggest a relationship between two variables, it doesn't mean that changes in one variable cause changes in another.
+
+Also, remember that correlation heatmaps are based on linear relationships between variables. If variables have a non-linear relationship, the correlation coefficient may not capture their relationship accurately.
+
+For medical students, think of correlation heatmaps as a quick way to visually identify relationships between multiple variables at once. This can help guide your understanding of which variables may be important to consider together in further analyses.""")
+                
 
         if summary_cat:
             st.info("Summary of categorical data")
@@ -768,7 +858,23 @@ with tab1:
                 st.write("The current filter settings result in an empty dataset. Please adjust the filter settings.")
             else:
                     create_scatterplot(df, scatter_x, scatter_y)
-                    
+        
+        if box_plot:
+            # Call the function to get the lists of numerical and categorical columns
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
+            # Filter numeric columns
+            # numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            numeric_cols.sort()  # sort the list of columns
+
+            # Filter categorical columns
+            # categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
+            categorical_cols.sort()  # sort the list of columns
+
+            # Dropdown to select columns to visualize
+            numeric_col = st.selectbox('Select a numerical column:', numeric_cols, key = "box_numeric")
+            categorical_col = st.selectbox('Select a categorical column:', categorical_cols, key = "box_category")  
+            create_boxplot(df, numeric_col, categorical_col, show_points=False)          
+        
         if violin_plot:
             
             # Call the function to get the lists of numerical and categorical columns
@@ -782,8 +888,8 @@ with tab1:
             categorical_cols.sort()  # sort the list of columns
 
             # Dropdown to select columns to visualize
-            numeric_col = st.selectbox('Select a numerical column:', numeric_cols)
-            categorical_col = st.selectbox('Select a categorical column:', categorical_cols)
+            numeric_col = st.selectbox('Select a numerical column:', numeric_cols, key = "violin_numeric")
+            categorical_col = st.selectbox('Select a categorical column:', categorical_cols, key = "violin_category")
 
             create_violinplot(df, numeric_col, categorical_col)
             
