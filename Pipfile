@@ -17,6 +17,8 @@ bardapi = "*"
 openai = "*"
 streamlit-chat = "*"
 importlib-resources = "*"
+scipy = "*"
+tableone = "*"
 
 [dev-packages]
 

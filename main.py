@@ -10,7 +10,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from statsmodels.imputation import mice
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve, roc_auc_score, average_precision_score, precision_recall_curve, auc, f1_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.tree import DecisionTreeClassifier
@@ -21,6 +22,8 @@ from sklearn import svm
 # import bardapi
 # from bardapi import Bard
 import openai
+from tableone import TableOne
+from scipy import stats
 from streamlit_chat import message
 import os
 
@@ -194,13 +197,53 @@ def start_chatbot2():
             message(user_input, is_user=True, key = "using message")
             message(msg.content, key = "last message")
                     
+def generate_table(df, categorical_variable):
+    mytable = TableOne(df,
+                       columns=df.columns.tolist(),
+                       categorical=categorical,
+                       groupby=categorical_variable, 
+                       pval=True)
+    return mytable
+
+
     
+def preprocess_for_pca(df):
+    included_cols = []
+    excluded_cols = []
 
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            if len(df[col].unique()) == 2:
+                most_freq = df[col].value_counts().idxmax()
+                least_freq = df[col].value_counts().idxmin()
+                df[col] = df[col].map({most_freq: 0, least_freq: 1})
+                included_cols.append(col)
+            else:
+                excluded_cols.append(col)
+        else:
+            included_cols.append(col)
 
-# def generate_response(helper_question):
-#     response = chatbot.ask(helper_prefix + helper_question)
-#     # You can use the OpenAI API or any other method to generate the response
-#     return response
+    return df[included_cols], included_cols, excluded_cols
+
+def perform_pca_plot(df):
+    st.write("Note: For this PCA analysis, categorical columns with more than 2 categories have been excluded. Binary variables have been converted to 0 and 1.")
+    
+    df, included_cols, excluded_cols = preprocess_for_pca(df)
+    
+    # Standardize the features
+    x = StandardScaler().fit_transform(df)
+    
+    # Create a PCA instance
+    pca = PCA(n_components=2)
+    principalComponents = pca.fit_transform(x)
+    
+    # Create DataFrame for the principal components
+    principalDf = pd.DataFrame(data=principalComponents, columns = ['PC1', 'PC2'])
+    
+    fig, ax = plt.subplots()
+    sns.scatterplot(data=principalDf, x='PC1', y='PC2', ax=ax)
+    
+    st.pyplot(fig)
 
 def display_metrics(y_true, y_pred, y_scores):
     # Compute metrics
@@ -683,6 +726,7 @@ with tab1:
         header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
         summary = st.checkbox("Summary (numerical data)", key = "show data")
         summary_cat = st.checkbox("Summary (categorical data)", key = "show summary cat")
+        show_table = st.checkbox("Create a Table 1", key = "show table")
         show_scatter  = st.checkbox("Scatterplot", key = "show scatter")
         view_full_df = st.checkbox("View Dataset", key = "view full df")
     with col2:
@@ -692,6 +736,7 @@ with tab1:
         show_corr = st.checkbox("Correlation heatmap", key = "show corr")
         box_plot = st.checkbox("Box plot", key = "show box")
         violin_plot = st.checkbox("Violin plot", key = "show violin")
+        perform_pca = st.checkbox("Perform PCA", key = "show pca")
         full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
     
     
@@ -895,6 +940,37 @@ For medical students, think of correlation heatmaps as a quick way to visually i
             
         if view_full_df:
             st.write(df)
+            
+        if show_table:
+            # Check if any numerical column is binary and add it to categorical list
+            numerical_columns = df.select_dtypes(include=[np.number]).columns.tolist()
+            for col in numerical_columns:
+                if df[col].nunique() == 2:
+                    df[col] = df[col].astype(str)
+
+            categorical = df.select_dtypes(include=[np.object]).columns.tolist()
+
+            # Use Streamlit to create selection box for categorical variable
+            categorical_variable = st.selectbox('Select the categorical variable for grouping:', 
+                                                options=categorical)
+            table = generate_table(df, categorical_variable)
+            st.write(table.tabulate(tablefmt = "github"))
+            
+        if perform_pca:
+                # Create PCA plot
+            perform_pca_plot(df)
+            with st.expander("What is PCA?"):
+                st.write("""Principal Component Analysis, or PCA, is a method used to highlight important information in datasets that have many variables and to bring out strong patterns in a dataset. It's a way of identifying underlying structure in data.
+
+Here's an analogy that might make it more understandable: Imagine a swarm of bees flying around in a three-dimensional space: up/down, left/right, and forward/backward. These are our original variables. Now, imagine you want to take a picture of this swarm that captures as much information as possible, but your camera can only take pictures in two dimensions. You can rotate your camera in any direction, but once you take a picture, you'll lose the third dimension. 
+
+PCA helps us choose the best angle to take this picture. The first principal component (PC1) represents the best angle that captures the most variation in the swarm. The second principal component (PC2) is the best angle perpendicular to the first that captures the remaining variation, and so on. The idea is to minimize the information (variance) lost when we reduce dimensionality (like going from a 3D swarm to a 2D picture).
+
+In a medical context, you might have data from thousands of genes or hundreds of physical and behavioral characteristics. Not all of these variables are independent, and many of them tend to change together. PCA allows us to represent the data in fewer dimensions that capture the most important variability in the dataset. 
+
+Each Principal Component represents a combination of original features (like genes or patient characteristics) and can often be interpreted in terms of those features. For example, a PC might represent a combination of patient's age, blood pressure, and cholesterol level. The coefficients of the features in the PC (the "loadings") tell us how much each feature contributes to that PC.
+
+Finally, PCA can be particularly useful in visualizing high-dimensional data. By focusing on the first two or three principal components, we can create a scatterplot of our data, potentially highlighting clusters or outliers. However, remember that this visualization doesn't capture all the variability in the data—only the variability best captured by the first few principal components.""")
 
 with tab2:
     st.info("""N.B. This merely shows a glimpse of what is possible. Any model shown is not yet optimized and requires ML and domain level expertise.
