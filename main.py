@@ -25,6 +25,8 @@ import openai
 from tableone import TableOne
 from scipy import stats
 from streamlit_chat import message
+import random
+from random import randint
 import os
 
 
@@ -115,7 +117,7 @@ def start_chatbot2():
         # openai_api_key = st.text_input('OpenAI API Key',key='chatbot_api_key')
         prefix_teacher = """You are an expert on data science, statistics, and medicine and only answer questions from these domains. 
         You explain step by step to help students at all levels. You are posted on a website next to an interactive tool that has a preloaded demo set of data and a button to upload their own CSV file. The 
-        tool can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for the sample dataset. Question:         
+        tool can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for the sample dataset.         
         """
         st.write("💬 Chatbot Teacher")
         
@@ -151,16 +153,18 @@ def start_chatbot2():
             b.form_submit_button("Send", use_container_width=True)
 
         for msg in st.session_state.messages:
-            message(msg["content"], is_user=msg["role"] == "user", key = "message key: " + msg["content"])
+            a = randint(0, 10000000000)
+            message(msg["content"], is_user=msg["role"] == "user", key = a)
 
         # if user_input and not openai_api_key:
         #     st.info("Please add your OpenAI API key to continue.")
             
         if user_input:
+            st.session_state.messages.append({"role": "system", "content": prefix_teacher})
             st.session_state.messages.append({"role": "user", "content": user_input})
             try:
                 #Make your OpenAI API request here
-                response = openai.Completion.create(model="text-davinci-003",                     
+                response = openai.Completion.create(model="gpt-3.5-turbo",                     
                             prompt="Hello world")['choices'][0]['text']
             except openai.error.Timeout as e:
                 #Handle timeout error, e.g. retry or log
