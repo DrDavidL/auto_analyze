@@ -115,9 +115,9 @@ def start_chatbot2():
     
     with st.sidebar:
         # openai_api_key = st.text_input('OpenAI API Key',key='chatbot_api_key')
-        prefix_teacher = """You answer questions as a focused expert on data science, statistics, and medicine. You politely decline to answer questions outside these domains. 
-        You explain cncepts help students at all levels. You are posted on a website next to an interactive tool that has a preloaded demo set of data and a button to upload their own CSV file. The 
-        tool can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for the sample dataset.         
+        prefix_teacher = """You politely decline to answer questions outside the domains of data science, statistics, and medicine. 
+        If the question is appropriate, you teach for students at all levels. Your response appears next to a web  
+        tool that can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for  sample datasets or a user supplied CSV file.         
         """
         st.write("💬 Chatbot Teacher")
         
@@ -140,6 +140,9 @@ def start_chatbot2():
             
         if "messages" not in st.session_state:
             st.session_state["messages"] = [
+                # {"role": "system", "content": prefix_teacher},
+                # {"role": "user", "content": "Who won the world series in 2020?"},
+                # {"role": "assistant", "content": "I'm sorry, that is outside my expertise in data science and medicine."},
                 {"role": "assistant", "content": "Hi! Ask me anything about data science and I'll try to answer it."}
                 ]
 
@@ -166,6 +169,8 @@ def start_chatbot2():
                 #Make your OpenAI API request here
                 # response = openai.Completion.create(model="gpt-3.5-turbo",                     
                 #             prompt="Hello world")['choices'][0]['text']
+                # system_set = {"role": "system", "content": prefix_teacher}
+                # prefixed_message = prefix_teacher + st.session_state.messages
                 response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
             except openai.error.Timeout as e:
                 #Handle timeout error, e.g. retry or log
