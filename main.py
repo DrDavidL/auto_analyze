@@ -174,7 +174,7 @@ def start_chatbot2():
                 response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
             except openai.error.Timeout as e:
                 #Handle timeout error, e.g. retry or log
-                print(f"OpenAI API request timed out: {e}")
+                print(f"I'm super busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
                 pass
             except openai.error.APIError as e:
                 #Handle API error, e.g. retry or log
@@ -198,7 +198,7 @@ def start_chatbot2():
                 pass
             except openai.error.RateLimitError as e:
                 #Handle rate limit error, e.g. wait or log
-                print(f"OpenAI API request exceeded rate limit: {e}")
+                print(f"I'm so busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
                 pass
 
             # response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
