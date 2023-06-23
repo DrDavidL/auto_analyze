@@ -147,7 +147,7 @@ def start_chatbot3(df):
                 else:
                     st.error("Invalid API key. Please enter a valid API key.")
         st.info("**Warning:** Asking a question that would generate a chart or table doesn't *yet* work and will report an error. For the moment, just ask for values. This is a work in progress!")
-        csv_question = st.text_input("Your question, e.g., 'What is the mean age?'", "")
+        csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?'", "")
         if st.button("Send"):
             st.session_state.messages_df.append({"role": "user", "content": csv_question})
             output = agent.run(csv_question)
