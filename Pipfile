@@ -19,6 +19,7 @@ streamlit-chat = "*"
 importlib-resources = "*"
 scipy = "*"
 tableone = "*"
+langchain = "*"
 
 [dev-packages]
 

@@ -1,4 +1,5 @@
 import numpy as np
+import langchain
 import pandas as pd
 from ydata_profiling import ProfileReport
 import streamlit as st
@@ -18,6 +19,12 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn import svm
+from langchain.agents import create_pandas_dataframe_agent
+from langchain.chat_models import ChatOpenAI
+from langchain.agents.agent_types import AgentType
+from langchain.llms import OpenAI
+
+
 # import asyncio
 # import bardapi
 # from bardapi import Bard
@@ -110,6 +117,46 @@ def check_password():
         # Password correct.
         return True
 
+ 
+def start_chatbot3(df):
+    agent = create_pandas_dataframe_agent(
+    ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
+    df,
+    verbose=True,
+    agent_type=AgentType.OPENAI_FUNCTIONS,
+    )
+    if "messages_df" not in st.session_state:
+            st.session_state["messages_df"] = []
+    with st.sidebar:
+       
+        st.write("💬 Chatbot with access to your data...")
+        
+            # Check if the API key exists as an environmental variable
+        api_key = os.environ.get("OPENAI_API_KEY")
+
+        if api_key:
+            st.write("*API key active - ready to respond!*")
+        else:
+            st.warning("API key not found as an environmental variable.")
+            api_key = st.text_input("Enter your OpenAI API key:")
+
+            if st.button("Save"):
+                if is_valid_api_key(api_key):
+                    os.environ["OPENAI_API_KEY"] = api_key
+                    st.success("API key saved as an environmental variable!")
+                else:
+                    st.error("Invalid API key. Please enter a valid API key.")
+        
+        csv_question = st.text_input("Your question, e.g., 'What is the mean age?'", "")
+        if st.button("Send"):
+            st.session_state.messages_df.append({"role": "user", "content": csv_question})
+            output = agent.run(csv_question)
+            st.session_state.messages_df.append({"role": "assistant", "content": output})    
+            message(csv_question, is_user=True, key = "using message_df")
+            message(output)
+            
+
+    
                 
 def start_chatbot2():
     
@@ -628,12 +675,44 @@ def summarize_categorical(df):
 
 # Function to plot correlation heatmap
  
+# def plot_corr(df_copy):
+#     df = df_copy.copy()
+#     binary_cat_cols = []
+#     for col in df.columns:
+#         if df[col].dtype == 'object':  # Check if the column is of type object (categorical)
+#             unique_vals = df[col].unique()
+#             if len(unique_vals) == 2:  # If the categorical variable has exactly 2 unique values
+#                 df[col] = df[col].map({np.argmax(df[col].value_counts()): 0, np.argmin(df[col].value_counts()): 1})
+#                 binary_cat_cols.append(col)
+            
+#     # Removing columns with more than two unique values after above transformation.
+#     df = df.select_dtypes(include=[np.number])
+    
+#     corr = df.corr()  # Compute pairwise correlation of columns
+#     plt.figure(figsize=(12, 10))  # set the size of the plot
+#     sns.heatmap(corr, annot=True, cmap='coolwarm', cbar=True)
+#     plt.title('Correlation Heatmap')
+#     return plt
+
 def plot_corr(df):
-    corr = df.corr()  # Compute pairwise correlation of columns
-    plt.figure(figsize=(12, 10))  # set the size of the plot
+    df_copy = df.copy()
+
+    for col in df_copy.columns:
+        if df_copy[col].dtype == 'object':  # Check if the column is categorical
+            unique_vals = df_copy[col].unique()
+            if len(unique_vals) == 2:  # If the categorical variable has exactly 2 unique values
+                value_counts = df_copy[col].value_counts()
+                df_copy[col] = df_copy[col].map({value_counts.idxmax(): 0, value_counts.idxmin(): 1})
+
+    # Keep only numerical and binary categorical columns
+    df_copy = df_copy.select_dtypes(include=[np.number])
+    
+    corr = df_copy.corr()  # Compute pairwise correlation of columns
+    plt.figure(figsize=(12, 10))  # Set the size of the plot
     sns.heatmap(corr, annot=True, cmap='coolwarm', cbar=True)
     plt.title('Correlation Heatmap')
     return plt
+
 
 
 def make_profile(df):
@@ -732,6 +811,8 @@ with tab1:
     col1, col2 = st.columns(2)
     with col1:
         activate_chatbot = st.checkbox("Activate Chatbot Teacher", key = "activate chatbot")
+        if activate_chatbot:
+            chat_context = st.sidebar.radio("Choose an approach", ("Teach about data science", "Give ChatGPT access to the data"))
         check_preprocess = st.checkbox("Assess need to preprocess data", key = "Preprocess needed")
         header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
         summary = st.checkbox("Summary (numerical data)", key = "show data")
@@ -761,7 +842,10 @@ with tab1:
         
         if activate_chatbot:
             if check_password():
-                start_chatbot2()
+                if chat_context == "Teach about data science":
+                    start_chatbot2()
+                if chat_context == "Give ChatGPT access to the data":
+                    start_chatbot3(df)
             # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
 
         
