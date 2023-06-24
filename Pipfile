@@ -20,6 +20,9 @@ importlib-resources = "*"
 scipy = "*"
 tableone = "*"
 langchain = "*"
+kaleido = "*"
+beautifulsoup4 = "*"
+pillow = "*"
 
 [dev-packages]
 

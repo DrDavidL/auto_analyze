@@ -1,5 +1,5 @@
 import numpy as np
-import langchain
+# import langchain
 import pandas as pd
 from ydata_profiling import ProfileReport
 import streamlit as st
@@ -23,6 +23,13 @@ from langchain.agents import create_pandas_dataframe_agent
 from langchain.chat_models import ChatOpenAI
 from langchain.agents.agent_types import AgentType
 from langchain.llms import OpenAI
+import json
+import plotly.io as pio
+from bs4 import BeautifulSoup
+from PIL import Image
+
+
+
 
 
 # import asyncio
@@ -117,8 +124,58 @@ def check_password():
         # Password correct.
         return True
 
- 
-def start_chatbot3(df):
+csv_prefix ="""You are an agent optimally designed for answering questions about a dataframe. 
+If anwering a query requires drawing a table, chart, or generating any other figure, never attempt 
+to draw the figure. Instead, return the Python code as a string. The following are already imported so 
+do not include any import statements in your code:
+- plotly.figure_factory as ff
+- matplotlib.pyplot as plt
+- seaborn as sns
+
+Please format the response such that it includes:
+
+1. Code to interpret the user's question and select the appropriate visualization.
+2. Code to generate the visualization using plotly as ff, matplotlib.pyplot as plt, or seaborn as sns. 
+3. Return statement that outputs the Python code as a string.
+
+Remember to structure the code such that it is properly indented and formatted according to PEP8 guidelines.
+
+            """
+
+
+def process_model_output(output):
+    # Convert JSON to string if necessary
+    if isinstance(output, dict):
+        output = json.dumps(output)
+
+    start_marker = '```python\n'
+    end_marker = '\n```'
+
+    start_index = output.find(start_marker)
+    end_index = output.find(end_marker, start_index)
+
+    # If the markers are found, extract the code part
+    # Adjust the start index to not include the start_marker
+    if start_index != -1 and end_index != -1:
+        code_string = output[start_index + len(start_marker) : end_index]
+    else:
+        code_string = ''
+
+    return code_string.strip()
+
+
+def replace_show_with_save(code_string, filename='output.png'):
+    # Prepare save command
+    save_cmd1 = f"plt.savefig('./images/{filename}')"
+    save_cmd2 = f"pio.write_image(fig, './images/{filename}')"
+
+    # Replace plt.show() with plt.savefig()
+    code_string = code_string.replace('plt.show()', save_cmd1)
+    code_string = code_string.replace('fig.show()', save_cmd2)
+
+    return code_string
+
+def start_chatbot2(df):
     agent = create_pandas_dataframe_agent(
     ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
     df,
@@ -156,9 +213,62 @@ def start_chatbot3(df):
             message(output)
             
 
+ 
+def start_chatbot3(df):
+    agent = create_pandas_dataframe_agent(
+    ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
+    df,
+    verbose=True,
+    agent_type=AgentType.OPENAI_FUNCTIONS,
+    )
+    if "messages_df" not in st.session_state:
+            st.session_state["messages_df"] = []
+    with st.sidebar:
+       
+        st.write("💬 Chatbot with access to your data...")
+        
+            # Check if the API key exists as an environmental variable
+        api_key = os.environ.get("OPENAI_API_KEY")
+
+        if api_key:
+            st.write("*API key active - ready to respond!*")
+        else:
+            st.warning("API key not found as an environmental variable.")
+            api_key = st.text_input("Enter your OpenAI API key:")
+
+            if st.button("Save"):
+                if is_valid_api_key(api_key):
+                    os.environ["OPENAI_API_KEY"] = api_key
+                    st.success("API key saved as an environmental variable!")
+                else:
+                    st.error("Invalid API key. Please enter a valid API key.")
+        st.info("**Warning:** This will often generate an error. This is a work in progress!")
+        csv_question = st.text_input("Your question, e.g., 'Create a scatterplot for age and BMI.'", "")
+        if st.button("Send"):
+            st.session_state.messages_df.append({"role": "user", "content": csv_question})
+            csv_input = csv_prefix + csv_question
+            output = agent.run(csv_input)
+            # st.write(output)
+            code_string = process_model_output(str(output))
+            # st.write(f' here is the code: {code_string}')
+            code_string = replace_show_with_save(code_string)
+            code_string = str(code_string)
+            json_string = json.dumps(code_string)
+            decoded_string = json.loads(json_string)
+            with st.expander("What is the code?"):
+                st.write('Here is the custom code for your request and the image below:')
+                st.code(decoded_string, language='python')
+            exec(decoded_string)
+            image = Image.open('./images/output.png')
+            st.image(image, caption='Output', use_column_width=True)
+                # st.session_state.messages_df.append({"role": "assistant", "content": output})    
+                # message(csv_question, is_user=True, key = "using message_df")
+                # message(output)
+            
+
     
                 
-def start_chatbot2():
+def start_chatbot1():
     
     with st.sidebar:
         # openai_api_key = st.text_input('OpenAI API Key',key='chatbot_api_key')
@@ -812,7 +922,7 @@ with tab1:
     with col1:
         activate_chatbot = st.checkbox("Activate Chatbot Teacher", key = "activate chatbot")
         if activate_chatbot:
-            chat_context = st.sidebar.radio("Choose an approach", ("Teach about data science", "Give ChatGPT access to the data"))
+            chat_context = st.sidebar.radio("Choose an approach", ("Teach about data science", "Ask questions (no charts)", "**EXPERIMENTAL:** Ask for a chart!"))
         check_preprocess = st.checkbox("Assess need to preprocess data", key = "Preprocess needed")
         header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
         summary = st.checkbox("Summary (numerical data)", key = "show data")
@@ -843,8 +953,10 @@ with tab1:
         if activate_chatbot:
             if check_password():
                 if chat_context == "Teach about data science":
-                    start_chatbot2()
-                if chat_context == "Give ChatGPT access to the data":
+                    start_chatbot1()
+                if chat_context == "Ask questions (no charts)":
+                    start_chatbot2(df)
+                if chat_context == "**EXPERIMENTAL:** Ask for a chart!":
                     start_chatbot3(df)
             # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
 
