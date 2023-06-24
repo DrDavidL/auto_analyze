@@ -126,17 +126,17 @@ def check_password():
 
 csv_prefix ="""You are an agent optimally designed for answering questions about a dataframe. 
 If anwering a query requires drawing a table, chart, or generating any other figure, never attempt 
-to draw the figure. Instead, return the Python code as a string. The following are already imported so 
+to draw the figure. Instead, return the Python code as a string. Do not return JSON. The following are already imported so 
 do not include any import statements in your code:
 - plotly.figure_factory as ff
 - matplotlib.pyplot as plt
 - seaborn as sns
 
-Please format the response such that it includes:
+Please format the string response (not JSON) such that it includes:
 
 1. Code to interpret the user's question and select the appropriate visualization.
 2. Code to generate the visualization using plotly as ff, matplotlib.pyplot as plt, or seaborn as sns. 
-3. Return statement that outputs the Python code as a string.
+3. Do not return JSON. The response should include the Python code as a string.
 
 Remember to structure the code such that it is properly indented and formatted according to PEP8 guidelines.
 
@@ -147,6 +147,12 @@ def process_model_output(output):
     # Convert JSON to string if necessary
     if isinstance(output, dict):
         output = json.dumps(output)
+        
+    # if isinstance(output, str):
+    #     output = json.loads(output)
+        
+    if 'arguments' in output:
+        output = output['arguments']
 
     start_marker = '```python\n'
     end_marker = '\n```'
@@ -162,6 +168,19 @@ def process_model_output(output):
         code_string = ''
 
     return code_string.strip()
+
+def safety_check(code):
+    dangerous_keywords = [' exec', ' eval', ' open', ' sys', ' subprocess', ' del',
+                          ' delete', ' remove', ' os', ' shutil', ' pip',' conda',
+                          ' print', ' exit', ' quit', ' globals', ' locals', ' dir',
+                          ' reload', ' lambda', ' setattr', ' getattr', ' delattr',
+                          ' yield', ' assert', ' break', ' continue', ' raise', ' try', 
+                          'compile', '__import__'
+                          ]
+    for keyword in dangerous_keywords:
+        if keyword in code:
+            return False, "Concerning code detected."
+    return True, "Safe to execute."
 
 
 def replace_show_with_save(code_string, filename='output.png'):
@@ -242,7 +261,10 @@ def start_chatbot3(df):
                     st.success("API key saved as an environmental variable!")
                 else:
                     st.error("Invalid API key. Please enter a valid API key.")
-        st.info("**Warning:** This will often generate an error. This is a work in progress!")
+        st.info("""**Warning:** This will often generate an error. This is a work in progress!
+                Multiple steps are required to generate a chart or table so this may take a minute.
+                If you get an error, try again. Use the format of the sample request.                
+                """)
         csv_question = st.text_input("Your question, e.g., 'Create a scatterplot for age and BMI.'", "")
         if st.button("Send"):
             st.session_state.messages_df.append({"role": "user", "content": csv_question})
@@ -258,9 +280,18 @@ def start_chatbot3(df):
             with st.expander("What is the code?"):
                 st.write('Here is the custom code for your request and the image below:')
                 st.code(decoded_string, language='python')
-            exec(decoded_string)
-            image = Image.open('./images/output.png')
-            st.image(image, caption='Output', use_column_width=True)
+            # usage
+            is_safe, message = safety_check(decoded_string)
+            if not is_safe:
+                st.write("Code safety concern. Try again.", message)
+            if is_safe:
+                try:
+                    exec(decoded_string)
+                    image = Image.open('./images/output.png')
+                    st.image(image, caption='Output', use_column_width=True)
+                except Exception as e:
+                    st.write('Error - we noted this was fragile! Try again.', e)
+
                 # st.session_state.messages_df.append({"role": "assistant", "content": output})    
                 # message(csv_question, is_user=True, key = "using message_df")
                 # message(output)
