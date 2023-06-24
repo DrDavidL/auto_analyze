@@ -262,7 +262,7 @@ def start_chatbot3(df):
                 else:
                     st.error("Invalid API key. Please enter a valid API key.")
         st.info("""**Warning:** This will often generate an error. This is a work in progress!
-                Multiple steps are required to generate a chart or table so this may take a minute.
+                Multiple steps are required to generate a plot so this may take a minute.
                 If you get an error, try again. Use the format of the sample request.                
                 """)
         csv_question = st.text_input("Your question, e.g., 'Create a scatterplot for age and BMI.'", "")
@@ -953,7 +953,7 @@ with tab1:
     with col1:
         activate_chatbot = st.checkbox("Activate Chatbot Teacher", key = "activate chatbot")
         if activate_chatbot:
-            chat_context = st.sidebar.radio("Choose an approach", ("Teach about data science", "Ask questions (no charts)", "**EXPERIMENTAL:** Ask for a chart!"))
+            chat_context = st.sidebar.radio("Choose an approach", ("Teach about data science", "Ask questions (no plots)", "EXPERIMENTAL: Ask for a plot!"))
         check_preprocess = st.checkbox("Assess need to preprocess data", key = "Preprocess needed")
         header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
         summary = st.checkbox("Summary (numerical data)", key = "show data")
@@ -985,9 +985,9 @@ with tab1:
             if check_password():
                 if chat_context == "Teach about data science":
                     start_chatbot1()
-                if chat_context == "Ask questions (no charts)":
+                if chat_context == "Ask questions (no plots)":
                     start_chatbot2(df)
-                if chat_context == "**EXPERIMENTAL:** Ask for a chart!":
+                if chat_context == "EXPERIMENTAL: Ask for a plot!":
                     start_chatbot3(df)
             # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
 
