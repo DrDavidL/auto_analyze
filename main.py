@@ -461,7 +461,7 @@ def preprocess_for_pca(df):
             else:
                 excluded_cols.append(col)
         else:
-            included_cols.append(col)
+            included_cols.append(col)     
 
     return df[included_cols], included_cols, excluded_cols
 
@@ -782,7 +782,8 @@ def replace_missing_values(df, method):
         df[cat_cols] = df[cat_cols].fillna(df[cat_cols].mode().iloc[0])
     elif method == 'mice':
         imp = mice.MICEData(df[num_cols])  # only apply to numerical columns
-        df[num_cols] = imp.data
+        df[num_cols] = imp.data   
+    st.session_state.df = df
     return df
 
   # This function will be cached
@@ -964,6 +965,9 @@ with st.expander('About AutoAnalyzer'):
     
 tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
 
+if 'df' not in st.session_state:
+    st.session_state.df = pd.DataFrame()
+
 with tab1:
 
     st.info("""Be sure your data is first in a 'tidy' format. Use the demo dataset below to check out the top 5 rows for an example. (*See https://tidyr.tidyverse.org/ for more information.*)
@@ -975,17 +979,17 @@ with tab1:
     if demo_or_custom == "CSV Upload":
         uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file:
-            df = load_data(uploaded_file)
+            st.session_state.df = load_data(uploaded_file)
 
     if demo_or_custom == 'Demo 1 (diabetes)':
         file_path = "data/predictdm.csv"
         st.write("About Demo 1 dataset: https://data.world/informatics-edu/diabetes-prediction")
-        df = load_data(file_path)
+        st.session_state.df = load_data(file_path)
         
     if demo_or_custom == 'Demo 2 (cancer)':
         file_path = "data/breastcancernew.csv"
         st.write("About Demo 2 dataset: https://data.world/marshalldatasolution/breast-cancer")
-        df = load_data(file_path)
+        st.session_state.df = load_data(file_path)
 
 
 
@@ -994,7 +998,7 @@ with tab1:
         st.info("Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
         method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
         if st.button('Apply the Method to Replace Missing Values'):
-                df = replace_missing_values(df, method)
+                st.session_state.df = replace_missing_values(st.session_state.df, method)
     st.subheader("Step 2: Tools for Analysis")
     
     col1, col2 = st.columns(2)
@@ -1023,7 +1027,7 @@ with tab1:
 
 
     try:
-        x = df
+        x = st.session_state.df
     except NameError:
 
         st.warning("Please upload a CSV file or choose a demo dataset")
@@ -1034,32 +1038,32 @@ with tab1:
                 if chat_context == "Teach about data science":
                     start_chatbot1()
                 if chat_context == "Ask questions (no plots)":
-                    start_chatbot2(df)
+                    start_chatbot2(st.session_state.df)
                 if chat_context == "EXPERIMENTAL: Ask for a plot!":
-                    start_chatbot3(df)
+                    start_chatbot3(st.session_state.df)
             # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
 
         
         if pre_process:
-            df = process_dataframe(df)
+            st.session_state.df = process_dataframe(st.session_state.df)
         
         if summary:
             st.info("Summary of data")
-            st.write(df.describe())
+            st.write(st.session_state.df.describe())
             
         if header:
             st.info("Header of data")
-            st.write(df.head())
+            st.write(st.session_state.df.head())
             
         if full_analysis:
             st.info("Full analysis of data")
-            profile = make_profile(df)
+            profile = make_profile(st.session_state.df)
             # profile = ProfileReport(df, title="Profiling Report")
             st_profile_report(profile)
             
         if histogram: 
             st.info("Histogram of data")
-            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(st.session_state.df)
             # options =[]
             # columns = list(df.columns)
             # for col in columns:
@@ -1067,13 +1071,13 @@ with tab1:
             #         options.append(col)
             selected_col = st.selectbox("Choose a column", numeric_cols, key = "histogram")
             if selected_col:
-                plt = plot_numeric(df, selected_col)
+                plt = plot_numeric(st.session_state.df, selected_col)
                 st.pyplot(plt)
 
         
         if barchart: 
             st.info("Barchart for categorical data")
-            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(st.session_state.df)
             # cat_options =[]
             # columns = list(df.columns)
             # for col in columns:
@@ -1081,12 +1085,12 @@ with tab1:
             #         cat_options.append(col)
             cat_selected_col = st.selectbox("Choose a column", categorical_cols, key = "bar_category")
             if cat_selected_col:
-                plt = plot_categorical(df, cat_selected_col)
+                plt = plot_categorical(st.session_state.df, cat_selected_col)
                 st.pyplot(plt)
 
         if show_corr:
             st.info("Correlation heatmap")
-            plt = plot_corr(df)
+            plt = plot_corr(st.session_state.df)
             st.pyplot(plt)
             with st.expander("What is a correlation heatmap?"):
                 st.write("""A correlation heatmap is a graphical representation of the correlation matrix, which is a table showing correlation coefficients between sets of variables. Each cell in the table shows the correlation between two variables. In the heatmap, correlation coefficients are color-coded, where the intensity of the color represents the magnitude of the correlation coefficient. 
@@ -1115,12 +1119,12 @@ For medical students, think of correlation heatmaps as a quick way to visually i
 
         if summary_cat:
             st.info("Summary of categorical data")
-            summary = summarize_categorical(df)
+            summary = summarize_categorical(st.session_state.df)
             st.write(summary)
             
         if piechart:
             st.info("Pie chart for categorical data")
-            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(st.session_state.df)
             # cat_options =[]
             # columns = list(df.columns)
             # for col in columns:
@@ -1128,11 +1132,11 @@ For medical students, think of correlation heatmaps as a quick way to visually i
             #         cat_options.append(col)
             cat_selected_col = st.selectbox("Choose a column", categorical_cols, key = "pie_category")
             if cat_selected_col:
-                plt = plot_pie(df, cat_selected_col)
+                plt = plot_pie(st.session_state.df, cat_selected_col)
                 st.pyplot(plt)
                 
         if check_preprocess:
-            readiness_summary = assess_data_readiness(df)
+            readiness_summary = assess_data_readiness(st.session_state.df)
             # Display the readiness summary using Streamlit
             # Display the readiness summary using Streamlit
             st.subheader("Data Readiness Summary")
@@ -1184,7 +1188,7 @@ For medical students, think of correlation heatmaps as a quick way to visually i
             
         if show_scatter:
             st.info("Scatterplot")
-            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(st.session_state.df)
             # Filter numeric columns
             # numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
             numeric_cols.sort()  # sort the list of columns alphabetically
@@ -1206,29 +1210,29 @@ For medical students, think of correlation heatmaps as a quick way to visually i
                 if remaining_cols:
                     filter_col = st.selectbox('Select a numerical column to filter data:', remaining_cols)
                     if filter_col:
-                        min_val, max_val = float(df[filter_col].min()), float(df[filter_col].max())
+                        min_val, max_val = float(st.session_state.df[filter_col].min()), float(st.session_state.df[filter_col].max())
                         if np.isnan(min_val) or np.isnan(max_val):
                             st.write(f"Cannot filter by {filter_col} because it contains NaN values.")
                         else:
                             filter_range = st.slider('Select a range to filter data:', min_val, max_val, (min_val, max_val))
-                            df = df[(df[filter_col] >= filter_range[0]) & (df[filter_col] <= filter_range[1])]
+                            st.session_state.df = st.session_state.df[(st.session_state.df[filter_col] >= filter_range[0]) & (st.session_state.df[filter_col] <= filter_range[1])]
 
                 # Filter for the remaining categorical column
                 if categorical_cols:
                     filter_cat_col = st.selectbox('Select a categorical column to filter data:', categorical_cols)
                     if filter_cat_col:
-                        categories = df[filter_cat_col].unique().tolist()
+                        categories = st.session_state.df[filter_cat_col].unique().tolist()
                         selected_categories = st.multiselect('Select categories to include in the data:', categories, default=categories)
-                        df = df[df[filter_cat_col].isin(selected_categories)]
+                        st.session_state.df = st.session_state.df[st.session_state.df[filter_cat_col].isin(selected_categories)]
             # Check if DataFrame is empty before creating scatterplot
-            if df.empty:
+            if st.session_state.df.empty:
                 st.write("The current filter settings result in an empty dataset. Please adjust the filter settings.")
             else:
-                    create_scatterplot(df, scatter_x, scatter_y)
+                    create_scatterplot(st.session_state.df, scatter_x, scatter_y)
         
         if box_plot:
             # Call the function to get the lists of numerical and categorical columns
-            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(st.session_state.df)
             # Filter numeric columns
             # numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
             numeric_cols.sort()  # sort the list of columns
@@ -1240,12 +1244,12 @@ For medical students, think of correlation heatmaps as a quick way to visually i
             # Dropdown to select columns to visualize
             numeric_col = st.selectbox('Select a numerical column:', numeric_cols, key = "box_numeric")
             categorical_col = st.selectbox('Select a categorical column:', categorical_cols, key = "box_category")  
-            create_boxplot(df, numeric_col, categorical_col, show_points=False)          
+            create_boxplot(st.session_state.df, numeric_col, categorical_col, show_points=False)          
         
         if violin_plot:
             
             # Call the function to get the lists of numerical and categorical columns
-            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(st.session_state.df)
             # Filter numeric columns
             # numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
             numeric_cols.sort()  # sort the list of columns
@@ -1258,29 +1262,29 @@ For medical students, think of correlation heatmaps as a quick way to visually i
             numeric_col = st.selectbox('Select a numerical column:', numeric_cols, key = "violin_numeric")
             categorical_col = st.selectbox('Select a categorical column:', categorical_cols, key = "violin_category")
 
-            create_violinplot(df, numeric_col, categorical_col)
+            create_violinplot(st.session_state.df, numeric_col, categorical_col)
             
         if view_full_df:
-            st.write(df)
+            st.dataframe(st.session_state.df)
             
         if show_table:
             # Check if any numerical column is binary and add it to categorical list
-            numerical_columns = df.select_dtypes(include=[np.number]).columns.tolist()
+            numerical_columns = st.session_state.df.select_dtypes(include=[np.number]).columns.tolist()
             for col in numerical_columns:
-                if df[col].nunique() == 2:
-                    df[col] = df[col].astype(str)
+                if st.session_state.df[col].nunique() == 2:
+                    st.session_state.df[col] = st.session_state.df[col].astype(str)
 
-            categorical = df.select_dtypes(include=[np.object]).columns.tolist()
+            categorical = st.session_state.df.select_dtypes(include=[np.object]).columns.tolist()
 
             # Use Streamlit to create selection box for categorical variable
             categorical_variable = st.selectbox('Select the categorical variable for grouping:', 
                                                 options=categorical)
-            table = generate_table(df, categorical_variable)
+            table = generate_table(st.session_state.df, categorical_variable)
             st.write(table.tabulate(tablefmt = "github"))
             
         if perform_pca:
                 # Create PCA plot
-            perform_pca_plot(df)
+            perform_pca_plot(st.session_state.df)
             with st.expander("What is PCA?"):
                 st.write("""Principal Component Analysis, or PCA, is a method used to highlight important information in datasets that have many variables and to bring out strong patterns in a dataset. It's a way of identifying underlying structure in data.
 
@@ -1299,17 +1303,17 @@ with tab2:
             Yet, this is a good start to get a sense of what is possible."""
             )
     try:
-        x = df
+        x = st.session_state.df
     except NameError:
         st.warning("First upload a CSV file or choose a demo dataset from the **Data Exploration** tab")
     else:
 
         # Filter categorical columns and numerical bivariate columns
-        categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
+        categorical_cols = st.session_state.df.select_dtypes(include=[object]).columns.tolist()
 
         # Add bivariate numerical columns
-        numerical_bivariate_cols = [col for col in df.select_dtypes(include=['int64', 'float64']).columns 
-                                    if df[col].nunique() == 2]
+        numerical_bivariate_cols = [col for col in st.session_state.df.select_dtypes(include=['int64', 'float64']).columns 
+                                    if st.session_state.df[col].nunique() == 2]
 
         # Combine the two lists and sort them
         categorical_cols = categorical_cols + numerical_bivariate_cols
@@ -1324,11 +1328,11 @@ with tab2:
         st.subheader("""
         Set Criteria for the Binary Target Class
         """)
-        categories_to_predict = st.multiselect('Select one or more categories but not all. You need 2 options to predict a group, i.e, your target versus the rest.:', df[target_col].unique().tolist())
+        categories_to_predict = st.multiselect('Select one or more categories but not all. You need 2 options to predict a group, i.e, your target versus the rest.:', st.session_state.df[target_col].unique().tolist())
 
         # Preprocess the data and exclude the target column from preprocessing
-        df_processed, included_cols, excluded_cols = preprocess(df.drop(columns=[target_col]), target_col)
-        df_processed[target_col] = df[target_col]  # Include the target column back into the dataframe
+        df_processed, included_cols, excluded_cols = preprocess(st.session_state.df.drop(columns=[target_col]), target_col)
+        df_processed[target_col] = st.session_state.df[target_col]  # Include the target column back into the dataframe
 
         st.write(f"Included columns: {included_cols}")
         st.write(f"Excluded columns: {excluded_cols}")
