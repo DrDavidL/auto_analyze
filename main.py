@@ -108,17 +108,17 @@ def check_password():
 
     if "password_correct" not in st.session_state:
         # First run, show input for password.
-        st.sidebar.text_input(
+        st.text_input(
             "Password", type="password", on_change=password_entered, key="password"
         )
-        st.sidebar.write("*Please contact David Liebovitz, MD if you need an updated password for access.*")
+        st.write("*Please contact David Liebovitz, MD if you need an updated password for access.*")
         return False
     elif not st.session_state["password_correct"]:
         # Password not correct, show input + error.
-        st.sidebar.text_input(
+        st.text_input(
             "Password", type="password", on_change=password_entered, key="password"
         )
-        st.sidebar.error("😕 Password incorrect")
+        st.error("😕 Password incorrect")
         return False
     else:
         # Password correct.
@@ -245,33 +245,33 @@ def start_chatbot2(df):
     )
     if "messages_df" not in st.session_state:
             st.session_state["messages_df"] = []
-    with st.sidebar:
+ 
        
-        st.write("💬 Chatbot with access to your data...")
-        
-            # Check if the API key exists as an environmental variable
-        api_key = os.environ.get("OPENAI_API_KEY")
+    st.write("💬 Chatbot with access to your data...")
+    
+        # Check if the API key exists as an environmental variable
+    api_key = os.environ.get("OPENAI_API_KEY")
 
-        if api_key:
-            st.write("*API key active - ready to respond!*")
-        else:
-            st.warning("API key not found as an environmental variable.")
-            api_key = st.text_input("Enter your OpenAI API key:")
+    if api_key:
+        st.write("*API key active - ready to respond!*")
+    else:
+        st.warning("API key not found as an environmental variable.")
+        api_key = st.text_input("Enter your OpenAI API key:")
 
-            if st.button("Save"):
-                if is_valid_api_key(api_key):
-                    os.environ["OPENAI_API_KEY"] = api_key
-                    st.success("API key saved as an environmental variable!")
-                else:
-                    st.error("Invalid API key. Please enter a valid API key.")
-        st.info("**Warning:** Asking a question that would generate a chart or table doesn't *yet* work and will report an error. For the moment, just ask for values. This is a work in progress!")
-        csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?'", "")
-        if st.button("Send"):
-            st.session_state.messages_df.append({"role": "user", "content": csv_question})
-            output = agent.run(csv_question)
-            st.session_state.messages_df.append({"role": "assistant", "content": output})    
-            message(csv_question, is_user=True, key = "using message_df")
-            message(output)
+        if st.button("Save"):
+            if is_valid_api_key(api_key):
+                os.environ["OPENAI_API_KEY"] = api_key
+                st.success("API key saved as an environmental variable!")
+            else:
+                st.error("Invalid API key. Please enter a valid API key.")
+    st.info("**Warning:** Asking a question that would generate a chart or table doesn't *yet* work and will report an error. For the moment, just ask for values. This is a work in progress!")
+    csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?'", "")
+    if st.button("Send"):
+        st.session_state.messages_df.append({"role": "user", "content": csv_question})
+        output = agent.run(csv_question)
+        st.session_state.messages_df.append({"role": "assistant", "content": output})    
+        message(csv_question, is_user=True, key = "using message_df")
+        message(output)
             
 
  
@@ -284,158 +284,157 @@ def start_chatbot3(df):
     )
     if "messages_df" not in st.session_state:
             st.session_state["messages_df"] = []
-    with st.sidebar:
        
-        st.write("💬 Chatbot with access to your data...")
-        
-            # Check if the API key exists as an environmental variable
-        api_key = os.environ.get("OPENAI_API_KEY")
+    st.write("💬 Chatbot with access to your data...")
+    
+        # Check if the API key exists as an environmental variable
+    api_key = os.environ.get("OPENAI_API_KEY")
 
-        if api_key:
-            st.write("*API key active - ready to respond!*")
-        else:
-            st.warning("API key not found as an environmental variable.")
-            api_key = st.text_input("Enter your OpenAI API key:")
+    if api_key:
+        st.write("*API key active - ready to respond!*")
+    else:
+        st.warning("API key not found as an environmental variable.")
+        api_key = st.text_input("Enter your OpenAI API key:")
 
-            if st.button("Save"):
-                if is_valid_api_key(api_key):
-                    os.environ["OPENAI_API_KEY"] = api_key
-                    st.success("API key saved as an environmental variable!")
-                else:
-                    st.error("Invalid API key. Please enter a valid API key.")
-        st.info("""**Warning:** This will often generate an error. This is a work in progress!
-                Multiple steps are required to generate a plot so this may take a minute.
-                If you get an error, try again. Use the format of the sample request.                
-                """)
-        csv_question = st.text_input("Your question, e.g., 'Create a scatterplot for age and BMI.'", "")
-        if st.button("Send"):
-            st.session_state.messages_df.append({"role": "user", "content": csv_question})
-            csv_input = csv_prefix + csv_question
-            output = agent.run(csv_input)
-            # st.write(output)
-            code_string = process_model_output(str(output))
-            # st.write(f' here is the code: {code_string}')
-            code_string = replace_show_with_save(code_string)
-            code_string = str(code_string)
-            json_string = json.dumps(code_string)
-            decoded_string = json.loads(json_string)
-            with st.expander("What is the code?"):
-                st.write('Here is the custom code for your request and the image below:')
-                st.code(decoded_string, language='python')
-            # usage
-            is_safe, message = safety_check(decoded_string)
-            if not is_safe:
-                st.write("Code safety concern. Try again.", message)
-            if is_safe:
-                try:
-                    exec(decoded_string)
-                    image = Image.open('./images/output.png')
-                    st.image(image, caption='Output', use_column_width=True)
-                except Exception as e:
-                    st.write('Error - we noted this was fragile! Try again.', e)
+        if st.button("Save"):
+            if is_valid_api_key(api_key):
+                os.environ["OPENAI_API_KEY"] = api_key
+                st.success("API key saved as an environmental variable!")
+            else:
+                st.error("Invalid API key. Please enter a valid API key.")
+    st.info("""**Warning:** This will often generate an error. This is a work in progress!
+            Multiple steps are required to generate a plot so this may take a minute.
+            If you get an error, try again. Use the format of the sample request.                
+            """)
+    csv_question = st.text_input("Your question, e.g., 'Create a scatterplot for age and BMI.'", "")
+    if st.button("Send"):
+        st.session_state.messages_df.append({"role": "user", "content": csv_question})
+        csv_input = csv_prefix + csv_question
+        output = agent.run(csv_input)
+        # st.write(output)
+        code_string = process_model_output(str(output))
+        # st.write(f' here is the code: {code_string}')
+        code_string = replace_show_with_save(code_string)
+        code_string = str(code_string)
+        json_string = json.dumps(code_string)
+        decoded_string = json.loads(json_string)
+        with st.expander("What is the code?"):
+            st.write('Here is the custom code for your request and the image below:')
+            st.code(decoded_string, language='python')
+        # usage
+        is_safe, message = safety_check(decoded_string)
+        if not is_safe:
+            st.write("Code safety concern. Try again.", message)
+        if is_safe:
+            try:
+                exec(decoded_string)
+                image = Image.open('./images/output.png')
+                st.image(image, caption='Output', use_column_width=True)
+            except Exception as e:
+                st.write('Error - we noted this was fragile! Try again.', e)
 
-                # st.session_state.messages_df.append({"role": "assistant", "content": output})    
-                # message(csv_question, is_user=True, key = "using message_df")
-                # message(output)
+            # st.session_state.messages_df.append({"role": "assistant", "content": output})    
+            # message(csv_question, is_user=True, key = "using message_df")
+            # message(output)
             
 
     
                 
 def start_chatbot1():
     
-    with st.sidebar:
-        # openai_api_key = st.text_input('OpenAI API Key',key='chatbot_api_key')
-        prefix_teacher = """You politely decline to answer questions outside the domains of data science, statistics, and medicine. 
-        If the question is appropriate, you teach for students at all levels. Your response appears next to a web  
-        tool that can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for  sample datasets or a user supplied CSV file.         
-        """
-        st.write("💬 Chatbot Teacher")
+
+    # openai_api_key = st.text_input('OpenAI API Key',key='chatbot_api_key')
+    prefix_teacher = """You politely decline to answer questions outside the domains of data science, statistics, and medicine. 
+    If the question is appropriate, you teach for students at all levels. Your response appears next to a web  
+    tool that can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for  sample datasets or a user supplied CSV file.         
+    """
+    st.write("💬 Chatbot Teacher")
+    
+        # Check if the API key exists as an environmental variable
+    api_key = os.environ.get("OPENAI_API_KEY")
+
+    if api_key:
+        st.write("*API key active - ready to respond!*")
+    else:
+        st.warning("API key not found as an environmental variable.")
+        api_key = st.text_input("Enter your OpenAI API key:")
+
+        if st.button("Save"):
+            if is_valid_api_key(api_key):
+                os.environ["OPENAI_API_KEY"] = api_key
+                st.success("API key saved as an environmental variable!")
+            else:
+                st.error("Invalid API key. Please enter a valid API key.")
+
         
-            # Check if the API key exists as an environmental variable
-        api_key = os.environ.get("OPENAI_API_KEY")
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = [
+            # {"role": "system", "content": prefix_teacher},
+            # {"role": "user", "content": "Who won the world series in 2020?"},
+            # {"role": "assistant", "content": "I'm sorry, that is outside my expertise in data science and medicine."},
+            {"role": "assistant", "content": "Hi! Ask me anything about data science and I'll try to answer it."}
+            ]
 
-        if api_key:
-            st.write("*API key active - ready to respond!*")
-        else:
-            st.warning("API key not found as an environmental variable.")
-            api_key = st.text_input("Enter your OpenAI API key:")
+    with st.form("chat_input", clear_on_submit=True):
+        a, b = st.columns([4, 1])
+        user_input = a.text_input(
+            label="Your question:",
+            placeholder="e.g., teach me about violin plots",
+            label_visibility="collapsed",
+        )
+        b.form_submit_button("Send", use_container_width=True)
 
-            if st.button("Save"):
-                if is_valid_api_key(api_key):
-                    os.environ["OPENAI_API_KEY"] = api_key
-                    st.success("API key saved as an environmental variable!")
-                else:
-                    st.error("Invalid API key. Please enter a valid API key.")
+    for msg in st.session_state.messages:
+        a = randint(0, 10000000000)
+        message(msg["content"], is_user=msg["role"] == "user", key = a)
 
-            
-        if "messages" not in st.session_state:
-            st.session_state["messages"] = [
-                # {"role": "system", "content": prefix_teacher},
-                # {"role": "user", "content": "Who won the world series in 2020?"},
-                # {"role": "assistant", "content": "I'm sorry, that is outside my expertise in data science and medicine."},
-                {"role": "assistant", "content": "Hi! Ask me anything about data science and I'll try to answer it."}
-                ]
+    # if user_input and not openai_api_key:
+    #     st.info("Please add your OpenAI API key to continue.")
+        
+    if user_input:
+        st.session_state.messages.append({"role": "system", "content": prefix_teacher})
+        st.session_state.messages.append({"role": "user", "content": user_input})
+        try:
+            #Make your OpenAI API request here
+            # response = openai.Completion.create(model="gpt-3.5-turbo",                     
+            #             prompt="Hello world")['choices'][0]['text']
+            # system_set = {"role": "system", "content": prefix_teacher}
+            # prefixed_message = prefix_teacher + st.session_state.messages
+            response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
+        except openai.error.Timeout as e:
+            #Handle timeout error, e.g. retry or log
+            print(f"I'm super busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
+            pass
+        except openai.error.APIError as e:
+            #Handle API error, e.g. retry or log
+            print(f"OpenAI API returned an API Error: {e}")
+            pass
+        except openai.error.APIConnectionError as e:
+            #Handle connection error, e.g. check network or log
+            print(f"OpenAI API request failed to connect: {e}")
+            pass
+        except openai.error.InvalidRequestError as e:
+            #Handle invalid request error, e.g. validate parameters or log
+            print(f"OpenAI API request was invalid: {e}")
+            pass
+        except openai.error.AuthenticationError as e:
+            #Handle authentication error, e.g. check credentials or log
+            print(f"OpenAI API request was not authorized: {e}")
+            pass
+        except openai.error.PermissionError as e:
+            #Handle permission error, e.g. check scope or log
+            print(f"OpenAI API request was not permitted: {e}")
+            pass
+        except openai.error.RateLimitError as e:
+            #Handle rate limit error, e.g. wait or log
+            print(f"I'm so busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
+            pass
 
-        with st.form("chat_input", clear_on_submit=True):
-            a, b = st.columns([4, 1])
-            user_input = a.text_input(
-                label="Your question:",
-                placeholder="e.g., teach me about violin plots",
-                label_visibility="collapsed",
-            )
-            b.form_submit_button("Send", use_container_width=True)
-
-        for msg in st.session_state.messages:
-            a = randint(0, 10000000000)
-            message(msg["content"], is_user=msg["role"] == "user", key = a)
-
-        # if user_input and not openai_api_key:
-        #     st.info("Please add your OpenAI API key to continue.")
-            
-        if user_input:
-            st.session_state.messages.append({"role": "system", "content": prefix_teacher})
-            st.session_state.messages.append({"role": "user", "content": user_input})
-            try:
-                #Make your OpenAI API request here
-                # response = openai.Completion.create(model="gpt-3.5-turbo",                     
-                #             prompt="Hello world")['choices'][0]['text']
-                # system_set = {"role": "system", "content": prefix_teacher}
-                # prefixed_message = prefix_teacher + st.session_state.messages
-                response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
-            except openai.error.Timeout as e:
-                #Handle timeout error, e.g. retry or log
-                print(f"I'm super busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
-                pass
-            except openai.error.APIError as e:
-                #Handle API error, e.g. retry or log
-                print(f"OpenAI API returned an API Error: {e}")
-                pass
-            except openai.error.APIConnectionError as e:
-                #Handle connection error, e.g. check network or log
-                print(f"OpenAI API request failed to connect: {e}")
-                pass
-            except openai.error.InvalidRequestError as e:
-                #Handle invalid request error, e.g. validate parameters or log
-                print(f"OpenAI API request was invalid: {e}")
-                pass
-            except openai.error.AuthenticationError as e:
-                #Handle authentication error, e.g. check credentials or log
-                print(f"OpenAI API request was not authorized: {e}")
-                pass
-            except openai.error.PermissionError as e:
-                #Handle permission error, e.g. check scope or log
-                print(f"OpenAI API request was not permitted: {e}")
-                pass
-            except openai.error.RateLimitError as e:
-                #Handle rate limit error, e.g. wait or log
-                print(f"I'm so busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
-                pass
-
-            # response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
-            msg = response.choices[0].message
-            st.session_state.messages.append(msg)      
-            message(user_input, is_user=True, key = "using message")
-            message(msg.content, key = "last message")
+        # response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
+        msg = response.choices[0].message
+        st.session_state.messages.append(msg)      
+        message(user_input, is_user=True, key = "using message")
+        message(msg.content, key = "last message")
                     
 def generate_table(df, categorical_variable):
     mytable = TableOne(df,
@@ -974,57 +973,60 @@ with tab1:
     Be sure to check out the **automated analysis** option for a full report on your data.""")
 
     # st.sidebar.subheader("Upload your data") 
-    st.subheader("Step 1: Upload your data or view a demo dataset")
-    demo_or_custom = st.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "CSV Upload"), horizontal=True)
+
+    st.sidebar.subheader("Step 1: Upload your data or view a demo dataset")
+    demo_or_custom = st.sidebar.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "CSV Upload"), horizontal=True)
     if demo_or_custom == "CSV Upload":
-        uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+        uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file:
             st.session_state.df = load_data(uploaded_file)
 
     if demo_or_custom == 'Demo 1 (diabetes)':
         file_path = "data/predictdm.csv"
-        st.write("About Demo 1 dataset: https://data.world/informatics-edu/diabetes-prediction")
+        st.sidebar.write("About Demo 1 dataset: https://data.world/informatics-edu/diabetes-prediction")
         st.session_state.df = load_data(file_path)
         
     if demo_or_custom == 'Demo 2 (cancer)':
         file_path = "data/breastcancernew.csv"
-        st.write("About Demo 2 dataset: https://data.world/marshalldatasolution/breast-cancer")
+        st.sidebar.write("About Demo 2 dataset: https://data.world/marshalldatasolution/breast-cancer")
         st.session_state.df = load_data(file_path)
 
 
 
-    with st.expander("Data Preprocessing Tools - *Use analysis tools **first** to check if needed.*"):
-        pre_process = st.checkbox("Assign bivariate categories into 1 or 0 based on frequency (0 most frequent) if needed for correlations, e.g.", key = "Preprocess")
-        st.info("Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
+    with st.expander("Data Preprocessing Tools - *Assess Data Readiness **first**. Use only if needed.*"):
+        st.write("Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
         method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
         if st.button('Apply the Method to Replace Missing Values'):
                 st.session_state.df = replace_missing_values(st.session_state.df, method)
-    st.subheader("Step 2: Tools for Analysis")
+        pre_process = st.checkbox(" Assign bivariate categories into 1 or 0 based on frequency (0 most frequent) if needed for correlations, e.g.", key = "Preprocess")
     
-    col1, col2 = st.columns(2)
-    with col1:
-        activate_chatbot = st.checkbox("Activate Chatbot Teacher", key = "activate chatbot")
-        if activate_chatbot:
-            chat_context = st.sidebar.radio("Choose an approach", ("Teach about data science", "Ask questions (no plots)", "EXPERIMENTAL: Ask for a plot!"))
-        check_preprocess = st.checkbox("Assess data readiness", key = "Preprocess needed")
-        header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
-        summary = st.checkbox("Summary (numerical data)", key = "show data")
-        summary_cat = st.checkbox("Summary (categorical data)", key = "show summary cat")
-        show_table = st.checkbox("Create a Table 1", key = "show table")
-        show_scatter  = st.checkbox("Scatterplot", key = "show scatter")
-        view_full_df = st.checkbox("View Dataset", key = "view full df")
-    with col2:
-        barchart = st.checkbox("Bar chart (categorical data)", key = "show barchart")
-        histogram = st.checkbox("Histogram (numerical data)", key = "show histogram")
-        piechart = st.checkbox("Pie chart (categorical data)", key = "show piechart")
-        show_corr = st.checkbox("Correlation heatmap", key = "show corr")
-        box_plot = st.checkbox("Box plot", key = "show box")
-        violin_plot = st.checkbox("Violin plot", key = "show violin")
-        perform_pca = st.checkbox("Perform PCA", key = "show pca")
-        full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
+    st.sidebar.subheader("Step 2: Tools for Analysis")
     
-    
+    with st.sidebar:
+        col1, col2 = st.columns(2)
+        with col1:
+            check_preprocess = st.checkbox("Assess data readiness", key = "Preprocess needed")
+            header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
+            summary = st.checkbox("Summary (numerical data)", key = "show data")
+            summary_cat = st.checkbox("Summary (categorical data)", key = "show summary cat")
+            show_table = st.checkbox("Create a Table 1", key = "show table")
+            show_scatter  = st.checkbox("Scatterplot", key = "show scatter")
+            view_full_df = st.checkbox("View Dataset", key = "view full df")
+            activate_chatbot = st.checkbox("Activate Chatbot Teacher", key = "activate chatbot")
 
+        with col2:
+            barchart = st.checkbox("Bar chart (categorical data)", key = "show barchart")
+            histogram = st.checkbox("Histogram (numerical data)", key = "show histogram")
+            piechart = st.checkbox("Pie chart (categorical data)", key = "show piechart")
+            show_corr = st.checkbox("Correlation heatmap", key = "show corr")
+            box_plot = st.checkbox("Box plot", key = "show box")
+            violin_plot = st.checkbox("Violin plot", key = "show violin")
+            perform_pca = st.checkbox("Perform PCA", key = "show pca")
+            full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
+ 
+    if activate_chatbot:
+        st.subheader("Chatbot Teacher")
+        chat_context = st.radio("Choose an approach", ("Ask questions (no plots)", "EXPERIMENTAL: Ask for a plot!", "Teach about data science"))
 
     try:
         x = st.session_state.df
