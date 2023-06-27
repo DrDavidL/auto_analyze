@@ -246,8 +246,8 @@ def start_chatbot2(df):
     if "messages_df" not in st.session_state:
             st.session_state["messages_df"] = []
  
-       
-    st.write("💬 Chatbot with access to your data...")
+    st.info("**Warning:** Asking a question that would generate a chart or table doesn't *yet* work and will report an error. For the moment, just ask for values. This is a work in progress!")   
+    # st.write("💬 Chatbot with access to your data...")
     
         # Check if the API key exists as an environmental variable
     api_key = os.environ.get("OPENAI_API_KEY")
@@ -264,8 +264,8 @@ def start_chatbot2(df):
                 st.success("API key saved as an environmental variable!")
             else:
                 st.error("Invalid API key. Please enter a valid API key.")
-    st.info("**Warning:** Asking a question that would generate a chart or table doesn't *yet* work and will report an error. For the moment, just ask for values. This is a work in progress!")
-    csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?'", "")
+    
+    csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?' *Do not ask for plots for this option.*", "")
     if st.button("Send"):
         st.session_state.messages_df.append({"role": "user", "content": csv_question})
         output = agent.run(csv_question)
@@ -285,7 +285,11 @@ def start_chatbot3(df):
     if "messages_df" not in st.session_state:
             st.session_state["messages_df"] = []
        
-    st.write("💬 Chatbot with access to your data...")
+    # st.write("💬 Chatbot with access to your data...")
+    st.info("""**Warning:** This will often generate an error. This is a work in progress!
+        Multiple steps are required to generate a plot so this may take a minute.
+        If you get an error, try again. Use the format of the sample request.                
+        """)
     
         # Check if the API key exists as an environmental variable
     api_key = os.environ.get("OPENAI_API_KEY")
@@ -302,11 +306,8 @@ def start_chatbot3(df):
                 st.success("API key saved as an environmental variable!")
             else:
                 st.error("Invalid API key. Please enter a valid API key.")
-    st.info("""**Warning:** This will often generate an error. This is a work in progress!
-            Multiple steps are required to generate a plot so this may take a minute.
-            If you get an error, try again. Use the format of the sample request.                
-            """)
-    csv_question = st.text_input("Your question, e.g., 'Create a scatterplot for age and BMI.'", "")
+
+    csv_question = st.text_input("Your question, e.g., 'Create a scatterplot for age and BMI.' *This option only generates plots.* ", "")
     if st.button("Send"):
         st.session_state.messages_df.append({"role": "user", "content": csv_question})
         csv_input = csv_prefix + csv_question
