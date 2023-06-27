@@ -142,6 +142,48 @@ Remember to structure the code such that it is properly indented and formatted a
 
             """
 
+def assess_data_readiness(df):
+    readiness_summary = {}
+
+    # Check if the DataFrame is empty
+    if df.empty:
+        readiness_summary['data_empty'] = True
+        readiness_summary['columns'] = {}
+        readiness_summary['missing_columns'] = []
+        readiness_summary['inconsistent_data_types'] = []
+        readiness_summary['missing_values'] = {}
+        readiness_summary['data_ready'] = False
+        return readiness_summary
+
+    # Get column information
+    columns = {col: str(df[col].dtype) for col in df.columns}
+    readiness_summary['columns'] = columns
+
+    # Check for missing columns
+    missing_columns = df.columns[df.isnull().all()].tolist()
+    readiness_summary['missing_columns'] = missing_columns
+
+    # Check for inconsistent data types
+    inconsistent_data_types = []
+    for col in df.columns:
+        unique_data_types = df[col].apply(type).drop_duplicates().tolist()
+        if len(unique_data_types) > 1:
+            inconsistent_data_types.append(col)
+    readiness_summary['inconsistent_data_types'] = inconsistent_data_types
+
+    # Check for missing values
+    missing_values = df.isnull().sum().to_dict()
+    readiness_summary['missing_values'] = missing_values
+
+    # Determine overall data readiness
+    readiness_summary['data_empty'] = False
+    if missing_columns or inconsistent_data_types or any(missing_values.values()):
+        readiness_summary['data_ready'] = False
+    else:
+        readiness_summary['data_ready'] = True
+
+    return readiness_summary
+
 
 def process_model_output(output):
     # Convert JSON to string if necessary
@@ -960,7 +1002,7 @@ with tab1:
         activate_chatbot = st.checkbox("Activate Chatbot Teacher", key = "activate chatbot")
         if activate_chatbot:
             chat_context = st.sidebar.radio("Choose an approach", ("Teach about data science", "Ask questions (no plots)", "EXPERIMENTAL: Ask for a plot!"))
-        check_preprocess = st.checkbox("Assess need to preprocess data", key = "Preprocess needed")
+        check_preprocess = st.checkbox("Assess data readiness", key = "Preprocess needed")
         header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
         summary = st.checkbox("Summary (numerical data)", key = "show data")
         summary_cat = st.checkbox("Summary (categorical data)", key = "show summary cat")
@@ -1090,18 +1132,55 @@ For medical students, think of correlation heatmaps as a quick way to visually i
                 st.pyplot(plt)
                 
         if check_preprocess:
-            st.info("Check if you need to preprocess data")
-            missing_values, outliers, data_types, skewness, cardinality = analyze_dataframe(df)
-            st.write("Missing values")
-            st.write(missing_values)
-            st.write("Outliers")
-            st.write(outliers)
-            st.write("Data types")
-            st.write(data_types)
-            st.write("Skewness")
-            st.write(skewness)
-            st.write("Cardinality")
-            st.write(cardinality)
+            readiness_summary = assess_data_readiness(df)
+            # Display the readiness summary using Streamlit
+            # Display the readiness summary using Streamlit
+            st.subheader("Data Readiness Summary")
+
+            if readiness_summary['data_empty']:
+                st.write("The DataFrame is empty.")
+            else:
+                # Combine column information and readiness summary into a single DataFrame
+                column_info_df = pd.DataFrame.from_dict(
+                    readiness_summary['columns'],
+                    orient='index',
+                    columns=['Data Type']
+                )
+                summary_df = pd.DataFrame.from_dict(
+                    readiness_summary['missing_values'],
+                    orient='index',
+                    columns=['Missing Values']
+                )
+                summary_df['Data Type'] = column_info_df['Data Type']
+
+                # Display the combined table
+                st.write(summary_df)
+
+                if readiness_summary['missing_columns']:
+                    st.write("Missing Columns:")
+                    st.write(readiness_summary['missing_columns'])
+
+                if readiness_summary['inconsistent_data_types']:
+                    st.write("Inconsistent Data Types:")
+                    st.write(readiness_summary['inconsistent_data_types'])
+
+                if readiness_summary['data_ready']:
+                    st.success("The data is ready for analysis!")
+                else:
+                    st.warning("The data is not fully ready for analysis.")
+            
+            # st.info("Check if you need to preprocess data")
+            # missing_values, outliers, data_types, skewness, cardinality = analyze_dataframe(df)
+            # st.write("Missing values")
+            # st.write(missing_values)
+            # st.write("Outliers")
+            # st.write(outliers)
+            # st.write("Data types")
+            # st.write(data_types)
+            # st.write("Skewness")
+            # st.write(skewness)
+            # st.write("Cardinality")
+            # st.write(cardinality)
             
         if show_scatter:
             st.info("Scatterplot")
