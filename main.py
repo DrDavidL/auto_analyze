@@ -783,6 +783,8 @@ def plot_pie(df, col_name):
 
 # Function to summarize categorical data
  
+import pandas as pd
+
 def summarize_categorical(df):
     # Select only categorical columns
     cat_df = df.select_dtypes(include=['object', 'category'])
@@ -792,8 +794,8 @@ def summarize_categorical(df):
         st.write("The DataFrame does not contain any categorical columns.")
         return None
 
-    # Summarize categorical data
-    summary = pd.DataFrame()
+    # Create a list to store dictionaries for each column's summary
+    summary_data = []
 
     for col in cat_df.columns:
         # Number of unique values
@@ -803,16 +805,20 @@ def summarize_categorical(df):
         most_frequent = df[col].mode()[0]
         freq_most_frequent = df[col].value_counts().iloc[0]
 
-        summary = summary.append(pd.Series({
+        # Append the column summary as a dictionary to the list
+        summary_data.append({
             'column': col,
             'unique_count': unique_count,
             'most_frequent': most_frequent,
             'frequency_most_frequent': freq_most_frequent,
-        }), ignore_index=True)
+        })
 
+    # Create the summary DataFrame from the list of dictionaries
+    summary = pd.DataFrame(summary_data)
     summary.set_index('column', inplace=True)
 
     return summary
+
 
 # Function to plot correlation heatmap
  
