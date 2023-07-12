@@ -398,7 +398,7 @@ def generate_df(columns, n_rows):
     If you do not know what kind of data to generate for a column, rename column using the provided name followed by -ambiguous. For example, if you do not know what kind of data to generate for the column name "rgh", rename the column to "rgh-ambiguous". 
     Popululate ambiguous columns with randomly selected 1 or 0 values. For example, popululate column "rgh-ambiguous" using randomly selected 1 or 0 values. For diagnoses provided
     as column headers, e.g., "diabetes", populate with randomly selected yes or no values. Populate all cells with appropriate values. No missing values.
-    As a final step review each row to ensure that the data is medically consistent, e.g., that overall A1c values trend higher for patients with diabetes. If not, regenerate the row or rows.
+    As a final step review each row to ensure that the data is medically consistent, e.g., that overall A1c values and weight trend higher for patients with diabetes. If not, regenerate the row or rows.
 
 Columns: ```columns```
 Number of rows: ```number```
