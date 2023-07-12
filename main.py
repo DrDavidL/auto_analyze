@@ -314,12 +314,15 @@ def start_chatbot2(df):
     
     csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?' *Do not ask for plots for this option.*", "")
     if st.button("Send"):
-        st.session_state.messages_df.append({"role": "user", "content": csv_question})
-        output = agent.run(csv_question)
-        st.session_state.messages_df.append({"role": "assistant", "content": output})    
-        message(csv_question, is_user=True, key = "using message_df")
-        message(output)
-            
+        try:
+            st.session_state.messages_df.append({"role": "user", "content": csv_question})
+            output = agent.run(csv_question)
+            st.session_state.messages_df.append({"role": "assistant", "content": output})    
+            message(csv_question, is_user=True, key = "using message_df")
+            message(output)
+        except Exception as e:
+            st.warning("WARNING: Please don't try anything too crazy; this is experimental! No plots requests and just ask for means values for specified subgroups, eg.")
+            sys.exit(1)
 
  
 def start_chatbot3(df):
@@ -358,34 +361,35 @@ def start_chatbot3(df):
 
     csv_question = st.text_input("Your question, e.g., 'Create a scatterplot for age and BMI.' *This option only generates plots.* ", "")
     if st.button("Send"):
-        st.session_state.messages_df.append({"role": "user", "content": csv_question})
-        csv_input = csv_prefix + csv_question
-        output = agent.run(csv_input)
-        # st.write(output)
-        code_string = process_model_output(str(output))
-        # st.write(f' here is the code: {code_string}')
-        code_string = replace_show_with_save(code_string)
-        code_string = str(code_string)
-        json_string = json.dumps(code_string)
-        decoded_string = json.loads(json_string)
-        with st.expander("What is the code?"):
-            st.write('Here is the custom code for your request and the image below:')
-            st.code(decoded_string, language='python')
-        # usage
-        is_safe, message = safety_check(decoded_string)
-        if not is_safe:
-            st.write("Code safety concern. Try again.", message)
-        if is_safe:
-            try:
-                exec(decoded_string)
-                image = Image.open('./images/output.png')
-                st.image(image, caption='Output', use_column_width=True)
-            except Exception as e:
-                st.write('Error - we noted this was fragile! Try again.', e)
-
-            # st.session_state.messages_df.append({"role": "assistant", "content": output})    
-            # message(csv_question, is_user=True, key = "using message_df")
-            # message(output)
+        try: 
+            st.session_state.messages_df.append({"role": "user", "content": csv_question})
+            csv_input = csv_prefix + csv_question
+            output = agent.run(csv_input)
+            # st.write(output)
+            code_string = process_model_output(str(output))
+            # st.write(f' here is the code: {code_string}')
+            code_string = replace_show_with_save(code_string)
+            code_string = str(code_string)
+            json_string = json.dumps(code_string)
+            decoded_string = json.loads(json_string)
+            with st.expander("What is the code?"):
+                st.write('Here is the custom code for your request and the image below:')
+                st.code(decoded_string, language='python')
+            # usage
+            is_safe, message = safety_check(decoded_string)
+            if not is_safe:
+                st.write("Code safety concern. Try again.", message)
+            if is_safe:
+                try:
+                    exec(decoded_string)
+                    image = Image.open('./images/output.png')
+                    st.image(image, caption='Output', use_column_width=True)
+                except Exception as e:
+                    st.write('Error - we noted this was fragile! Try again.', e)
+        except Exception as e:
+            st.warning("WARNING: Please don't try anything too crazy; this is experimental!")
+            sys.exit(1)
+            # return None, None
             
 
 
