@@ -1148,7 +1148,7 @@ with tab1:
             show_table = st.checkbox("Create a Table 1", key = "show table")
             show_scatter  = st.checkbox("Scatterplot", key = "show scatter")
             view_full_df = st.checkbox("View Dataset", key = "view full df")
-            activate_chatbot = st.checkbox("Activate Chatbot Teacher", key = "activate chatbot")
+            activate_chatbot = st.checkbox("Activate Chatbot (select specific bot on main window)", key = "activate chatbot")
 
         with col2:
             barchart = st.checkbox("Bar chart (categorical data)", key = "show barchart")
@@ -1169,7 +1169,8 @@ with tab1:
     
     if activate_chatbot:
         st.subheader("Chatbot Teacher")
-        chat_context = st.radio("Choose an approach", ("Ask questions (no plots)", "EXPERIMENTAL: Ask for a plot!", "Teach about data science"))
+        st.warning("First be sure to activate the right chatbot for your needs.")
+        chat_context = st.radio("Choose an approach", ("Ask questions (no plots)", "Ask for a plot!", "Teach about data science"))
 
     try:
         x = st.session_state.df
@@ -1184,7 +1185,7 @@ with tab1:
                     start_chatbot1()
                 if chat_context == "Ask questions (no plots)":
                     start_chatbot2(st.session_state.df)
-                if chat_context == "EXPERIMENTAL: Ask for a plot!":
+                if chat_context == "Ask for a plot!":
                     start_chatbot3(st.session_state.df)
             # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
 
