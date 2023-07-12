@@ -1,6 +1,8 @@
 import numpy as np
 # import langchain
 import pandas as pd
+import io
+import sys
 from ydata_profiling import ProfileReport
 import streamlit as st
 from streamlit_pandas_profiling import st_profile_report
@@ -54,6 +56,15 @@ st.set_page_config(page_title='AutoAnalyzer', layout = 'centered', page_icon = '
 #     # Initialize a session state variable that tracks the sidebar state (either 'expanded' or 'collapsed').
 if 'last_response' not in st.session_state:
      st.session_state.last_response = ''
+     
+if 'df' not in st.session_state:
+    st.session_state.df = pd.DataFrame()
+    
+if "openai_api_key" not in st.session_state:
+    st.session_state.openai_api_key = ''
+    
+if "gen_csv" not in st.session_state:
+    st.session_state.gen_csv = None
 
 # Streamlit set_page_config method has a 'initial_sidebar_state' argument that controls sidebar state.
 # st.set_page_config(initial_sidebar_state=st.session_state.sidebar_state)
@@ -94,6 +105,38 @@ def is_valid_api_key(api_key):
 
     return False
 
+def fetch_api_key():
+    api_key = None
+    
+    try:
+        # Attempt to retrieve the API key as a secret
+        api_key = st.secrets["OPENAI_API_KEY"]
+        # os.environ["OPENAI_API_KEY"] = api_key
+        st.session_state.openai_api_key = api_key
+        os.environ['OPENAI_API_KEY'] = api_key
+        # st.write(f'Here is what we think the key is step 1: {api_key}')
+    except KeyError:
+        
+        if st.session_state.openai_api_key != '':
+            api_key = st.session_state.openai_api_key
+            os.environ['OPENAI_API_KEY'] = api_key
+            # If the API key is already set, don't prompt for it again
+            # st.write(f'Here is what we think the key is step 2: {api_key}')
+            return 
+        else:        
+            # If the secret is not found, prompt the user for their API key
+            st.warning("Oh, dear friend of mine! It seems your API key has gone astray, hiding in the shadows. Pray, reveal it to me!")
+            api_key = st.text_input("Please, whisper your API key into my ears: ", key = 'warning')
+  
+            st.session_state.openai_api_key = api_key
+            os.environ['OPENAI_API_KEY'] = api_key
+            # Save the API key as a secret
+            # st.secrets["my_api_key"] = api_key
+            # st.write(f'Here is what we think the key is step 3: {api_key}')
+            return 
+    
+    return 
+
 def check_password():
 
     """Returns `True` if the user had the correct password."""
@@ -122,6 +165,7 @@ def check_password():
         return False
     else:
         # Password correct.
+        # fetch_api_key()
         return True
 
 csv_prefix ="""You are an agent optimally designed for answering questions about a dataframe. 
@@ -237,6 +281,9 @@ def replace_show_with_save(code_string, filename='output.png'):
     return code_string
 
 def start_chatbot2(df):
+    fetch_api_key()
+    openai.api_key = st.session_state.openai_api_key
+    openai_api_key = st.session_state.openai_api_key
     agent = create_pandas_dataframe_agent(
     ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
     df,
@@ -276,6 +323,8 @@ def start_chatbot2(df):
 
  
 def start_chatbot3(df):
+    fetch_api_key()
+    openai.api_key = st.session_state.openai_api_key
     agent = create_pandas_dataframe_agent(
     ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
     df,
@@ -339,10 +388,61 @@ def start_chatbot3(df):
             # message(output)
             
 
+
+def generate_df(columns, n_rows):
+
+    openai.api_key = st.session_state.openai_api_key
+    
+    system_prompt = f""" You are a medical data expert. Generate random medically consistent but not all normal synthetic patient data. 10-20% of values should be abnormal with values above and below the normal range for each column, but still physiologically possible. For example,
+    SBP could range from 90 to 190. Creatinine might go from 0.5 to 7.0. Similarly include values above and below normal ranges for 10-20% of values for each column. Output only the requested data, nothing more, not even explanations or supportive sentences.
+    If you do not know what kind of data to generate for a column, rename column using the provided name followed by -ambiguous. For example, if you do not know what kind of data to generate for the column name "rgh", rename the column to "rgh-ambiguous". 
+    Popululate ambiguous columns with randomly selected 1 or 0 values. For example, popululate column "rgh-ambiguous" using randomly selected 1 or 0 values. For diagnoses provided
+    as column headers, e.g., "diabetes", populate with randomly selected yes or no values. Populate all cells with appropriate values. No missing values.
+
+Columns: ```columns```
+Number of rows: ```number```
+
+Generate data for ```number``` patients. Provide only raw data, complete for every cell. I will provide the column names and requested number of rows in the user prompt."""
+
+    prompt = f"columns : {columns}, number : {n_rows}" 
+    
+    try:
+        response= openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            temperature = 0.5
+            )
+        
+        # Use StringIO to convert the string data into file-like object
+        data = io.StringIO(response.choices[0].message.content)
+
+        # Read the data into a DataFrame, skipping the first row
+        df = pd.read_csv(data, sep=",", skiprows=1, header=None, names=columns)
+
+        # Convert DataFrame to CSV and create download link
+        gen_csv = df.to_csv(index=False)
+        # st.download_button(
+        #     label="Download data as CSV",
+        #     data=gen_csv,
+        #     file_name="patient_data.csv",
+        #     mime="text/csv",
+        # )
+
+        return df, gen_csv
+    
+    except Exception as e:
+        st.warning("WARNING: Please double check your proposed column names for duplicates or invalid characters!")
+        sys.exit(1)
+        # return None, None
+
     
                 
 def start_chatbot1():
-    
+    fetch_api_key()
+    openai.api_key = st.session_state.openai_api_key    
 
     # openai_api_key = st.text_input('OpenAI API Key',key='chatbot_api_key')
     prefix_teacher = """You politely decline to answer questions outside the domains of data science, statistics, and medicine. 
@@ -964,9 +1064,11 @@ with st.expander('About AutoAnalyzer'):
     st.write("Last updated 6/14/23")
     
 tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
+fetch_api_key()
 
-if 'df' not in st.session_state:
-    st.session_state.df = pd.DataFrame()
+# if openai.api_key is None:
+#     os.environ["OPENAI_API_KEY"] = fetch_api_key()
+#     openai.api_key = os.getenv("OPENAI_API_KEY")
 
 with tab1:
 
@@ -976,7 +1078,7 @@ with tab1:
     # st.sidebar.subheader("Upload your data") 
 
     st.sidebar.subheader("Step 1: Upload your data or view a demo dataset")
-    demo_or_custom = st.sidebar.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "CSV Upload"), horizontal=True)
+    demo_or_custom = st.sidebar.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "Generate Data", "CSV Upload"), horizontal=True)
     if demo_or_custom == "CSV Upload":
         uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file:
@@ -991,7 +1093,26 @@ with tab1:
         file_path = "data/breastcancernew.csv"
         st.sidebar.write("About Demo 2 dataset: https://data.world/marshalldatasolution/breast-cancer")
         st.session_state.df = load_data(file_path)
+        
+    if demo_or_custom == 'Generate Data':
+        if check_password():
+            user_input = st.sidebar.text_area("Enter comma or space separated names for columns, e.g., Na, Cr, WBC, A1c, SPB, Diabetes:")
 
+            if "," in user_input:
+                user_list = user_input.split(",")
+            elif " " in user_input:
+                user_list = user_input.split()
+            else:
+                user_list = [user_input]
+
+            # Remove leading/trailing whitespace from each item in the list
+            user_columns = [item.strip() for item in user_list]
+            user_rows = st.sidebar.number_input("Enter approx number of rows (max 100).", min_value=1, max_value=100, value=10, step=1)
+            if st.sidebar.button("Generate Data"):
+                st.session_state.df, st.session_state.gen_csv = generate_df(user_columns, user_rows)
+                st.info("Here are the first 5 rows of your generated data. Use the tools in the sidebar to explore your new dataset! And, download and save your new CSV file from the sidebar!")
+                st.write(st.session_state.df.head())
+                
 
 
     with st.expander("Data Preprocessing Tools - *Assess Data Readiness **first**. Use only if needed.*"):
@@ -1001,9 +1122,18 @@ with tab1:
                 st.session_state.df = replace_missing_values(st.session_state.df, method)
         pre_process = st.checkbox(" Assign bivariate categories into 1 or 0 based on frequency (0 most frequent) if needed for correlations, e.g.", key = "Preprocess")
     
-    st.sidebar.subheader("Step 2: Tools for Analysis")
+    
     
     with st.sidebar:
+        if st.session_state.gen_csv is not None:
+            st.warning("Save your generated data!")
+            st.download_button(
+                label="Download!",
+                data=st.session_state.gen_csv,
+                file_name="patient_data.csv",
+                mime="text/csv",
+                )   
+        st.subheader("Step 2: Tools for Analysis")
         col1, col2 = st.columns(2)
         with col1:
             check_preprocess = st.checkbox("Assess data readiness", key = "Preprocess needed")
@@ -1024,7 +1154,14 @@ with tab1:
             violin_plot = st.checkbox("Violin plot", key = "show violin")
             perform_pca = st.checkbox("Perform PCA", key = "show pca")
             full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
- 
+            
+
+
+
+
+
+    
+    
     if activate_chatbot:
         st.subheader("Chatbot Teacher")
         chat_context = st.radio("Choose an approach", ("Ask questions (no plots)", "EXPERIMENTAL: Ask for a plot!", "Teach about data science"))
@@ -1055,7 +1192,7 @@ with tab1:
             st.write(st.session_state.df.describe())
             
         if header:
-            st.info("Header of data")
+            st.info("First 5 Rows of Data")
             st.write(st.session_state.df.head())
             
         if full_analysis:
@@ -1331,7 +1468,7 @@ with tab2:
         st.subheader("""
         Set Criteria for the Binary Target Class
         """)
-        categories_to_predict = st.multiselect('Select one or more categories but not all. You need 2 options to predict a group, i.e, your target versus the rest.:', st.session_state.df[target_col].unique().tolist())
+        categories_to_predict = st.multiselect('Select one or more categories but not all. You need 2 options to predict a group, i.e, your target versus the rest.:', st.session_state.df[target_col].unique().tolist(), key = "target_categories-10")
 
         # Preprocess the data and exclude the target column from preprocessing
         df_processed, included_cols, excluded_cols = preprocess(st.session_state.df.drop(columns=[target_col]), target_col)
