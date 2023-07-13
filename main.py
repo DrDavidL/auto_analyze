@@ -185,6 +185,49 @@ Please format the string response (not JSON) such that it includes:
 Remember to structure the code such that it is properly indented and formatted according to PEP8 guidelines.
 
             """
+            
+csv_prefix_gpt4 ="""You are an agent optimally designed for generating compelling plots about a dataframe. 
+Never attempt to draw the figure directly. Instead, return the Python code as a string. Do not return JSON. 
+The output from your code must be saved to a file as a single png file, 'output.png'. Here is an example:
+
+```
+import seaborn as sns
+
+sns.scatterplot(x='Age', y='BMI', data=df)
+plt.savefig('./images/output.png')
+```
+
+Do not generate code as follows. Remember, all outputs musbe saved to a file as a single png file, './images/output.png':
+
+```
+df_grouped = df.groupby('Diabetes').mean()
+print(df_grouped)
+```
+
+Instead, code like this should be used:
+```
+df_grouped = df.groupby('Diabetes').mean()
+
+# Plotting
+df_grouped.plot(kind='bar')
+
+# Saving the plot to a .png file
+plt.savefig('./images/output.png')
+```
+
+Take care and pre-process in order to avoid execution errors related to categorical versus numerical values such as:
+
+```
+TypeError: Could not convert 'female male' to numeric
+```
+
+Please format the string response (not JSON) such that it includes:
+
+1. Code to interpret the user's question to generate and save the appropriate visualization.
+2. Do not return JSON. The response should include the Python code as a string.
+
+Remember to structure the code such that it is properly indented and formatted according to PEP8 guidelines.
+"""
 
 def assess_data_readiness(df):
     readiness_summary = {}
@@ -369,6 +412,71 @@ def start_chatbot3(df):
             code_string = process_model_output(str(output))
             # st.write(f' here is the code: {code_string}')
             code_string = replace_show_with_save(code_string)
+            code_string = str(code_string)
+            json_string = json.dumps(code_string)
+            decoded_string = json.loads(json_string)
+            with st.expander("What is the code?"):
+                st.write('Here is the custom code for your request and the image below:')
+                st.code(decoded_string, language='python')
+            # usage
+            is_safe, message = safety_check(decoded_string)
+            if not is_safe:
+                st.write("Code safety concern. Try again.", message)
+            if is_safe:
+                try:
+                    exec(decoded_string)
+                    image = Image.open('./images/output.png')
+                    st.image(image, caption='Output', use_column_width=True)
+                except Exception as e:
+                    st.write('Error - we noted this was fragile! Try again.', e)
+        except Exception as e:
+            st.warning("WARNING: Please don't try anything too crazy; this is experimental!")
+            sys.exit(1)
+            # return None, None
+            
+def start_plot_gpt4(df):
+    fetch_api_key()
+    openai.api_key = st.session_state.openai_api_key
+    agent = create_pandas_dataframe_agent(
+    ChatOpenAI(temperature=0, model="gpt-4"),
+    df,
+    verbose=True,
+    agent_type=AgentType.OPENAI_FUNCTIONS,
+    )
+    if "messages_df" not in st.session_state:
+            st.session_state["messages_df"] = []
+       
+    # st.write("💬 Chatbot with access to your data...")
+    st.info("""**Warning:** This may generate an error. This is a work in progress!
+        If you get an error, try again.                 
+        """)
+    
+        # Check if the API key exists as an environmental variable
+    api_key = os.environ.get("OPENAI_API_KEY")
+
+    if api_key:
+        st.write("*API key active - ready to respond!*")
+    else:
+        st.warning("API key not found as an environmental variable.")
+        api_key = st.text_input("Enter your OpenAI API key:")
+
+        if st.button("Save"):
+            if is_valid_api_key(api_key):
+                os.environ["OPENAI_API_KEY"] = api_key
+                st.success("API key saved as an environmental variable!")
+            else:
+                st.error("Invalid API key. Please enter a valid API key.")
+
+    csv_question = st.text_area("Your question, e.g., 'Create a heatmap. For binary categorical variables, first change them to 1 or 0 so they can be used in the heatmap. Or, another example: Compare cholesterol values for men an women by age with regression lines.", "")
+    if st.button("Send"):
+        try: 
+            st.session_state.messages_df.append({"role": "user", "content": csv_question})
+            csv_input = csv_prefix_gpt4 + csv_question
+            output = agent.run(csv_input)
+            # st.write(output)
+            code_string = process_model_output(str(output))
+            # st.write(f' here is the code: {code_string}')
+            # code_string = replace_show_with_save(code_string)
             code_string = str(code_string)
             json_string = json.dumps(code_string)
             decoded_string = json.loads(json_string)
@@ -1170,7 +1278,7 @@ with tab1:
     if activate_chatbot:
         st.subheader("Chatbot Teacher")
         st.warning("First be sure to activate the right chatbot for your needs.")
-        chat_context = st.radio("Choose an approach", ("Ask questions (no plots)", "Ask for a plot!", "Teach about data science"))
+        chat_context = st.radio("Choose an approach", ("Ask questions (no plots)", "Ask for a plot!", "GPT4 Plotting", "Teach about data science"))
 
     try:
         x = st.session_state.df
@@ -1187,6 +1295,8 @@ with tab1:
                     start_chatbot2(st.session_state.df)
                 if chat_context == "Ask for a plot!":
                     start_chatbot3(st.session_state.df)
+                if chat_context == "GPT4 Plotting":
+                    start_plot_gpt4(st.session_state.df)
             # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
 
         
