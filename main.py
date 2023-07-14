@@ -325,12 +325,12 @@ def replace_show_with_save(code_string, filename='output.png'):
 
     return code_string
 
-def start_chatbot2(df):
+def start_chatbot2(df, selected_model):
     fetch_api_key()
     openai.api_key = st.session_state.openai_api_key
     openai_api_key = st.session_state.openai_api_key
     agent = create_pandas_dataframe_agent(
-    ChatOpenAI(temperature=0, model="gpt-4"),
+    ChatOpenAI(temperature=0, model=selected_model),
     df,
     verbose=True,
     agent_type=AgentType.OPENAI_FUNCTIONS,
@@ -376,7 +376,7 @@ def start_chatbot3(df):
     fetch_api_key()
     openai.api_key = st.session_state.openai_api_key
     agent = create_pandas_dataframe_agent(
-    ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
+    ChatOpenAI(temperature=0, model="gpt-3.5-turbo"),
     df,
     verbose=True,
     agent_type=AgentType.OPENAI_FUNCTIONS,
@@ -386,7 +386,7 @@ def start_chatbot3(df):
        
     # st.write("💬 Chatbot with access to your data...")
     st.info("""**Warning:** This may generate an error. This is a work in progress!
-        If you get an error, try again. GPT-3.5 is cheaper to use than GPT-4.                 
+        If you get an error, try again.                  
         """)
     
         # Check if the API key exists as an environmental variable
@@ -452,7 +452,7 @@ def start_plot_gpt4(df):
        
     # st.write("💬 Chatbot with access to your data...")
     st.info("""**Warning:** This may generate an error. This is a work in progress!
-        If you get an error, try again. GPT-4 allows for more complex code generation but is more costly.                
+        If you get an error, try again.                
         """)
     
         # Check if the API key exists as an environmental variable
@@ -472,7 +472,7 @@ def start_plot_gpt4(df):
             else:
                 st.error("Invalid API key. Please enter a valid API key.")
 
-    csv_question = st.text_area("Your question, e.g., 'Create a heatmap. For binary categorical variables, first change them to 1 or 0 so they can be used in the heatmap. Or, another example: Compare cholesterol values for men an women by age with regression lines.", "")
+    csv_question = st.text_area("Your question, e.g., 'Create a heatmap. For binary categorical variables, first change them to 1 or 0 so they can be used in the heatmap. Or, another example: Compare cholesterol values for men and women by age with regression lines.", "")
     if st.button("Send"):
         try: 
             st.session_state.messages_df.append({"role": "user", "content": csv_question})
@@ -506,7 +506,7 @@ def start_plot_gpt4(df):
             
 
 
-def generate_df(columns, n_rows):
+def generate_df(columns, n_rows, selected_model):
 
     openai.api_key = st.session_state.openai_api_key
     
@@ -526,7 +526,7 @@ Generate data for ```number``` patients. Provide only raw data, complete for eve
     
     try:
         response= openai.ChatCompletion.create(
-            model="gpt-4",
+            model='gpt-3.5-turbo',
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}
@@ -558,7 +558,7 @@ Generate data for ```number``` patients. Provide only raw data, complete for eve
 
     
                 
-def start_chatbot1():
+def start_chatbot1(selected_model):
     fetch_api_key()
     openai.api_key = st.session_state.openai_api_key    
 
@@ -620,7 +620,7 @@ def start_chatbot1():
             #             prompt="Hello world")['choices'][0]['text']
             # system_set = {"role": "system", "content": prefix_teacher}
             # prefixed_message = prefix_teacher + st.session_state.messages
-            response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
+            response = openai.ChatCompletion.create(model=selected_model, messages=st.session_state.messages)
         except openai.error.Timeout as e:
             #Handle timeout error, e.g. retry or log
             print(f"I'm super busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
@@ -1184,6 +1184,12 @@ with st.expander('About AutoAnalyzer'):
     
 tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
 fetch_api_key()
+gpt_version = st.sidebar.radio("Select GPT model:", ("GPT-3.5 ($)", "GPT-4 ($$$$)"), index=0)
+if gpt_version == "GPT-3.5 ($)":
+    selected_model ="gpt-3.5-turbo"
+if gpt_version == "GPT-4 ($$$$)":
+    selected_model = "gpt-4"
+
 
 # if openai.api_key is None:
 #     os.environ["OPENAI_API_KEY"] = fetch_api_key()
@@ -1228,7 +1234,7 @@ with tab1:
             user_columns = [item.strip() for item in user_list]
             user_rows = st.sidebar.number_input("Enter approx number of rows (max 100).", min_value=1, max_value=100, value=10, step=1)
             if st.sidebar.button("Generate Data"):
-                st.session_state.df, st.session_state.gen_csv = generate_df(user_columns, user_rows)
+                st.session_state.df, st.session_state.gen_csv = generate_df(user_columns, user_rows, selected_model)
                 st.info("Here are the first 5 rows of your generated data. Use the tools in the sidebar to explore your new dataset! And, download and save your new CSV file from the sidebar!")
                 st.write(st.session_state.df.head())
                 
@@ -1284,7 +1290,7 @@ with tab1:
     if activate_chatbot:
         st.subheader("Chatbot Teacher")
         st.warning("First be sure to activate the right chatbot for your needs.")
-        chat_context = st.radio("Choose an approach", ("Ask questions (no plots)", "Generate Basic Plots (GPT-3.5)", "Generate Plots (GPT-4)", "Teach about data science"))
+        chat_context = st.radio("Choose an approach", ("Ask questions (no plots)", "Generate Plots", "Teach about data science"))
 
     try:
         x = st.session_state.df
@@ -1296,13 +1302,15 @@ with tab1:
         if activate_chatbot:
             if check_password():
                 if chat_context == "Teach about data science":
-                    start_chatbot1()
+                    start_chatbot1(selected_model)
                 if chat_context == "Ask questions (no plots)":
-                    start_chatbot2(st.session_state.df)
-                if chat_context == "Generate Basic Plots (GPT-3.5)":
-                    start_chatbot3(st.session_state.df)
-                if chat_context == "Generate Plots (GPT-4)":
-                    start_plot_gpt4(st.session_state.df)
+                    start_chatbot2(st.session_state.df, selected_model)
+                if chat_context == "Generate Plots":
+                    if selected_model == "gpt-3.5-turbo":
+                        start_chatbot3(st.session_state.df)
+                    if selected_model == "gpt-4":
+                        start_plot_gpt4(st.session_state.df)
+
             # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
 
         
