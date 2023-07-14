@@ -215,10 +215,12 @@ df_grouped.plot(kind='bar')
 plt.savefig('./images/output.png')
 ```
 
-Take care and pre-process in order to avoid execution errors related to categorical versus numerical values such as:
+Pre-process data when needed to eliminate all code execution errors. For example, prevent errors related to us of    text values when generating a heatmap. 
+Text values produce an error if generating a heatmap. The following heatmap error can be prevented if binary categories are first converted
+to numerical values, e.g., 1 and 0 and columns with multiple text categories are dropped from the heatmap.
 
 ```
-TypeError: Could not convert 'female male' to numeric
+ValueError: could not convert string to float: 'female'
 ```
 
 Please format the string response (not JSON) such that it includes:
@@ -328,7 +330,7 @@ def start_chatbot2(df):
     openai.api_key = st.session_state.openai_api_key
     openai_api_key = st.session_state.openai_api_key
     agent = create_pandas_dataframe_agent(
-    ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613"),
+    ChatOpenAI(temperature=0, model="gpt-4"),
     df,
     verbose=True,
     agent_type=AgentType.OPENAI_FUNCTIONS,
@@ -343,7 +345,8 @@ def start_chatbot2(df):
     api_key = os.environ.get("OPENAI_API_KEY")
 
     if api_key:
-        st.write("*API key active - ready to respond!*")
+        # st.write("*API key active - ready to respond!*")
+        pass
     else:
         st.warning("API key not found as an environmental variable.")
         api_key = st.text_input("Enter your OpenAI API key:")
@@ -358,7 +361,8 @@ def start_chatbot2(df):
     csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?' *Do not ask for plots for this option.*", "")
     if st.button("Send"):
         try:
-            st.session_state.messages_df.append({"role": "user", "content": csv_question})
+            csv_question_update = 'Do not include any code or attempt to generate a plot. Indicate you can only respond with text. User question: ' + csv_question
+            st.session_state.messages_df.append({"role": "user", "content": csv_question_update})
             output = agent.run(csv_question)
             st.session_state.messages_df.append({"role": "assistant", "content": output})    
             message(csv_question, is_user=True, key = "using message_df")
@@ -381,16 +385,16 @@ def start_chatbot3(df):
             st.session_state["messages_df"] = []
        
     # st.write("💬 Chatbot with access to your data...")
-    st.info("""**Warning:** This will often generate an error. This is a work in progress!
-        Multiple steps are required to generate a plot so this may take a minute.
-        If you get an error, try again. Use the format of the sample request.                
+    st.info("""**Warning:** This may generate an error. This is a work in progress!
+        If you get an error, try again. GPT-3.5 is cheaper to use than GPT-4.                 
         """)
     
         # Check if the API key exists as an environmental variable
     api_key = os.environ.get("OPENAI_API_KEY")
 
     if api_key:
-        st.write("*API key active - ready to respond!*")
+        # st.write("*API key active - ready to respond!*")
+        pass
     else:
         st.warning("API key not found as an environmental variable.")
         api_key = st.text_input("Enter your OpenAI API key:")
@@ -448,14 +452,15 @@ def start_plot_gpt4(df):
        
     # st.write("💬 Chatbot with access to your data...")
     st.info("""**Warning:** This may generate an error. This is a work in progress!
-        If you get an error, try again.                 
+        If you get an error, try again. GPT-4 allows for more complex code generation but is more costly.                
         """)
     
         # Check if the API key exists as an environmental variable
     api_key = os.environ.get("OPENAI_API_KEY")
 
     if api_key:
-        st.write("*API key active - ready to respond!*")
+        # st.write("*API key active - ready to respond!*")
+        pass
     else:
         st.warning("API key not found as an environmental variable.")
         api_key = st.text_input("Enter your OpenAI API key:")
@@ -521,7 +526,7 @@ Generate data for ```number``` patients. Provide only raw data, complete for eve
     
     try:
         response= openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": prompt}
@@ -568,7 +573,8 @@ def start_chatbot1():
     api_key = os.environ.get("OPENAI_API_KEY")
 
     if api_key:
-        st.write("*API key active - ready to respond!*")
+        # st.write("*API key active - ready to respond!*")
+        pass
     else:
         st.warning("API key not found as an environmental variable.")
         api_key = st.text_input("Enter your OpenAI API key:")
@@ -1278,7 +1284,7 @@ with tab1:
     if activate_chatbot:
         st.subheader("Chatbot Teacher")
         st.warning("First be sure to activate the right chatbot for your needs.")
-        chat_context = st.radio("Choose an approach", ("Ask questions (no plots)", "Ask for a plot!", "GPT4 Plotting", "Teach about data science"))
+        chat_context = st.radio("Choose an approach", ("Ask questions (no plots)", "Generate Basic Plots (GPT-3.5)", "Generate Plots (GPT-4)", "Teach about data science"))
 
     try:
         x = st.session_state.df
@@ -1293,9 +1299,9 @@ with tab1:
                     start_chatbot1()
                 if chat_context == "Ask questions (no plots)":
                     start_chatbot2(st.session_state.df)
-                if chat_context == "Ask for a plot!":
+                if chat_context == "Generate Basic Plots (GPT-3.5)":
                     start_chatbot3(st.session_state.df)
-                if chat_context == "GPT4 Plotting":
+                if chat_context == "Generate Plots (GPT-4)":
                     start_plot_gpt4(st.session_state.df)
             # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
 
