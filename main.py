@@ -369,7 +369,7 @@ def start_chatbot2(df, selected_model):
             message(output)
         except Exception as e:
             st.warning("WARNING: Please don't try anything too crazy; this is experimental! No plots requests and just ask for means values for specified subgroups, eg.")
-            sys.exit(1)
+            # sys.exit(1)
 
  
 def start_chatbot3(df):
@@ -435,7 +435,7 @@ def start_chatbot3(df):
                     st.write('Error - we noted this was fragile! Try again.', e)
         except Exception as e:
             st.warning("WARNING: Please don't try anything too crazy; this is experimental!")
-            sys.exit(1)
+            # sys.exit(1)
             # return None, None
             
 def start_plot_gpt4(df):
@@ -501,7 +501,7 @@ def start_plot_gpt4(df):
                     st.write('Error - we noted this was fragile! Try again.', e)
         except Exception as e:
             st.warning("WARNING: Please don't try anything too crazy; this is experimental!")
-            sys.exit(1)
+            # sys.exit(1)
             # return None, None
             
 
@@ -582,7 +582,7 @@ Number of rows: ```number```
     
     except Exception as e:
         st.warning("WARNING: Please double check your proposed column names for duplicates or invalid characters!")
-        sys.exit(1)
+        # sys.exit(1)
         # return None, None
 
     
