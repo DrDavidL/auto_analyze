@@ -248,15 +248,19 @@ def assess_data_readiness(df):
         st.warning('Dataframe not yet amenable to missing for "missingno" library analysis.')
 
     # Check if the DataFrame is empty
-    if df.empty:
-        readiness_summary['data_empty'] = True
-        readiness_summary['columns'] = {}
-        readiness_summary['missing_columns'] = []
-        readiness_summary['inconsistent_data_types'] = []
-        readiness_summary['missing_values'] = {}
-        readiness_summary['data_ready'] = False
-        return readiness_summary
-
+    
+    try:
+        if df.empty:
+            readiness_summary['data_empty'] = True
+            readiness_summary['columns'] = {}
+            readiness_summary['missing_columns'] = []
+            readiness_summary['inconsistent_data_types'] = []
+            readiness_summary['missing_values'] = {}
+            readiness_summary['data_ready'] = False
+            return readiness_summary
+    except:
+        st.warning('Dataframe not yet amenable to empty analysis.')
+    
     # Get column information
     st.write('second line of assess_data_readiness')
     try:
