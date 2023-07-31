@@ -1489,45 +1489,48 @@ For medical students, think of correlation heatmaps as a quick way to visually i
             # Display the readiness summary using Streamlit
             # Display the readiness summary using Streamlit
             st.subheader("Data Readiness Summary")
-
-            if readiness_summary['data_empty']:
-                st.write("The DataFrame is empty.")
-            else:
-                # Combine column information and readiness summary into a single DataFrame
-                column_info_df = pd.DataFrame.from_dict(
-                    readiness_summary['columns'],
-                    orient='index',
-                    columns=['Data Type']
-                )
-                summary_df = pd.DataFrame.from_dict(
-                    readiness_summary['missing_values'],
-                    orient='index',
-                    columns=['Missing Values']
-                )
-                summary_df['Data Type'] = column_info_df['Data Type']
-
-                # Display the combined table
-                st.write(summary_df)
-                
-                # Display heatmap and full view
-                # missing_matrix = msno.matrix(st.session_state.df)
-                # st.pyplot(missing_matrix.figure)
-                # missing_heatmap = msno.heatmap(st.session_state.df)
-                # st.pyplot(missing_heatmap.figure)
-
-                if readiness_summary['missing_columns']:
-                    st.write("Missing Columns:")
-                    st.write(readiness_summary['missing_columns'])
-
-                if readiness_summary['inconsistent_data_types']:
-                    st.write("Inconsistent Data Types:")
-                    st.write(readiness_summary['inconsistent_data_types'])
-
-                if readiness_summary['data_ready']:
-                    st.success("The data is ready for analysis!")
-                else:
-                    st.warning("The data is not fully ready for analysis.")
             
+            try:
+
+                if readiness_summary['data_empty']:
+                    st.write("The DataFrame is empty.")
+                else:
+                    # Combine column information and readiness summary into a single DataFrame
+                    column_info_df = pd.DataFrame.from_dict(
+                        readiness_summary['columns'],
+                        orient='index',
+                        columns=['Data Type']
+                    )
+                    summary_df = pd.DataFrame.from_dict(
+                        readiness_summary['missing_values'],
+                        orient='index',
+                        columns=['Missing Values']
+                    )
+                    summary_df['Data Type'] = column_info_df['Data Type']
+
+                    # Display the combined table
+                    st.write(summary_df)
+                    
+                    # Display heatmap and full view
+                    # missing_matrix = msno.matrix(st.session_state.df)
+                    # st.pyplot(missing_matrix.figure)
+                    # missing_heatmap = msno.heatmap(st.session_state.df)
+                    # st.pyplot(missing_heatmap.figure)
+
+                    if readiness_summary['missing_columns']:
+                        st.write("Missing Columns:")
+                        st.write(readiness_summary['missing_columns'])
+
+                    if readiness_summary['inconsistent_data_types']:
+                        st.write("Inconsistent Data Types:")
+                        st.write(readiness_summary['inconsistent_data_types'])
+
+                    if readiness_summary['data_ready']:
+                        st.success("The data is ready for analysis!")
+                    else:
+                        st.warning("The data is not fully ready for analysis.")
+            except:
+                st.write("The DataFrame is isn't yet ready for readiness assessment. :)  ")
             # st.info("Check if you need to preprocess data")
             # missing_values, outliers, data_types, skewness, cardinality = analyze_dataframe(df)
             # st.write("Missing values")
