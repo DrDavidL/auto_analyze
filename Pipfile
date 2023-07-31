@@ -24,6 +24,7 @@ kaleido = "*"
 beautifulsoup4 = "*"
 pillow = "*"
 missingno = "*"
+urllib3 < 2.0
 
 [dev-packages]
 
