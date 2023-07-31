@@ -1340,7 +1340,7 @@ with tab1:
         st.subheader("Step 2: Tools for Analysis")
         col1, col2 = st.columns(2)
         with col1:
-            check_preprocess = st.checkbox("Assess data readiness", key = "Preprocess needed")
+            check_preprocess = st.checkbox("Assess dataset readiness", key = "Preprocess now needed")
             header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
             summary = st.checkbox("Summary (numerical data)", key = "show data")
             summary_cat = st.checkbox("Summary (categorical data)", key = "show summary cat")
@@ -1485,7 +1485,9 @@ For medical students, think of correlation heatmaps as a quick way to visually i
                 st.pyplot(plt)
                 
         if check_preprocess:
+            st.write("Running readiness assessment...")
             readiness_summary = assess_data_readiness(st.session_state.df)
+            st.write("Readiness assessment complete.")
             # Display the readiness summary using Streamlit
             # Display the readiness summary using Streamlit
             st.subheader("Data Readiness Summary")
