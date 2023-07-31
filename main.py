@@ -237,7 +237,7 @@ Remember to structure the code such that it is properly indented and formatted a
 
 def assess_data_readiness(df):
     readiness_summary = {}
-    
+    st.write('first line of assess_data_readiness')
     try:
         missing_matrix = msno.matrix(df)
         st.pyplot(missing_matrix.figure)
@@ -258,6 +258,7 @@ def assess_data_readiness(df):
         return readiness_summary
 
     # Get column information
+    st.write('second line of assess_data_readiness')
     try:
         columns = {col: str(df[col].dtype) for col in df.columns}
         readiness_summary['columns'] = columns
@@ -265,6 +266,7 @@ def assess_data_readiness(df):
         st.warning('Dataframe not yet amenable to column analysis.')
 
     # Check for missing columns
+    st.write('third line of assess_data_readiness')
     try:
         missing_columns = df.columns[df.isnull().all()].tolist()
         readiness_summary['missing_columns'] = missing_columns
@@ -272,6 +274,7 @@ def assess_data_readiness(df):
         st.warning('Dataframe not yet amenable to missing column analysis.')
 
     # Check for inconsistent data types
+    st.write('fourth line of assess_data_readiness')
     try:
         inconsistent_data_types = []
         for col in df.columns:
@@ -284,7 +287,7 @@ def assess_data_readiness(df):
         st.warning('Dataframe not yet amenable to data type analysis.')
 
     # Check for missing values
-    
+    st.write('fifth line of assess_data_readiness')
     try:
         missing_values = df.isnull().sum().to_dict()
         readiness_summary['missing_values'] = missing_values
@@ -292,6 +295,7 @@ def assess_data_readiness(df):
         st.warning('Dataframe not yet amenable to specific missing value analysis.')
 
     # Determine overall data readiness
+    st.write('sixth line of assess_data_readiness')
     try:
         readiness_summary['data_empty'] = False
         if missing_columns or inconsistent_data_types or any(missing_values.values()):
