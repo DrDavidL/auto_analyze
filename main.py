@@ -237,10 +237,15 @@ Remember to structure the code such that it is properly indented and formatted a
 
 def assess_data_readiness(df):
     readiness_summary = {}
-    missing_matrix = msno.matrix(st.session_state.df)
-    st.pyplot(missing_matrix.figure)
-    missing_heatmap = msno.heatmap(st.session_state.df)
-    st.pyplot(missing_heatmap.figure)
+    
+    try:
+        missing_matrix = msno.matrix(df)
+        st.pyplot(missing_matrix.figure)
+        missing_heatmap = msno.heatmap(df)
+        st.pyplot(missing_heatmap.figure)
+        
+    except:
+        st.warning('Dataframe not yet amenable to missing for "missingno" library analysis.')
 
     # Check if the DataFrame is empty
     if df.empty:
@@ -253,33 +258,50 @@ def assess_data_readiness(df):
         return readiness_summary
 
     # Get column information
-    columns = {col: str(df[col].dtype) for col in df.columns}
-    readiness_summary['columns'] = columns
+    try:
+        columns = {col: str(df[col].dtype) for col in df.columns}
+        readiness_summary['columns'] = columns
+    except:
+        st.warning('Dataframe not yet amenable to column analysis.')
 
     # Check for missing columns
-    missing_columns = df.columns[df.isnull().all()].tolist()
-    readiness_summary['missing_columns'] = missing_columns
+    try:
+        missing_columns = df.columns[df.isnull().all()].tolist()
+        readiness_summary['missing_columns'] = missing_columns
+    except:
+        st.warning('Dataframe not yet amenable to missing column analysis.')
 
     # Check for inconsistent data types
-    inconsistent_data_types = []
-    for col in df.columns:
-        unique_data_types = df[col].apply(type).drop_duplicates().tolist()
-        if len(unique_data_types) > 1:
-            inconsistent_data_types.append(col)
-    readiness_summary['inconsistent_data_types'] = inconsistent_data_types
+    try:
+        inconsistent_data_types = []
+        for col in df.columns:
+            unique_data_types = df[col].apply(type).drop_duplicates().tolist()
+            if len(unique_data_types) > 1:
+                inconsistent_data_types.append(col)
+        readiness_summary['inconsistent_data_types'] = inconsistent_data_types
+        
+    except:
+        st.warning('Dataframe not yet amenable to data type analysis.')
 
     # Check for missing values
-    missing_values = df.isnull().sum().to_dict()
-    readiness_summary['missing_values'] = missing_values
+    
+    try:
+        missing_values = df.isnull().sum().to_dict()
+        readiness_summary['missing_values'] = missing_values
+    except:
+        st.warning('Dataframe not yet amenable to specific missing value analysis.')
 
     # Determine overall data readiness
-    readiness_summary['data_empty'] = False
-    if missing_columns or inconsistent_data_types or any(missing_values.values()):
-        readiness_summary['data_ready'] = False
-    else:
-        readiness_summary['data_ready'] = True
+    try:
+        readiness_summary['data_empty'] = False
+        if missing_columns or inconsistent_data_types or any(missing_values.values()):
+            readiness_summary['data_ready'] = False
+        else:
+            readiness_summary['data_ready'] = True
 
-    return readiness_summary
+        return readiness_summary
+    except:
+        st.warning('Dataframe not yet amenable to overall data readiness analysis.')
 
 
 def process_model_output(output):
@@ -1293,7 +1315,16 @@ with tab1:
         method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
         if st.button('Apply the Method to Replace Missing Values'):
                 st.session_state.df = replace_missing_values(st.session_state.df, method)
-        pre_process = st.checkbox(" Assign bivariate categories into 1 or 0 based on frequency (0 most frequent) if needed for correlations, e.g.", key = "Preprocess")
+        # pre_process = st.checkbox(" Assign bivariate categories into 1 or 0 based on frequency (0 most frequent) if needed for correlations, e.g.", key = "Preprocess")
+                modified_csv = st.session_state.df.to_csv(index=False)          
+                    
+                st.warning("Download your processed data now to capture changes!")
+                st.download_button(
+                    label="Download Processed Data!",
+                    data=modified_csv,
+                    file_name="patient_data_processed.csv",
+                    mime="text/csv", key = 'processed_df'
+                    )  
     
     
     
