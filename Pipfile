@@ -23,6 +23,7 @@ langchain = "*"
 kaleido = "*"
 beautifulsoup4 = "*"
 pillow = "*"
+missingno = "*"
 
 [dev-packages]
 

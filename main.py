@@ -1,6 +1,7 @@
 import numpy as np
 # import langchain
 import pandas as pd
+import missingno as msno
 import io
 import sys
 from ydata_profiling import ProfileReport
@@ -59,6 +60,9 @@ if 'last_response' not in st.session_state:
      
 if 'df' not in st.session_state:
     st.session_state.df = pd.DataFrame()
+
+if 'modified_df' not in st.session_state:
+    st.session_state.modified_df = pd.DataFrame()
     
 if "openai_api_key" not in st.session_state:
     st.session_state.openai_api_key = ''
@@ -367,8 +371,19 @@ def start_chatbot2(df, selected_model):
             st.session_state.messages_df.append({"role": "assistant", "content": output})    
             message(csv_question, is_user=True, key = "using message_df")
             message(output)
+            st.session_state.df = df
+            modified_csv = df.to_csv(index=False)          
+               
+            st.warning("If you asked for modifications to your dataset, download your new data now to capture changes!")
+            st.download_button(
+                label="Download Modified Data!",
+                data=modified_csv,
+                file_name="patient_data_modified.csv",
+                mime="text/csv", key = 'modified_df'
+                )   
         except Exception as e:
             st.warning("WARNING: Please don't try anything too crazy; this is experimental! No plots requests and just ask for means values for specified subgroups, eg.")
+            st.write(f'Error: {e}')
             # sys.exit(1)
 
  
@@ -1458,6 +1473,12 @@ For medical students, think of correlation heatmaps as a quick way to visually i
 
                 # Display the combined table
                 st.write(summary_df)
+                
+                # Display heatmap and full view
+                missing_matrix = msno.matrix(st.session_state.df)
+                st.pyplot(missing_matrix.figure)
+                missing_heatmap = msno.heatmap(st.session_state.df)
+                st.pyplot(missing_heatmap.figure)
 
                 if readiness_summary['missing_columns']:
                     st.write("Missing Columns:")
