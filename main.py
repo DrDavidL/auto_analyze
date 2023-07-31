@@ -1393,8 +1393,8 @@ with tab1:
             # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
 
         
-        if pre_process:
-            st.session_state.df = process_dataframe(st.session_state.df)
+        # if pre_process:
+        #     st.session_state.df = process_dataframe(st.session_state.df)
         
         if summary:
             st.info("Summary of data")
