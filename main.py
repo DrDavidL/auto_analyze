@@ -205,7 +205,7 @@ Do not generate code as follows. Remember, all outputs musbe saved to a file as 
 
 ```
 df_grouped = df.groupby('Diabetes').mean()
-print(df_grouped)
+st.write(df_grouped)
 ```
 
 Instead, code like this should be used:
@@ -237,6 +237,10 @@ Remember to structure the code such that it is properly indented and formatted a
 
 def assess_data_readiness(df):
     readiness_summary = {}
+    missing_matrix = msno.matrix(st.session_state.df)
+    st.pyplot(missing_matrix.figure)
+    missing_heatmap = msno.heatmap(st.session_state.df)
+    st.pyplot(missing_heatmap.figure)
 
     # Check if the DataFrame is empty
     if df.empty:
@@ -307,7 +311,7 @@ def process_model_output(output):
 def safety_check(code):
     dangerous_keywords = [' exec', ' eval', ' open', ' sys', ' subprocess', ' del',
                           ' delete', ' remove', ' os', ' shutil', ' pip',' conda',
-                          ' print', ' exit', ' quit', ' globals', ' locals', ' dir',
+                          ' st.write', ' exit', ' quit', ' globals', ' locals', ' dir',
                           ' reload', ' lambda', ' setattr', ' getattr', ' delattr',
                           ' yield', ' assert', ' break', ' continue', ' raise', ' try', 
                           'compile', '__import__'
@@ -667,31 +671,31 @@ def start_chatbot1(selected_model):
             response = openai.ChatCompletion.create(model=selected_model, messages=st.session_state.messages)
         except openai.error.Timeout as e:
             #Handle timeout error, e.g. retry or log
-            print(f"I'm super busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
+            st.write(f"I'm super busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
             pass
         except openai.error.APIError as e:
             #Handle API error, e.g. retry or log
-            print(f"OpenAI API returned an API Error: {e}")
+            st.write(f"OpenAI API returned an API Error: {e}")
             pass
         except openai.error.APIConnectionError as e:
             #Handle connection error, e.g. check network or log
-            print(f"OpenAI API request failed to connect: {e}")
+            st.write(f"OpenAI API request failed to connect: {e}")
             pass
         except openai.error.InvalidRequestError as e:
             #Handle invalid request error, e.g. validate parameters or log
-            print(f"OpenAI API request was invalid: {e}")
+            st.write(f"OpenAI API request was invalid: {e}")
             pass
         except openai.error.AuthenticationError as e:
             #Handle authentication error, e.g. check credentials or log
-            print(f"OpenAI API request was not authorized: {e}")
+            st.write(f"OpenAI API request was not authorized: {e}")
             pass
         except openai.error.PermissionError as e:
             #Handle permission error, e.g. check scope or log
-            print(f"OpenAI API request was not permitted: {e}")
+            st.write(f"OpenAI API request was not permitted: {e}")
             pass
         except openai.error.RateLimitError as e:
             #Handle rate limit error, e.g. wait or log
-            print(f"I'm so busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
+            st.write(f"I'm so busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
             pass
 
         # response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
@@ -919,11 +923,11 @@ def preprocess(df, target_col):
                 if df[col].isnull().values.any():
                     mean_imputer = SimpleImputer(strategy='mean')
                     df[col] = mean_imputer.fit_transform(df[[col]])
-                    print(f"Imputed missing values in {col} with mean.")
+                    st.write(f"Imputed missing values in {col} with mean.")
                 included_cols.append(col)
 
-    print(f"Included Columns: {included_cols}")
-    print(f"Excluded Columns: {excluded_cols}")
+    st.write(f"Included Columns: {included_cols}")
+    st.write(f"Excluded Columns: {excluded_cols}")
     
     return df[included_cols], included_cols, excluded_cols
 
@@ -1475,10 +1479,10 @@ For medical students, think of correlation heatmaps as a quick way to visually i
                 st.write(summary_df)
                 
                 # Display heatmap and full view
-                missing_matrix = msno.matrix(st.session_state.df)
-                st.pyplot(missing_matrix.figure)
-                missing_heatmap = msno.heatmap(st.session_state.df)
-                st.pyplot(missing_heatmap.figure)
+                # missing_matrix = msno.matrix(st.session_state.df)
+                # st.pyplot(missing_matrix.figure)
+                # missing_heatmap = msno.heatmap(st.session_state.df)
+                # st.pyplot(missing_heatmap.figure)
 
                 if readiness_summary['missing_columns']:
                     st.write("Missing Columns:")
