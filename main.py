@@ -1284,7 +1284,7 @@ with tab1:
     # st.sidebar.subheader("Upload your data") 
 
     st.sidebar.subheader("Step 1: Upload your data or view a demo dataset")
-    demo_or_custom = st.sidebar.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "Generate Data", "CSV Upload"), horizontal=True)
+    demo_or_custom = st.sidebar.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "Demo 3 (missing data example)", "Generate Data", "CSV Upload"), horizontal=True)
     if demo_or_custom == "CSV Upload":
         uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file:
@@ -1292,12 +1292,17 @@ with tab1:
 
     if demo_or_custom == 'Demo 1 (diabetes)':
         file_path = "data/predictdm.csv"
-        st.sidebar.write("About Demo 1 dataset: https://data.world/informatics-edu/diabetes-prediction")
+        st.sidebar.markdown("[About Demo 1 dataset](https://data.world/informatics-edu/diabetes-prediction)")
         st.session_state.df = load_data(file_path)
         
     if demo_or_custom == 'Demo 2 (cancer)':
         file_path = "data/breastcancernew.csv"
-        st.sidebar.write("About Demo 2 dataset: https://data.world/marshalldatasolution/breast-cancer")
+        st.sidebar.write("[About Demo 2 dataset](https://data.world/marshalldatasolution/breast-cancer)")
+        st.session_state.df = load_data(file_path)
+        
+    if demo_or_custom == 'Demo 3 (missing data example)':
+        file_path = "data/missing_data.csv"
+        st.sidebar.markdown("[About Demo 3 dataset](https://www.lshtm.ac.uk/research/centres-projects-groups/missing-data#dia-missing-data)")
         st.session_state.df = load_data(file_path)
         
     if demo_or_custom == 'Generate Data':
