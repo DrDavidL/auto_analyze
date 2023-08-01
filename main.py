@@ -237,11 +237,14 @@ Remember to structure the code such that it is properly indented and formatted a
 
 def assess_data_readiness(df):
     readiness_summary = {}
-    st.write('first line of assess_data_readiness')
+    st.write('White horizontal lines show missing data')
     try:
         missing_matrix = msno.matrix(df)
+        # st.write('line 2 of assess_data_readiness')
         st.pyplot(missing_matrix.figure)
+        # st.write('line 3 of assess_data_readiness')
         missing_heatmap = msno.heatmap(df)
+        st.write('Heatmap of convergence of missing data')
         st.pyplot(missing_heatmap.figure)
         
     except:
