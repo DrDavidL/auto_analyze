@@ -1729,13 +1729,17 @@ with tab2:
         st.subheader("""
         Select Features to Include in the Model
         """)
-        final_columns = st.multiselect('Select features to include in your model:', included_cols, key = "columns_to_include-10")
+        all_features = st.checkbox("Select all features", value=False, key="select_all_features-10")
+        if all_features:
+            final_columns = included_cols
+        else:        
+            final_columns = st.multiselect('Select features to include in your model:', included_cols, key = "columns_to_include-10")
         if len(excluded_cols) > 0:
             st.write(f"Unavailable columns for modeling: {excluded_cols}")
 
         # Create binary target variable based on the selected categories
         df_processed[target_col] = df_processed[target_col].apply(lambda x: 1 if x in categories_to_predict else 0)
-
+        X = df_processed[final_columns]
 
         # Split the dataframe into data and labels
         # List of available scaling options
@@ -1751,23 +1755,23 @@ with tab2:
             "L1 Normalization": "l1",
             "L2 Normalization": "l2",
         }
-
+        scaling_or_norm = st.checkbox("Scaling or Normalization?", value=False, key="scaling_or_norm-10")
         # User selection for scaling option
-        scaling_option = st.selectbox("Select Scaling Option", list(scaling_options.keys()))
-
-        # User selection for normalization option
-        normalization_option = st.selectbox("Select Normalization Option", list(normalization_options.keys()))
+        if scaling_or_norm == True:
+            scaling_option = st.selectbox("Select Scaling Option", list(scaling_options.keys()))
+            # User selection for normalization option
+            normalization_option = st.selectbox("Select Normalization Option", list(normalization_options.keys()))
 
         # Apply selected scaling and normalization options to the features
-        X = df_processed[included_cols]
+        
 
-        if scaling_option != "No Scaling":
-            scaler = scaling_options[scaling_option]
-            X = scaler.fit_transform(X)
+            if scaling_option != "No Scaling":
+                scaler = scaling_options[scaling_option]
+                X = scaler.fit_transform(X)
 
-        if normalization_option != "No Normalization":
-            normalization_type = normalization_options[normalization_option]
-            X = normalize(X, norm=normalization_type)
+            if normalization_option != "No Normalization":
+                normalization_type = normalization_options[normalization_option]
+                X = normalize(X, norm=normalization_type)
         # X = df_processed.drop(columns=[target_col])
         # X = df_processed[final_columns]
         y = df_processed[target_col]
