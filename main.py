@@ -15,7 +15,7 @@ import seaborn as sns
 from statsmodels.imputation import mice
 from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler, MinMaxScaler, normalize
 from sklearn.decomposition import PCA
 from sklearn.metrics import accuracy_score, confusion_matrix, roc_curve, roc_auc_score, average_precision_score, precision_recall_curve, auc, f1_score
 from sklearn.linear_model import LogisticRegression
@@ -1738,8 +1738,38 @@ with tab2:
 
 
         # Split the dataframe into data and labels
+        # List of available scaling options
+        scaling_options = {
+            "No Scaling": None,
+            "Standard Scaling": StandardScaler(),
+            "Min-Max Scaling": MinMaxScaler(),
+        }
+
+        # List of available normalization options
+        normalization_options = {
+            "No Normalization": None,
+            "L1 Normalization": "l1",
+            "L2 Normalization": "l2",
+        }
+
+        # User selection for scaling option
+        scaling_option = st.selectbox("Select Scaling Option", list(scaling_options.keys()))
+
+        # User selection for normalization option
+        normalization_option = st.selectbox("Select Normalization Option", list(normalization_options.keys()))
+
+        # Apply selected scaling and normalization options to the features
+        X = df_processed[included_cols]
+
+        if scaling_option != "No Scaling":
+            scaler = scaling_options[scaling_option]
+            X = scaler.fit_transform(X)
+
+        if normalization_option != "No Normalization":
+            normalization_type = normalization_options[normalization_option]
+            X = normalize(X, norm=normalization_type)
         # X = df_processed.drop(columns=[target_col])
-        X = df_processed[final_columns]
+        # X = df_processed[final_columns]
         y = df_processed[target_col]
 
         # Split into training and test sets
