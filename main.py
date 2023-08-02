@@ -1726,6 +1726,9 @@ with tab2:
         df_processed[target_col] = st.session_state.df[target_col]  # Include the target column back into the dataframe
 
         # st.write(f"Included columns: {included_cols}")
+        st.subheader("""
+        Select Features to Include in the Model
+        """)
         final_columns = st.multiselect('Select features to include in your model:', included_cols, key = "columns_to_include-10")
         if len(excluded_cols) > 0:
             st.write(f"Unavailable columns for modeling: {excluded_cols}")
