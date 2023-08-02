@@ -130,7 +130,7 @@ def fetch_api_key():
         else:        
             # If the secret is not found, prompt the user for their API key
             st.warning("Oh, dear friend of mine! It seems your API key has gone astray, hiding in the shadows. Pray, reveal it to me!")
-            api_key = st.text_input("Please, whisper your API key into my ears: ", key = 'warning')
+            api_key = st.text_input("Please, whisper your API key into my ears: ", key = 'warning2')
   
             st.session_state.openai_api_key = api_key
             os.environ['OPENAI_API_KEY'] = api_key
@@ -366,7 +366,7 @@ def replace_show_with_save(code_string, filename='output.png'):
 
     return code_string
 
-def start_chatbot2(df, selected_model):
+def start_chatbot2(df, selected_model, key = "main routine"):
     fetch_api_key()
     openai.api_key = st.session_state.openai_api_key
     openai_api_key = st.session_state.openai_api_key
@@ -405,16 +405,18 @@ def start_chatbot2(df, selected_model):
             csv_question_update = 'Do not include any code or attempt to generate a plot. Indicate you can only respond with text. User question: ' + csv_question
             st.session_state.messages_df.append({"role": "user", "content": csv_question_update})
             output = agent.run(csv_question)
+            if True:
+                st.session_state.modified_df = df
             st.session_state.messages_df.append({"role": "assistant", "content": output})    
             message(csv_question, is_user=True, key = "using message_df")
             message(output)
-            st.session_state.df = df
-            modified_csv = df.to_csv(index=False)          
+            
+            chat_modified_csv = df.to_csv(index=False)          
                
-            st.warning("If you asked for modifications to your dataset, download your new data now to capture changes!")
+            st.warning("If you asked for modifications to your dataset, select - modified dataframe at top left of sidebar!")
             st.download_button(
                 label="Download Modified Data!",
-                data=modified_csv,
+                data=chat_modified_csv,
                 file_name="patient_data_modified.csv",
                 mime="text/csv", key = 'modified_df'
                 )   
@@ -422,7 +424,7 @@ def start_chatbot2(df, selected_model):
             st.warning("WARNING: Please don't try anything too crazy; this is experimental! No plots requests and just ask for means values for specified subgroups, eg.")
             st.write(f'Error: {e}')
             # sys.exit(1)
-
+    
  
 def start_chatbot3(df):
     fetch_api_key()
@@ -1265,12 +1267,13 @@ with st.expander('About AutoAnalyzer'):
     
 tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
 fetch_api_key()
-gpt_version = st.sidebar.radio("Select GPT model:", ("GPT-3.5 ($)", "GPT-4 ($$$$)"), index=0)
+gpt_version = st.sidebar.radio("Select GPT model:", ("GPT-3.5 ($)", "GPT-3.5 16k ($$)", "GPT-4 ($$$$)"), index=0)
 if gpt_version == "GPT-3.5 ($)":
     selected_model ="gpt-3.5-turbo"
 if gpt_version == "GPT-4 ($$$$)":
     selected_model = "gpt-4"
-
+if gpt_version == "GPT-3.5 16k ($$)":
+    selected_model  = "gpt-3.5-turbo-16k"
 
 # if openai.api_key is None:
 #     os.environ["OPENAI_API_KEY"] = fetch_api_key()
@@ -1284,7 +1287,7 @@ with tab1:
     # st.sidebar.subheader("Upload your data") 
 
     st.sidebar.subheader("Step 1: Upload your data or view a demo dataset")
-    demo_or_custom = st.sidebar.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "Demo 3 (missing data example)", "Generate Data", "CSV Upload"), horizontal=True)
+    demo_or_custom = st.sidebar.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "Demo 3 (missing data example)", "Generate Data", "CSV Upload", "Modified Dataframe"), horizontal=True)
     if demo_or_custom == "CSV Upload":
         uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file:
@@ -1304,6 +1307,17 @@ with tab1:
         file_path = "data/missing_data.csv"
         st.sidebar.markdown("[About Demo 3 dataset](https://www.lshtm.ac.uk/research/centres-projects-groups/missing-data#dia-missing-data)")
         st.session_state.df = load_data(file_path)
+        
+    if demo_or_custom == 'Modified Dataframe':
+        st.sidebar.markdown("Using the dataframe from the previous step.")
+        if len(st.session_state.modified_df) == 0:
+            st.sidebar.warning("No saved dataframe; using demo dataset 1.")
+            file_path = "data/predictdm.csv"
+            st.sidebar.markdown("[About Demo 1 dataset](https://data.world/informatics-edu/diabetes-prediction)")
+            st.session_state.df = load_data(file_path)
+            
+        else:
+            st.session_state.df = st.session_state.modified_df
         
     if demo_or_custom == 'Generate Data':
         if check_password():
@@ -1399,7 +1413,7 @@ with tab1:
                 if chat_context == "Teach about data science":
                     start_chatbot1(selected_model)
                 if chat_context == "Ask questions (no plots)":
-                    start_chatbot2(st.session_state.df, selected_model)
+                    start_chatbot2(st.session_state.df, selected_model, key = "chatbot2 main")
                 if chat_context == "Generate Plots":
                     if selected_model == "gpt-3.5-turbo":
                         start_chatbot3(st.session_state.df)
