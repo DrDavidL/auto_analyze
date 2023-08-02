@@ -962,8 +962,8 @@ def preprocess(df, target_col):
                     st.write(f"Imputed missing values in {col} with mean.")
                 included_cols.append(col)
 
-    st.write(f"Included Columns: {included_cols}")
-    st.write(f"Excluded Columns: {excluded_cols}")
+    # st.write(f"Included Columns: {included_cols}")
+    # st.write(f"Excluded Columns: {excluded_cols}")
     
     return df[included_cols], included_cols, excluded_cols
 
@@ -1725,15 +1725,18 @@ with tab2:
         df_processed, included_cols, excluded_cols = preprocess(st.session_state.df.drop(columns=[target_col]), target_col)
         df_processed[target_col] = st.session_state.df[target_col]  # Include the target column back into the dataframe
 
-        st.write(f"Included columns: {included_cols}")
-        st.write(f"Excluded columns: {excluded_cols}")
+        # st.write(f"Included columns: {included_cols}")
+        final_columns = st.multiselect('Select features to include in your model:', included_cols, key = "columns_to_include-10")
+        if len(excluded_cols) > 0:
+            st.write(f"Unavailable columns for modeling: {excluded_cols}")
 
         # Create binary target variable based on the selected categories
         df_processed[target_col] = df_processed[target_col].apply(lambda x: 1 if x in categories_to_predict else 0)
 
 
         # Split the dataframe into data and labels
-        X = df_processed.drop(columns=[target_col])
+        # X = df_processed.drop(columns=[target_col])
+        X = df_processed[final_columns]
         y = df_processed[target_col]
 
         # Split into training and test sets
