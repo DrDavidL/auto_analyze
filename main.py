@@ -13,6 +13,7 @@ import plotly.figure_factory as ff
 import matplotlib.pyplot as plt
 import seaborn as sns
 from statsmodels.imputation import mice
+from sklearn.neural_network import MLPClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.decomposition import PCA
@@ -1743,7 +1744,7 @@ with tab2:
         """)
         model_option = st.selectbox(
             "Which machine learning model would you like to use?",
-            ("Logistic Regression", "Decision Tree", "Random Forest", "Gradient Boosting Machines (GBMs)", "Support Vector Machines (SVMs)")
+            ("Logistic Regression", "Decision Tree", "Random Forest", "Gradient Boosting Machines (GBMs)", "Support Vector Machines (SVMs)", "Neural Network")
         )
 
         if st.button("Predict"):
@@ -1915,6 +1916,33 @@ Challenges:
 - SVMs can be inefficient to train with very large datasets, and they require careful preprocessing of the data and tuning of the parameters.
 
 As with any machine learning model, while an SVM can make predictions about patient health, it's crucial to validate these predictions with medical expertise. Furthermore, an SVM can identify relationships in data, but it doesn't explain why these relationships exist. As always, correlation doesn't imply causation.""")
+                display_metrics(y_test, predictions, y_scores)
+                
+            elif model_option == "Neural Network":
+                model = MLPClassifier(hidden_layer_sizes=(100,), activation='relu')
+                model.fit(X_train, y_train)
+                predictions = model.predict(X_test)
+                accuracy = accuracy_score(y_test, predictions)
+                y_scores = model.predict_proba(X_test)[:, 1]
+                with st.expander("What is a neural network?"):
+                    st.write("""
+A neural network is a type of machine learning model inspired by the structure and function of the human brain's neural network. It is excellent for solving complex problems and making predictions based on historical data.
+
+Just like the human brain consists of interconnected neurons, a neural network consists of interconnected artificial neurons called "nodes" or "neurons". These neurons are organized in layers - an input layer, one or more hidden layers, and an output layer. Each neuron takes input from the previous layer, performs a mathematical operation on the input, and passes the result to the next layer.
+
+Here's a simplified breakdown of how a neural network works:
+
+1. **Feedforward**: The input layer receives the input data, which can be numerical or categorical variables. Each neuron in the hidden layers and the output layer performs a weighted sum of the inputs, applies an activation function, and passes the result to the next layer. This process is called feedforward.
+
+2. **Activation Function**: The activation function introduces non-linearity to the neural network, allowing it to learn and model complex relationships in the data. Common activation functions include sigmoid, tanh, and ReLU.
+
+3. **Backpropagation**: After the feedforward process, the neural network compares its predictions to the actual values and calculates the prediction error. It then adjusts the weights and biases of the neurons in the network through a process called backpropagation. This iterative process continues until the neural network reaches a satisfactory level of accuracy.
+
+Neural networks can be used for a wide range of tasks, including regression, classification, and even more complex tasks like image and speech recognition. They have been successfully applied in various domains, including medicine, finance, and natural language processing.
+
+However, it's important to note that neural networks are computationally intensive and require a large amount of training data to generalize well. Additionally, hyperparameter tuning and regularization techniques may be necessary to prevent overfitting and improve performance.
+            """
+        )
                 display_metrics(y_test, predictions, y_scores)
 
                 
