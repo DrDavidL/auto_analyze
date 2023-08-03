@@ -1431,7 +1431,7 @@ with tab1:
             box_plot = st.checkbox("Box plot", key = "show box")
             violin_plot = st.checkbox("Violin plot", key = "show violin")
             perform_pca = st.checkbox("Perform PCA", key = "show pca")
-            full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Download a Comprehensive Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
+            full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Download a Full Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
             
 
 
