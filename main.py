@@ -130,8 +130,8 @@ def fetch_api_key():
             return 
         else:        
             # If the secret is not found, prompt the user for their API key
-            st.warning("Oh, dear friend of mine! It seems your API key has gone astray, hiding in the shadows. Pray, reveal it to me!")
-            api_key = st.text_input("Please, whisper your API key into my ears: ", key = 'warning2')
+            st.sidebar.warning("Oh, dear friend of mine! It seems your API key has gone astray, hiding in the shadows. Pray, reveal it to me!")
+            api_key = st.sidebar.text_input("Please, whisper your API key into my ears: ", key = 'warning2')
   
             st.session_state.openai_api_key = api_key
             os.environ['OPENAI_API_KEY'] = api_key
@@ -1441,16 +1441,16 @@ with tab1:
 
 
     if needs_preprocess:
-        with st.sidebar.expander("Data Preprocessing Tools - *Assess Data Readiness **first**. Use only if needed.*"):
-            st.write("Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
-            st.write("Step 1: store your current dataframe in working memory by clicking the button below.")
-            if st.button("Store Current Dataframe"):
-                st.session_state.modified_df = st.session_state.df
-            st.write("Step 2: Select 'Use Modified Dataframe' in the sidebar to use the dataframe you just stored.")
-            st.write("Step 3: Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
-            method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
-            if st.button('Apply the Method to Replace Missing Values'):
-                    st.session_state.modified_df = replace_missing_values(st.session_state.modified_df, method)
+        st.info("Data Preprocessing Tools - *Assess Data Readiness **first**. Use only if needed.*")
+        st.write("Step 1: Make a copy of your dataset to modify by clicking the button below.")
+        if st.button("Copy dataset"):
+            st.session_state.modified_df = st.session_state.df
+        st.write("Step 2: Select 'Modified Dataframe' in Step 1 of the sidebar to use the dataframe you just copied.")
+        st.write("Step 3: Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
+        method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
+        if st.button('Apply the Method to Replace Missing Values'):
+                st.session_state.modified_df = replace_missing_values(st.session_state.modified_df, method)
+        st.write("Recheck data readiness to see if you are ready to proceed with analysis.")
         
 
     
