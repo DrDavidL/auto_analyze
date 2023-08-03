@@ -412,15 +412,15 @@ def start_chatbot2(df, selected_model, key = "main routine"):
             message(csv_question, is_user=True, key = "using message_df")
             message(output)
             
-            chat_modified_csv = df.to_csv(index=False)          
+            # chat_modified_csv = df.to_csv(index=False)          
                
-            st.warning("If you asked for modifications to your dataset, select - modified dataframe at top left of sidebar!")
-            st.download_button(
-                label="Download Modified Data!",
-                data=chat_modified_csv,
-                file_name="patient_data_modified.csv",
-                mime="text/csv", key = 'modified_df'
-                )   
+            st.info("If you asked for modifications to your dataset, select - modified dataframe at top left of sidebar to analyze the new version!")
+            # st.download_button(
+            #     label="Download Modified Data!",
+            #     data=chat_modified_csv,
+            #     file_name="patient_data_modified.csv",
+            #     mime="text/csv", key = 'modified_df'
+            #     )   
         except Exception as e:
             st.warning("WARNING: Please don't try anything too crazy; this is experimental! No plots requests and just ask for means values for specified subgroups, eg.")
             st.write(f'Error: {e}')
@@ -940,8 +940,34 @@ def plot_roc_curve(y_true, y_scores):
     
     return fig
 
- 
 def preprocess(df, target_col):
+    included_cols = []
+    excluded_cols = []
+
+    for col in df.columns:
+        if col != target_col:  # Exclude target column from preprocessing
+            if df[col].dtype == 'object':
+                if len(df[col].unique()) == 2:  # Bivariate case
+                    most_freq = df[col].value_counts().idxmax()
+                    least_freq = df[col].value_counts().idxmin()
+                    
+                    # Update the mapping to include 'F' as 0 and 'M' as 1
+                    df[col] = df[col].map({most_freq: 0, least_freq: 1, 'F': 0})
+                    
+                    included_cols.append(col)
+                else:  # Multivariate case
+                    excluded_cols.append(col)
+            elif df[col].dtype in ['int64', 'float64']:  # Numerical case
+                if df[col].isnull().values.any():
+                    mean_imputer = SimpleImputer(strategy='mean')
+                    df[col] = mean_imputer.fit_transform(df[[col]])
+                    st.write(f"Imputed missing values in {col} with mean.")
+                    
+                included_cols.append(col)
+
+    return df[included_cols], included_cols, excluded_cols
+ 
+def preprocess_old(df, target_col):
     included_cols = []
     excluded_cols = []
 
@@ -1264,7 +1290,7 @@ def process_dataframe(df):
 st.title("AutoAnalyzer")
 with st.expander('About AutoAnalyzer'):
     st.write("Author: David Liebovitz, MD, Northwestern University")
-    st.write("Last updated 6/14/23")
+    st.write("Last updated 8/3/23")
     
 tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
 fetch_api_key()
@@ -1310,7 +1336,7 @@ with tab1:
         st.session_state.df = load_data(file_path)
         
     if demo_or_custom == 'Modified Dataframe':
-        st.sidebar.markdown("Using the dataframe from the previous step.")
+        # st.sidebar.markdown("Using the dataframe from the previous step.")
         if len(st.session_state.modified_df) == 0:
             st.sidebar.warning("No saved dataframe; using demo dataset 1.")
             file_path = "data/predictdm.csv"
@@ -1319,6 +1345,15 @@ with tab1:
             
         else:
             st.session_state.df = st.session_state.modified_df
+            # st.sidebar.write("Download the modified dataframe as a CSV file.")
+            modified_csv = st.session_state.modified_df.to_csv(index=False) 
+            st.sidebar.download_button(
+                label="Download Modified Dataset!",
+                data=modified_csv,
+                file_name="modified_data.csv",
+                mime="text/csv",
+                ) 
+            
         
     if demo_or_custom == 'Generate Data':
         if check_password():
@@ -1343,31 +1378,39 @@ with tab1:
 
     with st.expander("Data Preprocessing Tools - *Assess Data Readiness **first**. Use only if needed.*"):
         st.write("Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
+        st.write("Step 1: store your current dataframe in working memory by clicking the button below.")
+        if st.button("Store Current Dataframe"):
+            st.session_state.modified_df = st.session_state.df
+        st.write("Step 2: Select 'Use Modified Dataframe' in the sidebar to use the dataframe you just stored.")
+        st.write("Step 3: Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
         method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
         if st.button('Apply the Method to Replace Missing Values'):
-                st.session_state.df = replace_missing_values(st.session_state.df, method)
+                st.session_state.modified_df = replace_missing_values(st.session_state.modified_df, method)
         # pre_process = st.checkbox(" Assign bivariate categories into 1 or 0 based on frequency (0 most frequent) if needed for correlations, e.g.", key = "Preprocess")
-                modified_csv = st.session_state.df.to_csv(index=False)          
-                    
-                st.warning("Download your processed data now to capture changes!")
-                st.download_button(
-                    label="Download Processed Data!",
-                    data=modified_csv,
-                    file_name="patient_data_processed.csv",
-                    mime="text/csv", key = 'processed_df'
-                    )  
+                # modified_csv = st.session_state.modified_df.to_csv(index=False)          
+                # if st.checkbox("Process for downloading", key = "prepare download"):
+                #     st.write(st.session_state.modified_df.head())
+                  
+                #     st.warning("If desired, download your processed data. Otherwise, continue analysis.")
+                #     st.download_button(
+                #         label="Download Processed Data!",
+                #         data=modified_csv,
+                #         file_name="patient_data_processed.csv",
+                #         mime="text/csv", key = 'processed_df'
+                    # )  
     
     
     
     with st.sidebar:
         if st.session_state.gen_csv is not None:
-            st.warning("Save your generated data!")
+            # st.warning("Save your generated data!")
             st.download_button(
-                label="Download!",
+                label="Download Generated Data!",
                 data=st.session_state.gen_csv,
                 file_name="patient_data.csv",
                 mime="text/csv",
                 )   
+        
         st.subheader("Step 2: Tools for Analysis")
         col1, col2 = st.columns(2)
         with col1:
@@ -1725,10 +1768,12 @@ with tab2:
         df_processed, included_cols, excluded_cols = preprocess(st.session_state.df.drop(columns=[target_col]), target_col)
         df_processed[target_col] = st.session_state.df[target_col]  # Include the target column back into the dataframe
 
-        # st.write(f"Included columns: {included_cols}")
+        
         st.subheader("""
         Select Features to Include in the Model
         """)
+        st.info(f"Available Features for your Model: {included_cols}")
+        st.warning(f"Your Selected Target for Prediction: {target_col} = {categories_to_predict}")
         all_features = st.checkbox("Select all features", value=False, key="select_all_features-10")
         if all_features:
             final_columns = included_cols
@@ -1740,6 +1785,7 @@ with tab2:
         # Create binary target variable based on the selected categories
         df_processed[target_col] = df_processed[target_col].apply(lambda x: 1 if x in categories_to_predict else 0)
         X = df_processed[final_columns]
+        # st.write(X.head())
 
         # Split the dataframe into data and labels
         # List of available scaling options
