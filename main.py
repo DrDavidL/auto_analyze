@@ -1760,7 +1760,7 @@ with tab2:
         target_col = st.selectbox('Select a categorical column as the target:', categorical_cols)
 
         st.subheader("""
-        Set Criteria for the Binary Target Class
+        Set the Target Class Value to Predict
         """)
         categories_to_predict = st.multiselect('Select one or more categories but not all. You need 2 options to predict a group, i.e, your target versus the rest.:', st.session_state.df[target_col].unique().tolist(), key = "target_categories-10")
 
