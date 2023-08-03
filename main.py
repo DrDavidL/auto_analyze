@@ -1233,7 +1233,7 @@ def plot_corr(df):
     return plt
 
 
-@st.cache_data
+@st.cache_resource
 def make_profile(df):
     return ProfileReport(df, title="Profiling Report")
 
