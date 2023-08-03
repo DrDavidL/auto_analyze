@@ -1431,7 +1431,7 @@ with tab1:
             box_plot = st.checkbox("Box plot", key = "show box")
             violin_plot = st.checkbox("Violin plot", key = "show violin")
             perform_pca = st.checkbox("Perform PCA", key = "show pca")
-            full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Automated Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
+            full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Download a Comprehensive Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
             
 
 
@@ -1482,7 +1482,14 @@ with tab1:
             st.info("Full analysis of data")
             profile = make_profile(st.session_state.df)
             # profile = ProfileReport(df, title="Profiling Report")
-            st_profile_report(profile)
+            st.write(f'Since this file is large, please download and then open the full report.')
+            st.download_button(
+                label="Download report",
+                data=profile.to_html(),
+                file_name='full_report.html',
+                mime='text/html',
+            )
+            # st_profile_report(profile)
             
         if histogram: 
             st.info("Histogram of data")
