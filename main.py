@@ -1753,6 +1753,9 @@ with tab2:
         categorical_cols = categorical_cols + numerical_bivariate_cols
         categorical_cols.sort()  # sort the list of columns
 
+        with st.expander("Click to see your current dataset"):
+            st.info("The first 5 rows:")
+            st.write(st.session_state.df.head())
 
         st.subheader("""
         Choose the Target Column
