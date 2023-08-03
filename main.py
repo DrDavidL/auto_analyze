@@ -1290,7 +1290,9 @@ def process_dataframe(df):
 st.title("AutoAnalyzer")
 with st.expander('Please Read: Using AutoAnalyzer'):
     st.info("""Be sure your data is first in a 'tidy' format. Use the demo datasets for examples. (*See https://tidyr.tidyverse.org/ for more information.*)
-    """)
+    Follow the steps listed in the sidebar on the left. After your exploratory analysis is complete, try the machine learning tab to see if you can predict a target variable.""")        
+            
+    # """)
     st.write("Author: David Liebovitz, MD, Northwestern University")
     st.write("Last updated 8/3/23")
     
