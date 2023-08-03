@@ -1288,7 +1288,9 @@ def process_dataframe(df):
     return df
 
 st.title("AutoAnalyzer")
-with st.expander('About AutoAnalyzer'):
+with st.expander('Please Read: Using AutoAnalyzer'):
+    st.info("""Be sure your data is first in a 'tidy' format. Use the demo datasets for examples. (*See https://tidyr.tidyverse.org/ for more information.*)
+    """)
     st.write("Author: David Liebovitz, MD, Northwestern University")
     st.write("Last updated 8/3/23")
     
@@ -1308,8 +1310,7 @@ if gpt_version == "GPT-3.5 16k ($$)":
 
 with tab1:
 
-    st.info("""Be sure your data is first in a 'tidy' format. Use the demo dataset below to check out the top 5 rows for an example. (*See https://tidyr.tidyverse.org/ for more information.*)
-    Be sure to check out the **automated analysis** option for a full report on your data.""")
+
 
     # st.sidebar.subheader("Upload your data") 
 
@@ -1376,16 +1377,16 @@ with tab1:
                 
 
 
-    with st.expander("Data Preprocessing Tools - *Assess Data Readiness **first**. Use only if needed.*"):
-        st.write("Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
-        st.write("Step 1: store your current dataframe in working memory by clicking the button below.")
-        if st.button("Store Current Dataframe"):
-            st.session_state.modified_df = st.session_state.df
-        st.write("Step 2: Select 'Use Modified Dataframe' in the sidebar to use the dataframe you just stored.")
-        st.write("Step 3: Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
-        method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
-        if st.button('Apply the Method to Replace Missing Values'):
-                st.session_state.modified_df = replace_missing_values(st.session_state.modified_df, method)
+    # with st.sidebar.expander("Data Preprocessing Tools - *Assess Data Readiness **first**. Use only if needed.*"):
+    #     st.write("Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
+    #     st.write("Step 1: store your current dataframe in working memory by clicking the button below.")
+    #     if st.button("Store Current Dataframe"):
+    #         st.session_state.modified_df = st.session_state.df
+    #     st.write("Step 2: Select 'Use Modified Dataframe' in the sidebar to use the dataframe you just stored.")
+    #     st.write("Step 3: Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
+    #     method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
+    #     if st.button('Apply the Method to Replace Missing Values'):
+    #             st.session_state.modified_df = replace_missing_values(st.session_state.modified_df, method)
         # pre_process = st.checkbox(" Assign bivariate categories into 1 or 0 based on frequency (0 most frequent) if needed for correlations, e.g.", key = "Preprocess")
                 # modified_csv = st.session_state.modified_df.to_csv(index=False)          
                 # if st.checkbox("Process for downloading", key = "prepare download"):
@@ -1410,11 +1411,14 @@ with tab1:
                 file_name="patient_data.csv",
                 mime="text/csv",
                 )   
+        st.subheader("Step 2: Assess Data Readiness")
+        check_preprocess = st.checkbox("Assess dataset readiness", key = "Preprocess now needed")
+        needs_preprocess = st.checkbox("Select if dataset fails readiness", key = "Open Preprocess")
         
-        st.subheader("Step 2: Tools for Analysis")
+        
+        st.subheader("Step 3: Tools for Analysis")
         col1, col2 = st.columns(2)
         with col1:
-            check_preprocess = st.checkbox("Assess dataset readiness", key = "Preprocess now needed")
             header = st.checkbox("Show header (top 5 rows of data)", key = "show header")
             summary = st.checkbox("Summary (numerical data)", key = "show data")
             summary_cat = st.checkbox("Summary (categorical data)", key = "show summary cat")
@@ -1436,7 +1440,18 @@ with tab1:
 
 
 
-
+    if needs_preprocess:
+        with st.sidebar.expander("Data Preprocessing Tools - *Assess Data Readiness **first**. Use only if needed.*"):
+            st.write("Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
+            st.write("Step 1: store your current dataframe in working memory by clicking the button below.")
+            if st.button("Store Current Dataframe"):
+                st.session_state.modified_df = st.session_state.df
+            st.write("Step 2: Select 'Use Modified Dataframe' in the sidebar to use the dataframe you just stored.")
+            st.write("Step 3: Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
+            method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
+            if st.button('Apply the Method to Replace Missing Values'):
+                    st.session_state.modified_df = replace_missing_values(st.session_state.modified_df, method)
+        
 
     
     
@@ -1506,17 +1521,21 @@ with tab1:
 
         
         if barchart: 
-            st.info("Barchart for categorical data")
+            
+            # st.info("Barchart for categorical data")
             numeric_cols, categorical_cols = get_categorical_and_numerical_cols(st.session_state.df)
-            # cat_options =[]
-            # columns = list(df.columns)
-            # for col in columns:
-            #     if df[col].dtype != np.float64 and df[col].dtype != np.int64:
-            #         cat_options.append(col)
             cat_selected_col = st.selectbox("Choose a column", categorical_cols, key = "bar_category")
             if cat_selected_col:
                 plt = plot_categorical(st.session_state.df, cat_selected_col)
                 st.pyplot(plt)
+            with st.expander("Expand for Python|Streamlit Code"):
+                st.code("""
+            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(st.session_state.df)
+            cat_selected_col = st.selectbox("Choose a column", categorical_cols, key = "bar_category")
+            if cat_selected_col:
+                plt = plot_categorical(st.session_state.df, cat_selected_col)
+                st.pyplot(plt)
+                """)
 
         if show_corr:
             st.info("Correlation heatmap")
