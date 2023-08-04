@@ -1511,15 +1511,47 @@ with tab1:
         if histogram: 
             st.info("Histogram of data")
             numeric_cols, categorical_cols = get_categorical_and_numerical_cols(st.session_state.df)
-            # options =[]
-            # columns = list(df.columns)
-            # for col in columns:
-            #     if df[col].dtype == np.float64 or df[col].dtype == np.int64:
-            #         options.append(col)
             selected_col = st.selectbox("Choose a column", numeric_cols, key = "histogram")
             if selected_col:
                 plt = plot_numeric(st.session_state.df, selected_col)
                 st.pyplot(plt)
+            with st.expander("Expand for Python|Streamlit Code"):
+                st.code("""
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Function to get categorical and numerical columns from a dataframe
+def get_categorical_and_numerical_cols(df):
+    numeric_cols = df.select_dtypes(include=['int', 'float']).columns.tolist()
+    categorical_cols = df.select_dtypes(include=['object']).columns.tolist()
+    return numeric_cols, categorical_cols
+
+# Function to plot a histogram of a selected numeric column
+def plot_numeric(df, column):
+    plt.figure(figsize=(10, 6))
+    plt.hist(df[column], bins=20, color='skyblue')
+    plt.xlabel(column)
+    plt.ylabel('Frequency')
+    plt.title(f'Histogram of {column}')
+    return plt
+
+# Assuming st.session_state.df contains the dataframe
+
+# Display info message
+print("Histogram of data")
+
+# Get numeric and categorical columns
+numeric_cols, categorical_cols = get_categorical_and_numerical_cols(st.session_state.df)
+
+# Display selectbox to choose a column
+selected_col = input("Choose a column: ")
+
+# Check if a column is selected
+if selected_col:
+    # Plot histogram and display
+    plt = plot_numeric(st.session_state.df, selected_col)
+    plt.show()
+                """)
 
         
         if barchart: 
@@ -1532,11 +1564,42 @@ with tab1:
                 st.pyplot(plt)
             with st.expander("Expand for Python|Streamlit Code"):
                 st.code("""
-            numeric_cols, categorical_cols = get_categorical_and_numerical_cols(st.session_state.df)
-            cat_selected_col = st.selectbox("Choose a column", categorical_cols, key = "bar_category")
-            if cat_selected_col:
-                plt = plot_categorical(st.session_state.df, cat_selected_col)
-                st.pyplot(plt)
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Function to get categorical and numerical columns from the dataframe
+def get_categorical_and_numerical_cols(df):
+    numeric_cols = []
+    categorical_cols = []
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            categorical_cols.append(col)
+        else:
+            numeric_cols.append(col)
+    return numeric_cols, categorical_cols
+
+# Function to plot the categorical data
+def plot_categorical(df, column):
+    plt.figure(figsize=(10, 6))
+    df[column].value_counts().plot(kind='bar')
+    plt.xlabel(column)
+    plt.ylabel('Count')
+    plt.title(f'Bar Chart for {column}')
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    return plt
+
+# Get the numeric and categorical columns from the dataframe
+numeric_cols, categorical_cols = get_categorical_and_numerical_cols(df)
+
+# Select a column from the categorical columns
+cat_selected_col = input("Choose a column: ")
+
+# Check if a column is selected
+if cat_selected_col in categorical_cols:
+    # Plot the categorical data
+    plt = plot_categorical(df, cat_selected_col)
+    plt.show()
                 """)
 
         if show_corr:
@@ -1566,7 +1629,40 @@ It's important to note that correlation doesn't imply causation. While a correla
 Also, remember that correlation heatmaps are based on linear relationships between variables. If variables have a non-linear relationship, the correlation coefficient may not capture their relationship accurately.
 
 For medical students, think of correlation heatmaps as a quick way to visually identify relationships between multiple variables at once. This can help guide your understanding of which variables may be important to consider together in further analyses.""")
-                
+                st.code("""import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Function to plot correlation heatmap
+def plot_corr(df):
+    # Compute correlation matrix
+    corr = df.corr()
+
+    # Generate a mask for the upper triangle
+    mask = np.triu(np.ones_like(corr, dtype=bool))
+
+    # Set up the matplotlib figure
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    # Generate a custom diverging colormap
+    cmap = sns.diverging_palette(230, 20, as_cmap=True)
+
+    # Draw the heatmap with the mask and correct aspect ratio
+    sns.heatmap(corr, mask=mask, cmap=cmap, vmax=1, vmin=-1, center=0,
+                square=True, linewidths=.5, annot=True, fmt=".2f", ax=ax)
+
+    # Set plot title
+    ax.set_title("Correlation Heatmap")
+
+    return plt
+
+# Load the dataframe
+df = pd.read_csv("your_data.csv")
+
+# Call the plot_corr function and display the correlation heatmap
+plt = plot_corr(df)
+plt.show()
+""")
 
         if summary_cat:
             st.info("Summary of categorical data")
