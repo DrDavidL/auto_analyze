@@ -1499,7 +1499,7 @@ with tab1:
             # Select variable pairs
             var1, var2 = st.columns(2)
             selected_var1 = var1.selectbox("Pick the exposure", binary_categorical_vars)
-            selected_var2 = var2.selectbox("Pick the outcome", binary_categorical_vars)
+            selected_var2 = var2.selectbox("Pick the outcome", binary_categorical_vars, index = 1)
 
             # Generate the 2x2 table
             table = generate_2x2_table(st.session_state.df, selected_var1, selected_var2)
