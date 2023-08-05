@@ -127,6 +127,12 @@ def find_binary_categorical_variables(df):
             binary_categorical_vars.append(col)
     return binary_categorical_vars
 
+def calculate_odds_older(table):
+    odds_cases = table.iloc[1, 1] / table.iloc[1, 0]
+    odds_controls = table.iloc[0, 1] / table.iloc[0, 0]
+    odds_ratio = odds_cases / odds_controls
+    return odds_cases, odds_controls, odds_ratio
+
 def calculate_odds(table):
     odds_cases = table.iloc[1, 1] / table.iloc[1, 0]
     odds_controls = table.iloc[0, 1] / table.iloc[0, 0]
@@ -139,9 +145,10 @@ def generate_2x2_table(df, var1, var2):
     table.index = ['No ' + var1, 'Yes ' + var1, 'Total']
     return table
 
+
 def calculate_rr_arr_nnt(tn, fp, fn, tp):
-    rr = (tp / (tp + fp)) / (tn / (tn + fn))
-    arr = ((tp + fp) / (tn + fp + tp + fn)) - (tn / (tn + fn))
+    rr = (tp / (tp + fn)) / (fp / (fp + tn)) if fp + tn > 0 and tp + fn > 0 else np.inf
+    arr = (fn / (fn + tp)) - (fp / (fp + tn)) if fn + tp > 0 and fp + tn > 0 else np.inf
     nnt = 1 / arr if arr > 0 else np.inf
     return rr, arr, nnt
 
