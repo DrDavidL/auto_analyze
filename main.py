@@ -32,7 +32,7 @@ import base64
 import plotly.io as pio
 from bs4 import BeautifulSoup
 from PIL import Image
-
+from scipy import stats
 
 
 
@@ -116,14 +116,40 @@ def get_download_link(file_path, file_type):
     with open(file_path, "rb") as file:
         contents = file.read()
     base64_data = base64.b64encode(contents).decode("utf-8")
-    download_link = f'<a href="data:application/octet-stream;base64,{base64_data}" download="tableone_results.{file_type}">Click here to download the TableOne results in you requested format.</a>'
+    download_link = f'<a href="data:application/octet-stream;base64,{base64_data}" download="tableone_results.{file_type}">Click here to download the TableOne results in {file_type} format.</a>'
     return download_link
+
+def find_binary_categorical_variables(df):
+    binary_categorical_vars = []
+    for col in df.columns:
+        unique_values = df[col].unique()
+        if len(unique_values) == 2:
+            binary_categorical_vars.append(col)
+    return binary_categorical_vars
+
+def calculate_odds(table):
+    odds_cases = table.iloc[1, 1] / table.iloc[1, 0]
+    odds_controls = table.iloc[0, 1] / table.iloc[0, 0]
+    odds_ratio = odds_cases / odds_controls
+    return odds_cases, odds_controls, odds_ratio
+
+def generate_2x2_table(df, var1, var2):
+    table = pd.crosstab(df[var1], df[var2], margins=True)
+    table.columns = ['No ' + var2, 'Yes ' + var2, 'Total']
+    table.index = ['No ' + var1, 'Yes ' + var1, 'Total']
+    return table
+
+def calculate_rr_arr_nnt(tn, fp, fn, tp):
+    rr = (tp / (tp + fp)) / (tn / (tn + fn))
+    arr = ((tp + fp) / (tn + fp + tp + fn)) - (tn / (tn + fn))
+    nnt = 1 / arr if arr > 0 else np.inf
+    return rr, arr, nnt
 
 def fetch_api_key():
     api_key = None
     
     try:
-        # Attempt to retrieve the API key as a secret
+        # Attempt to retrieve the API key as a secret   
         api_key = st.secrets["OPENAI_API_KEY"]
         # os.environ["OPENAI_API_KEY"] = api_key
         st.session_state.openai_api_key = api_key
@@ -1448,6 +1474,7 @@ with tab1:
             show_table = st.checkbox("Create a Table 1", key = "show table")
             show_scatter  = st.checkbox("Scatterplot", key = "show scatter")
             view_full_df = st.checkbox("View Dataset", key = "view full df")
+            binary_categ_analysis = st.checkbox("Binary categorical analysis", key = "binary categ analysis")
             activate_chatbot = st.checkbox("Activate Chatbot (select specific bot on main window)", key = "activate chatbot")
 
         with col2:
@@ -1461,7 +1488,54 @@ with tab1:
             full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Download a Full Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
             
 
+    if binary_categ_analysis:
+        
+        cohort_or_case = st.radio("Choose an approach", ("Cohort Study", "Case Control Study"))
+                           # Find binary categorical variables
+        binary_categorical_vars = find_binary_categorical_variables(st.session_state.df)
+        
 
+        if len(binary_categorical_vars) > 0:
+            # Select variable pairs
+            var1, var2 = st.columns(2)
+            selected_var1 = var1.selectbox("Pick the exposure", binary_categorical_vars)
+            selected_var2 = var2.selectbox("Pick the outcome", binary_categorical_vars)
+
+            # Generate the 2x2 table
+            table = generate_2x2_table(st.session_state.df, selected_var1, selected_var2)
+            if cohort_or_case == "Cohort Study":
+                st.write("For use with cohort study data.")
+
+                # Calculate relative risk, ARR, and NNT
+                tn = table.iloc[0, 0]
+                fp = table.iloc[0, 1]
+                fn = table.iloc[1, 0]
+                tp = table.iloc[1, 1]
+                rr, arr, nnt = calculate_rr_arr_nnt(tn, fp, fn, tp)
+
+                # Display the 2x2 table and analysis results
+                st.subheader("2x2 Table")
+                st.write(table)
+                st.subheader("Results")
+                st.write("Relative Risk (RR):", rr)
+                st.write("Absolute Risk Reduction (ARR):", arr)
+                st.write("Number Needed to Treat (NNT):", nnt)
+
+            if cohort_or_case == "Case Control Study":
+                st.write("For use with case-control data.")
+                            # Calculate odds and odds ratio
+                odds_cases, odds_controls, odds_ratio = calculate_odds(table)
+
+                # Display the 2x2 table and analysis results
+                st.subheader("2x2 Table")
+                st.write(table)
+                st.subheader("Results")
+                st.write("Odds in cases:", odds_cases)
+                st.write("Odds in controls:", odds_controls)
+                st.write("Odds Ratio:", odds_ratio)
+        else:
+            st.subheader("No binary categorical variables found in the data.")
+        
 
     if needs_preprocess:
         st.info("Data Preprocessing Tools - *Assess Data Readiness **first**. Use only if needed.*")
@@ -1866,7 +1940,7 @@ plt.show()
             st.write("-------")
         # Download button for Excel file
             if st.checkbox("Click to Download Your Table 1"):
-                table_format = st.selectbox("Select a format for downloading table:", ["csv", "excel", "html", "latex"])
+                table_format = st.selectbox("Select a file format:", ["csv", "excel", "html", "latex"])
 
                 # Save DataFrame as Excel file
                 if table_format == "excel":
