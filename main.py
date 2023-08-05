@@ -1517,9 +1517,9 @@ with tab1:
                 st.subheader("2x2 Table")
                 st.write(table)
                 st.subheader("Results")
-                st.write("Relative Risk (RR):", rr)
-                st.write("Absolute Risk Reduction (ARR):", arr)
-                st.write("Number Needed to Treat (NNT):", nnt)
+                st.write("Relative Risk (RR):", round(rr,2))
+                st.write("Absolute Risk Reduction (ARR):", round(arr,2))
+                st.write("Number Needed to Treat (NNT):", round(nnt, 2))
 
             if cohort_or_case == "Case Control Study":
                 st.write("For use with case-control data.")
@@ -1530,9 +1530,9 @@ with tab1:
                 st.subheader("2x2 Table")
                 st.write(table)
                 st.subheader("Results")
-                st.write("Odds in cases:", odds_cases)
-                st.write("Odds in controls:", odds_controls)
-                st.write("Odds Ratio:", odds_ratio)
+                st.write("Odds in cases:", round(odds_cases,2))
+                st.write("Odds in controls:", round(odds_controls, 2))
+                st.write("Odds Ratio:", round(odds_ratio, 2))
         else:
             st.subheader("No binary categorical variables found in the data.")
         
