@@ -1,8 +1,12 @@
 .streamlit/secrets.toml
-.streamlit/secrets.toml
-.streamlit/secrets.toml
-.env
-.env
 .env
 convert.ipynb
 full_report.html
+output/tableone_results.csv
+output/tableone_results.xlsx
+output/tableone_results.html
+output/tableone_results.tex
+output/
+images/
+
+

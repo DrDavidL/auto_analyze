@@ -28,6 +28,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.agents.agent_types import AgentType
 from langchain.llms import OpenAI
 import json
+import base64
 import plotly.io as pio
 from bs4 import BeautifulSoup
 from PIL import Image
@@ -109,6 +110,14 @@ def is_valid_api_key(api_key):
         pass
 
     return False
+
+# Function to generate a download link
+def get_download_link(file_path, file_type):
+    with open(file_path, "rb") as file:
+        contents = file.read()
+    base64_data = base64.b64encode(contents).decode("utf-8")
+    download_link = f'<a href="data:application/octet-stream;base64,{base64_data}" download="tableone_results.{file_type}">Click here to download the TableOne results in you requested format.</a>'
+    return download_link
 
 def fetch_api_key():
     api_key = None
@@ -740,11 +749,23 @@ def start_chatbot1(selected_model):
         message(user_input, is_user=True, key = "using message")
         message(msg.content, key = "last message")
                     
-def generate_table(df, categorical_variable):
+def generate_table_old(df, categorical_variable):
     mytable = TableOne(df,
                        columns=df.columns.tolist(),
                        categorical=categorical,
                        groupby=categorical_variable, 
+                       pval=True)
+    return mytable
+
+def generate_table(df, categorical_variable, nonnormal_variables):
+
+    
+    # Generate the table using TableOne
+    mytable = TableOne(df,
+                       columns=df.columns.tolist(),
+                       categorical=categorical,
+                       groupby=categorical_variable,
+                       nonnormal=nonnormal_variables,
                        pval=True)
     return mytable
 
@@ -1832,13 +1853,48 @@ plt.show()
                 if st.session_state.df[col].nunique() == 2:
                     st.session_state.df[col] = st.session_state.df[col].astype(str)
 
-            categorical = st.session_state.df.select_dtypes(include=[np.object]).columns.tolist()
+            categorical = st.session_state.df.select_dtypes(include=[object]).columns.tolist()
 
             # Use Streamlit to create selection box for categorical variable
             categorical_variable = st.selectbox('Select the categorical variable for grouping:', 
                                                 options=categorical)
-            table = generate_table(st.session_state.df, categorical_variable)
+            nonnormal_variables = st.multiselect("Select any non-normally distributed variables for rank-based analysis", st.session_state.df.columns.tolist())
+            table = generate_table(st.session_state.df, categorical_variable, nonnormal_variables)
+            # tablefmt = st.radio("Select a format for your table:", ["github", "grid", "fancy_grid", "pipe", "orgtbl", "jira", "presto", "psql", "rst", "mediawiki", "moinmoin", "youtrack", "html", "latex", "latex_raw", "latex_booktabs", "textile"])
+            st.header("Table 1")
             st.write(table.tabulate(tablefmt = "github"))
+            st.write("-------")
+        # Download button for Excel file
+            if st.checkbox("Click to Download Your Table 1"):
+                table_format = st.selectbox("Select a format for downloading table:", ["csv", "excel", "html", "latex"])
+
+                # Save DataFrame as Excel file
+                if table_format == "excel":
+                    output_path = "./output/tableone_results.xlsx"
+                    table.to_excel(output_path)
+                    # Provide the download link
+                    st.markdown(get_download_link(output_path, "xlsx"), unsafe_allow_html=True)
+                    
+                if table_format == "csv":
+                    output_path = "./output/tableone_results.csv"
+                    table.to_csv(output_path)
+                    # Provide the download link
+                    st.markdown(get_download_link(output_path, "csv"), unsafe_allow_html=True)
+                    
+                if table_format == "html":
+                    output_path = "./output/tableone_results.html"
+                    table.to_html(output_path)
+                    # Provide the download link
+                    st.markdown(get_download_link(output_path, "html"), unsafe_allow_html=True)
+                    
+                if table_format == "latex":
+                    output_path = "./output/tableone_results.tex"
+                    table.to_latex(output_path)
+                    st.markdown(get_download_link(output_path, "tex"), unsafe_allow_html=True)
+
+                # Save DataFrame as Excel file
+
+
             
         if perform_pca:
                 # Create PCA plot
