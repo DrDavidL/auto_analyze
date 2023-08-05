@@ -1474,7 +1474,7 @@ with tab1:
             show_table = st.checkbox("Create a Table 1", key = "show table")
             show_scatter  = st.checkbox("Scatterplot", key = "show scatter")
             view_full_df = st.checkbox("View Dataset", key = "view full df")
-            binary_categ_analysis = st.checkbox("Binary categorical analysis", key = "binary categ analysis")
+            binary_categ_analysis = st.checkbox("Binary categorical analysis (For cohort or case-control studies)", key = "binary categ analysis")
             activate_chatbot = st.checkbox("Activate Chatbot (select specific bot on main window)", key = "activate chatbot")
 
         with col2:
