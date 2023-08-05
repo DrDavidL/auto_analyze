@@ -1921,52 +1921,68 @@ plt.show()
             st.dataframe(st.session_state.df)
             
         if show_table:
-            # Check if any numerical column is binary and add it to categorical list
-            numerical_columns = st.session_state.df.select_dtypes(include=[np.number]).columns.tolist()
-            for col in numerical_columns:
-                if st.session_state.df[col].nunique() == 2:
-                    st.session_state.df[col] = st.session_state.df[col].astype(str)
+            if st.session_state.df.shape[1] > 99:
+                st.warning(f'You have {st.session_state.df.shape[1]} columns. This would not look good in a publication. Less than 50 would be much better.')
+            else:
+                nunique = st.session_state.df.select_dtypes(include=['object', 'category']).nunique()
+                to_drop = nunique[nunique > 15].index
+                df_filtered = st.session_state.df.drop(to_drop, axis=1)
+                # Check if any numerical column is binary and add it to categorical list
+                numerical_columns = df_filtered.select_dtypes(include=[np.number]).columns.tolist()
+                for col in numerical_columns:
+                    if df_filtered[col].nunique() == 2:
+                        df_filtered[col] = df_filtered[col].astype(str)
 
-            categorical = st.session_state.df.select_dtypes(include=[object]).columns.tolist()
+                categorical = df_filtered.select_dtypes(include=[object]).columns.tolist()
 
-            # Use Streamlit to create selection box for categorical variable
-            categorical_variable = st.selectbox('Select the categorical variable for grouping:', 
-                                                options=categorical)
-            nonnormal_variables = st.multiselect("Select any non-normally distributed variables for rank-based analysis", st.session_state.df.columns.tolist())
-            table = generate_table(st.session_state.df, categorical_variable, nonnormal_variables)
-            # tablefmt = st.radio("Select a format for your table:", ["github", "grid", "fancy_grid", "pipe", "orgtbl", "jira", "presto", "psql", "rst", "mediawiki", "moinmoin", "youtrack", "html", "latex", "latex_raw", "latex_booktabs", "textile"])
-            st.header("Table 1")
-            st.write(table.tabulate(tablefmt = "github"))
-            st.write("-------")
-        # Download button for Excel file
-            if st.checkbox("Click to Download Your Table 1"):
-                table_format = st.selectbox("Select a file format:", ["csv", "excel", "html", "latex"])
+                # Use Streamlit to create selection box for categorical variable
+                st.header("Table 1")
+                categorical_variable = st.selectbox('Select the categorical variable for grouping:', 
+                                                    options=categorical)
+                nonnormal_variables = st.multiselect("Select any non-normally distributed variables for rank-based analysis", df_filtered.columns.tolist())
 
-                # Save DataFrame as Excel file
-                if table_format == "excel":
-                    output_path = "./output/tableone_results.xlsx"
-                    table.to_excel(output_path)
-                    # Provide the download link
-                    st.markdown(get_download_link(output_path, "xlsx"), unsafe_allow_html=True)
-                    
-                if table_format == "csv":
-                    output_path = "./output/tableone_results.csv"
-                    table.to_csv(output_path)
-                    # Provide the download link
-                    st.markdown(get_download_link(output_path, "csv"), unsafe_allow_html=True)
-                    
-                if table_format == "html":
-                    output_path = "./output/tableone_results.html"
-                    table.to_html(output_path)
-                    # Provide the download link
-                    st.markdown(get_download_link(output_path, "html"), unsafe_allow_html=True)
-                    
-                if table_format == "latex":
-                    output_path = "./output/tableone_results.tex"
-                    table.to_latex(output_path)
-                    st.markdown(get_download_link(output_path, "tex"), unsafe_allow_html=True)
+                # st.write(df_filtered.head())
+                table = generate_table(df_filtered, categorical_variable, nonnormal_variables)
+                # tablefmt = st.radio("Select a format for your table:", ["github", "grid", "fancy_grid", "pipe", "orgtbl", "jira", "presto", "psql", "rst", "mediawiki", "moinmoin", "youtrack", "html", "latex", "latex_raw", "latex_booktabs", "textile"])
+                # st.header("Table 1")
+                st.write(table.tabulate(tablefmt = "github"))
+                st.write("-------")
+                st.info("""Courtesy of TableOne: Tom J Pollard, Alistair E W Johnson, Jesse D Raffa, Roger G Mark;
+    tableone: An open source Python package for producing summary statistics
+    for research papers, JAMIA Open, Volume 1, Issue 1, 1 July 2018, Pages 26–31,
+    https://doi.org/10.1093/jamiaopen/ooy012""")
+                st.write("-------")
+            # Download button for Excel file
+                if st.checkbox("Click to Download Your Table 1"):
+                    table_format = st.selectbox("Select a file format:", ["csv", "excel", "html", "latex"])
 
-                # Save DataFrame as Excel file
+                    # Save DataFrame as Excel file
+                    if table_format == "excel":
+                        output_path = "./output/tableone_results.xlsx"
+                        table.to_excel(output_path)
+                        # Provide the download link
+                        st.markdown(get_download_link(output_path, "xlsx"), unsafe_allow_html=True)
+                        
+                    if table_format == "csv":
+                        output_path = "./output/tableone_results.csv"
+                        table.to_csv(output_path)
+                        # Provide the download link
+                        st.markdown(get_download_link(output_path, "csv"), unsafe_allow_html=True)
+                        
+                    if table_format == "html":
+                        output_path = "./output/tableone_results.html"
+                        table.to_html(output_path)
+                        # Provide the download link
+                        st.markdown(get_download_link(output_path, "html"), unsafe_allow_html=True)
+                        
+                    if table_format == "latex":
+                        output_path = "./output/tableone_results.tex"
+                        table.to_latex(output_path)
+                        st.markdown(get_download_link(output_path, "tex"), unsafe_allow_html=True)
+
+
+
+                    # Save DataFrame as Excel file
 
 
             
