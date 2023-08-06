@@ -42,10 +42,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier, NeighborhoodComponentsAnalysis
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-
-
-
-
 import openai
 from tableone import TableOne
 from scipy import stats
@@ -81,31 +77,6 @@ if "gen_csv" not in st.session_state:
 if "df_to_download" not in st.session_state:
     st.session_state.df_to_download = None
 
-# Streamlit set_page_config method has a 'initial_sidebar_state' argument that controls sidebar state.
-# st.set_page_config(initial_sidebar_state=st.session_state.sidebar_state)
-# Prepare Chatbot Helper
-
-# async def start_chatbot():    
-# def start_chatbot():   
-#     with st.sidebar:
-#         st.write("Chatbot Teacher")
-#         if 'sidebar_state' not in st.session_state:
-#             st.session_state.sidebar_state = 'expanded'
-#         token = st.secrets["BARD_TOKEN"]
-#         # Bard = Bard(token, timeout=10)
-#         helper_prefix = """You are a friendly teacher to medical students learning about data science. You answer all questions 
-#         through this lens and defer questions that are completely unrelated to this topic. Your responses cannot contain images or links.
-#         You are posted on a website next to an interactive tool that has a preloaded demo set of data. You can refer to the tool to ask students to make a checkbox selectio to view bar charts, 
-#         histograms, pie charts, violin plots, scatterplots, and summary statistics for the sample dataset. They also have an option to upload their own CSV file, although most probably won't do this.        
-#         Student question:        
-#         """
-#         # st.sidebar.info("Chatbot:", value="Hi! I'm your friendly chatbot. Ask me anything about data science and I'll try to answer it.", height=200, max_chars=None)
-#         question_input = st.sidebar.text_input("Your question, e.g., 'teach me about violin plots'", "")
-#         if st.button("Send"):
-#             if question_input:
-                
-#                 response = bardapi.core.Bard(token, timeout = 200).get_answer(helper_prefix + question_input)['content']
-#                 st.session_state.last_response = response
 
 def is_valid_api_key(api_key):
     openai.api_key = api_key
@@ -157,9 +128,6 @@ def df_download_options(df, report_type):
             mime=mime,
         )
 
-# Usage
-# data = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
-# df_to_csv(data, 'my_beautiful_dataframe.csv')
 
 def all_categorical(df):
     categ_cols = df.select_dtypes(include=['object']).columns.tolist()
@@ -769,12 +737,6 @@ Number of rows: ```number```
 
         # Convert DataFrame to CSV and create download link
         gen_csv = df.to_csv(index=False)
-        # st.download_button(
-        #     label="Download data as CSV",
-        #     data=gen_csv,
-        #     file_name="patient_data.csv",
-        #     mime="text/csv",
-        # )
 
         return df, gen_csv
     
@@ -1324,24 +1286,7 @@ def summarize_categorical(df):
 
 # Function to plot correlation heatmap
  
-# def plot_corr(df_copy):
-#     df = df_copy.copy()
-#     binary_cat_cols = []
-#     for col in df.columns:
-#         if df[col].dtype == 'object':  # Check if the column is of type object (categorical)
-#             unique_vals = df[col].unique()
-#             if len(unique_vals) == 2:  # If the categorical variable has exactly 2 unique values
-#                 df[col] = df[col].map({np.argmax(df[col].value_counts()): 0, np.argmin(df[col].value_counts()): 1})
-#                 binary_cat_cols.append(col)
-            
-#     # Removing columns with more than two unique values after above transformation.
-#     df = df.select_dtypes(include=[np.number])
-    
-#     corr = df.corr()  # Compute pairwise correlation of columns
-#     plt.figure(figsize=(12, 10))  # set the size of the plot
-#     sns.heatmap(corr, annot=True, cmap='coolwarm', cbar=True)
-#     plt.title('Correlation Heatmap')
-#     return plt
+
 
 def plot_corr(df):
     df_copy = df.copy()
@@ -1508,31 +1453,6 @@ with tab1:
                 st.write(st.session_state.df.head())
                 
 
-
-    # with st.sidebar.expander("Data Preprocessing Tools - *Assess Data Readiness **first**. Use only if needed.*"):
-    #     st.write("Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
-    #     st.write("Step 1: store your current dataframe in working memory by clicking the button below.")
-    #     if st.button("Store Current Dataframe"):
-    #         st.session_state.modified_df = st.session_state.df
-    #     st.write("Step 2: Select 'Use Modified Dataframe' in the sidebar to use the dataframe you just stored.")
-    #     st.write("Step 3: Select a method to impute missing values in your dataset. Built in checks to apply only to applicable data types.")
-    #     method = st.selectbox("Choose a method to replace missing values", ("Select here!", "drop", "zero", "mean", "median", "mode", "mice"))
-    #     if st.button('Apply the Method to Replace Missing Values'):
-    #             st.session_state.modified_df = replace_missing_values(st.session_state.modified_df, method)
-        # pre_process = st.checkbox(" Assign bivariate categories into 1 or 0 based on frequency (0 most frequent) if needed for correlations, e.g.", key = "Preprocess")
-                # modified_csv = st.session_state.modified_df.to_csv(index=False)          
-                # if st.checkbox("Process for downloading", key = "prepare download"):
-                #     st.write(st.session_state.modified_df.head())
-                  
-                #     st.warning("If desired, download your processed data. Otherwise, continue analysis.")
-                #     st.download_button(
-                #         label="Download Processed Data!",
-                #         data=modified_csv,
-                #         file_name="patient_data_processed.csv",
-                #         mime="text/csv", key = 'processed_df'
-                    # )  
-    
-    
     
     with st.sidebar:
         if st.session_state.gen_csv is not None:
@@ -1592,7 +1512,7 @@ with tab1:
                 # Shift DataFrame to Selected Columns
                 cph_data = df[selected_columns_cox + [event_col] + [duration_col]]
 
-                # Define Event & Duration Columns here, my dear
+                # Define Event & Duration Columns here
                 # Assuming 'event' as Event Column & 'duration' as Duration Column
                 # Please change as per your data
                 # st.write(duration_col)
@@ -1606,21 +1526,6 @@ with tab1:
                 st.subheader("Summary of the Cox PH Analysis")
                 # Display summary DataFrame
                 st.dataframe(summary_cox)
-
-                # Displaying results in all their glory!
-                # st.write(cph.print_summary())
-                # fig, ax = plt.subplots(figsize=(12,5))
-                # ax.table(cellText=cph.summary.values, colLabels=cph.summary.columns, cellLoc='center')
-                # ax.axis('off')
-                # st.write(summary_df)
-        # format = st.radio("Select the format for your report:", ('csv', 'json', 'html', 'xlsx'), key = 'report_format', horizontal = True, )
-        # file_name = f'Cox_PH_Summary.{format}'
-        # submit = st.button('Download')
-        # if submit:
-        #     df_to_download(df, file_name=file_name, format=format)
-        
-                
-                # plt.savefig('tester.png')
 
         else:
             st.text("Time is a-ticking! Select columns & hit 'Analyze'.")
@@ -1672,15 +1577,8 @@ with tab1:
 
             
             cohort_or_case = st.radio("Choose an approach", ("Cohort Study", "Case Control Study"))
-                            # Find binary categorical variables
-            # binary_categorical_vars = find_binary_categorical_variables(temp_df)
-            
 
-
-            # # Select variable pairs
-            # var1, var2 = st.columns(2)
-            # selected_var1 = var1.selectbox("Pick the exposure", binary_categorical_vars)
-            # selected_var2 = var2.selectbox("Pick the outcome", binary_categorical_vars, index = 1)
+ 
 
             # Generate the 2x2 table
             table = generate_2x2_table(temp_df, sd_exposure, sd_outcome)
@@ -1757,11 +1655,6 @@ with tab1:
                     if selected_model == "gpt-4":
                         start_plot_gpt4(st.session_state.df)
 
-            # st.sidebar.text_area("Teacher:", value=st.session_state.last_response, height=600, max_chars=None)
-
-        
-        # if pre_process:
-        #     st.session_state.df = process_dataframe(st.session_state.df)
         
         if summary:
             st.info("Summary of data")
