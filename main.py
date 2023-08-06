@@ -1500,6 +1500,7 @@ with tab1:
         st.subheader("""
         Choose your exposures and outcomes.
         """)
+        st.info('Note - categories with more than 15 unique values will not be used.')
         var1, var2 = st.columns(2)
         s_categorical_cols = st.session_state.df.select_dtypes(include=['object']).columns.tolist()
         numeric_cols = [col for col in st.session_state.df.columns if st.session_state.df[col].nunique() == 2 and st.session_state.df[col].dtype != 'object']
