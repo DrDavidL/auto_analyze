@@ -1157,6 +1157,8 @@ def create_scatterplot(df, scatter_x, scatter_y):
 
         # Add the slope and intercept as a text annotation on the plot
         ax.text(0.05, 0.95, f'y={slope:.2f}x+{intercept:.2f}', transform=ax.transAxes)
+        
+        ax.set_title("Scatter Plot for " + scatter_y + " vs " + scatter_x)
 
         st.pyplot(fig)
         with st.expander('What is a scatter plot?'):
@@ -1182,7 +1184,7 @@ The slope of the regression line also tells you something important: for every u
 However, keep in mind that correlation does not imply causation. Just because two variables move together, it doesn't mean that one is causing the other to change.
 
 For medical students, think of scatterplots as a way to visually inspect the correlation between two numerical variables. It's a way to quickly identify patterns, trends, and outliers, and to formulate hypotheses for further testing.""")
-
+        return fig
 
 # Function to replace missing values
 
@@ -1966,7 +1968,9 @@ plt.show()
             if st.session_state.df.empty:
                 st.write("The current filter settings result in an empty dataset. Please adjust the filter settings.")
             else:
-                    create_scatterplot(st.session_state.df, scatter_x, scatter_y)
+                scatterplot = create_scatterplot(st.session_state.df, scatter_x, scatter_y)
+                save_image(scatterplot, 'custom_scatterplot.png') 
+
         
         if box_plot:
             # Call the function to get the lists of numerical and categorical columns
