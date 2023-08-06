@@ -903,7 +903,10 @@ def perform_pca_plot(df):
     fig, ax = plt.subplots()
     sns.scatterplot(data=principalDf, x='PC1', y='PC2', ax=ax)
     
+    ax.set_title("PCA Plot")
+    
     st.pyplot(fig)
+    return fig
 
 
     
@@ -2116,7 +2119,9 @@ Remember, like any statistical tool, violin plots provide a simplified represent
             
         if perform_pca:
                 # Create PCA plot
-            perform_pca_plot(st.session_state.df)
+            pca_fig = perform_pca_plot(st.session_state.df)
+            save_image(pca_fig, 'pca_plot.png')
+            
             with st.expander("What is PCA?"):
                 st.write("""Principal Component Analysis, or PCA, is a method used to highlight important information in datasets that have many variables and to bring out strong patterns in a dataset. It's a way of identifying underlying structure in data.
 
