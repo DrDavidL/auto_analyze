@@ -1497,19 +1497,43 @@ with tab1:
 
     if binary_categ_analysis:
         
-        cohort_or_case = st.radio("Choose an approach", ("Cohort Study", "Case Control Study"))
-                           # Find binary categorical variables
-        binary_categorical_vars = find_binary_categorical_variables(st.session_state.df)
-        
+        st.subheader("""
+        Choose your exposures and outcomes.
+        """)
+        var1, var2 = st.columns(2)
+        s_categorical_cols = st.session_state.df.select_dtypes(include=['object']).columns.tolist()
+        numeric_cols = [col for col in st.session_state.df.columns if st.session_state.df[col].nunique() == 2 and st.session_state.df[col].dtype != 'object']
+        filtered_categorical_cols = [col for col in s_categorical_cols if st.session_state.df[col].nunique() <= 15]
+        sd_categorical_cols = filtered_categorical_cols + numeric_cols
+        if len(sd_categorical_cols) > 1:
+            sd_exposure = var1.selectbox('Select a categorical column as the exposure:', sd_categorical_cols, index = 0)
+            sd_outcome = var2.selectbox('Select a categorical column as the outcome:', sd_categorical_cols, index = 1)
+            sd_exposure_values = var1.multiselect('Select one or more values for the exposure:', st.session_state.df[sd_exposure].unique().tolist(), [st.session_state.df[sd_exposure].unique().tolist()[1]])
+            sd_outcome_values = var2.multiselect('Select one or more values for the outcome:', st.session_state.df[sd_outcome].unique().tolist(), [st.session_state.df[sd_outcome].unique().tolist()[1]])
 
-        if len(binary_categorical_vars) > 0:
-            # Select variable pairs
-            var1, var2 = st.columns(2)
-            selected_var1 = var1.selectbox("Pick the exposure", binary_categorical_vars)
-            selected_var2 = var2.selectbox("Pick the outcome", binary_categorical_vars, index = 1)
+            # Create a temporary dataframe to store the modified values
+            temp_df = st.session_state.df.copy()
+            
+            # Replace the selected exposure values with 1 and others with 0
+            temp_df[sd_exposure] = temp_df[sd_exposure].apply(lambda x: 1 if x in sd_exposure_values else 0)
+
+            # Replace the selected outcome values with 1 and others with 0
+            temp_df[sd_outcome] = temp_df[sd_outcome].apply(lambda x: 1 if x in sd_outcome_values else 0)
+
+            
+            cohort_or_case = st.radio("Choose an approach", ("Cohort Study", "Case Control Study"))
+                            # Find binary categorical variables
+            # binary_categorical_vars = find_binary_categorical_variables(temp_df)
+            
+
+
+            # # Select variable pairs
+            # var1, var2 = st.columns(2)
+            # selected_var1 = var1.selectbox("Pick the exposure", binary_categorical_vars)
+            # selected_var2 = var2.selectbox("Pick the outcome", binary_categorical_vars, index = 1)
 
             # Generate the 2x2 table
-            table = generate_2x2_table(st.session_state.df, selected_var1, selected_var2)
+            table = generate_2x2_table(temp_df, sd_exposure, sd_outcome)
             if cohort_or_case == "Cohort Study":
                 st.write("For use with cohort study data.")
 
@@ -1541,7 +1565,7 @@ with tab1:
                 st.write("Odds in controls:", round(odds_controls, 2))
                 st.write("Odds Ratio:", round(odds_ratio, 2))
         else:
-            st.subheader("No binary categorical variables found in the data.")
+            st.subheader("Insufficient categorical variables found in the data.")
         
 
     if needs_preprocess:
