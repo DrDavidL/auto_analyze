@@ -45,9 +45,7 @@ from sklearn.preprocessing import StandardScaler
 
 
 
-# import asyncio
-# import bardapi
-# from bardapi import Bard
+
 import openai
 from tableone import TableOne
 from scipy import stats
