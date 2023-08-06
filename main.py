@@ -1944,7 +1944,7 @@ plt.show()
             with col1:
                 scatter_x = st.selectbox('Select column for x axis:', numeric_cols)
             with col2:
-                scatter_y = st.selectbox('Select column for y axis:', numeric_cols)
+                scatter_y = st.selectbox('Select column for y axis:', numeric_cols, index=1)
                 
             # Use st.beta_expander to hide or expand filtering options
             with st.expander('Filter Options'):
