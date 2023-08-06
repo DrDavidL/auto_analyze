@@ -1657,8 +1657,12 @@ with tab1:
 
         
         if summary:
-            st.info("Summary of data")
-            st.write(st.session_state.df.describe())
+            st.info("Summary of numerical data")
+            sum_num_data =st.session_state.df.describe()
+            st.write(sum_num_data)
+            st.session_state.df_to_download = sum_num_data
+            if st.session_state.df_to_download is not None:
+                df_download_options(st.session_state.df_to_download, 'numerical_data_summary')
             
         if header:
             st.info("First 5 Rows of Data")
@@ -1840,6 +1844,9 @@ plt.show()
             st.info("Summary of categorical data")
             summary = summarize_categorical(st.session_state.df)
             st.write(summary)
+            st.session_state.df_to_download = summary
+            if st.session_state.df_to_download is not None:
+                df_download_options(st.session_state.df_to_download, 'categorical_summary')
             
         if piechart:
             st.info("Pie chart for categorical data")
