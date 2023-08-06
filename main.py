@@ -33,7 +33,15 @@ import plotly.io as pio
 from bs4 import BeautifulSoup
 from PIL import Image
 from scipy import stats
-
+import lifelines
+from lifelines import KaplanMeierFitter, CoxPHFitter
+from explanations.explanations  import kaplan_meier, cox
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier, NeighborhoodComponentsAnalysis
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 
 
@@ -71,6 +79,9 @@ if "openai_api_key" not in st.session_state:
     
 if "gen_csv" not in st.session_state:
     st.session_state.gen_csv = None
+    
+if "df_to_download" not in st.session_state:
+    st.session_state.df_to_download = None
 
 # Streamlit set_page_config method has a 'initial_sidebar_state' argument that controls sidebar state.
 # st.set_page_config(initial_sidebar_state=st.session_state.sidebar_state)
@@ -110,6 +121,73 @@ def is_valid_api_key(api_key):
         pass
 
     return False
+def is_bytes_like(obj):
+    return isinstance(obj, (bytes, bytearray, memoryview))
+
+def save_image(plot, filename):
+    if is_bytes_like(plot):        
+        img = io.BytesIO(plot)
+    else:
+        img = io.BytesIO()
+        plot.savefig(img, format='png')
+    btn = st.download_button(
+        label="Download your plot.",
+        data = img,
+        file_name=filename,
+        mime='image/png',
+    )
+
+def df_download_options(df, report_type):
+    format = st.radio("Select the format for your report:", ('csv', 'json', 'html', ), key = 'report_format', horizontal = True, )
+    file_name = f'{report_type}.{format}'
+
+    if format == 'csv':
+        data = df.to_csv(index=False)
+        mime = 'text/csv'
+    if format == 'json':
+        data = df.to_json(orient='records')
+        mime = 'application/json'
+    if format == 'html':
+        data = df.to_html()
+        mime = 'text/html'
+    if True:
+        st.download_button(
+            label="Download your report.",
+            data=data,
+            # data=df.to_csv(index=True),
+            file_name=file_name,
+            mime=mime,
+        )
+
+# Usage
+# data = pd.DataFrame({"A": [1, 2, 3], "B": [4, 5, 6]})
+# df_to_csv(data, 'my_beautiful_dataframe.csv')
+
+def all_categorical(df):
+    categ_cols = df.select_dtypes(include=['object']).columns.tolist()
+    numeric_cols = [col for col in df.columns if df[col].nunique() == 2 and df[col].dtype != 'object']
+    filtered_categorical_cols = [col for col in categ_cols if df[col].nunique() <= 15]
+    all_categ = filtered_categorical_cols + numeric_cols
+    return all_categ
+
+def all_numerical(df):
+    numerical_cols = df.select_dtypes(include='number').columns.tolist()
+
+    for col in df.select_dtypes(include='object').columns:
+        if df[col].nunique() == 2:
+            unique_values = df[col].unique()
+            if 0 in unique_values and 1 in unique_values:
+                continue
+
+            value_counts = df[col].value_counts()
+            most_frequent_value = value_counts.idxmax()
+            least_frequent_value = value_counts.idxmin()
+
+            if most_frequent_value != 0 and least_frequent_value != 1:
+                df[col] = np.where(df[col] == most_frequent_value, 0, 1)
+                st.write(f"Replaced most frequent value '{most_frequent_value}' with 0 and least frequent value '{least_frequent_value}' with 1 in column '{col}'.")
+
+    return numerical_cols
 
 # Function to generate a download link
 def get_download_link(file_path, file_type):
@@ -144,6 +222,31 @@ def generate_2x2_table(df, var1, var2):
     table.columns = ['No ' + var2, 'Yes ' + var2, 'Total']
     table.index = ['No ' + var1, 'Yes ' + var1, 'Total']
     return table
+
+def plot_survival_curve(df, time_col, event_col):
+    # Create a Kaplan-Meier fitter object
+    try:
+        kmf = KaplanMeierFitter()
+
+        # Fit the survival curve using the dataframe
+        kmf.fit(df[time_col], event_observed=df[event_col])
+
+        # Plot the survival curve
+        fig, ax = plt.subplots()
+        kmf.plot(ax=ax)
+
+        # Add labels and title to the plot
+        ax.set_xlabel('Time')
+        ax.set_ylabel('Survival Probability')
+        ax.set_title('Survival Curve')
+
+        # Display the plot
+        st.pyplot(fig)
+    except TypeError:
+        st.warning("Find the right columns for time and event.")
+    return fig
+
+        
 
 
 def calculate_rr_arr_nnt(tn, fp, fn, tp):
@@ -842,6 +945,9 @@ def perform_pca_plot(df):
     
     st.pyplot(fig)
 
+
+    
+
 def display_metrics(y_true, y_pred, y_scores):
     # Compute metrics
     f1 = f1_score(y_true, y_pred)
@@ -1058,31 +1164,12 @@ def create_boxplot(df, numeric_col, categorical_col, show_points=False):
             # Add the actual data points on the plot
             sns.swarmplot(x=categorical_col, y=numeric_col, data=df, color=".25", ax=ax)
             
+        # Add a title to the plot
+        ax.set_title(f'Box Plot of {numeric_col} by {categorical_col}')
+            
         st.pyplot(fig)
-        with st.expander('What is a box plot?'):
-            st.write("""Box plots (also known as box-and-whisker plots) are a great way to visually represent the distribution of data. They're particularly useful when you want to compare distributions between several groups. For example, you might want to compare the distribution of patients' ages across different diagnostic categories.
-(Check out age and diabetes in the sample dataset.)
+        return fig
 
-**Components of a box plot:**
-
-A box plot is composed of several parts:
-
-1. **Box:** The main part of the plot, the box, represents the interquartile range (IQR), which is the range between the 25th percentile (Q1, the lower edge of the box) and the 75th percentile (Q3, the upper edge of the box). The IQR contains the middle 50% of the data points.
-
-2. **Median:** The line (or sometimes a dot) inside the box represents the median of the data - the value separating the higher half from the lower half of a data sample. It's essentially the 50th percentile.
-
-3. **Whiskers:** The lines extending from the box (known as whiskers) indicate variability outside the IQR. Typically, they extend to the most extreme data point within 1.5 times the IQR from the box. 
-
-4. **Outliers:** Points plotted beyond the whiskers are considered outliers - unusually high or low values in comparison with the rest of the data.
-
-**What is the notch used for?**
-
-The notch in a notched box plot represents the confidence interval around the median. If the notches of two box plots do not overlap, it's a strong indication (though not absolute proof) that the medians differ. This can be a useful way to visually compare medians across groups. 
-
-For medical students, a good way to think about box plots might be in comparison to lab results. Just as lab results typically give a reference range and flag values outside of that range, a box plot gives a visual representation of the range of the data (through the box and whiskers) and flags outliers.
-
-The notch, meanwhile, is a bit like the statistical version of a normal range for the median. If a notch doesn't overlap with the notch from another box plot, it's a sign that the medians might be significantly different. But just like lab results, statistical tests are needed to definitively say whether a difference is significant.
-""")
  
 def create_violinplot(df, numeric_col, categorical_col):
     if numeric_col and categorical_col:
@@ -1090,21 +1177,12 @@ def create_violinplot(df, numeric_col, categorical_col):
 
         # Plot the violin plot
         sns.violinplot(x=categorical_col, y=numeric_col, data=df, ax=ax)
+        
+        # Add a title to the plot
+        ax.set_title(f'Violin Plot of {numeric_col} by {categorical_col}')
 
         st.pyplot(fig)
-        with st.expander('What is a violin plot?'):
-            st.write("""Violin plots are a great visualization tool for examining distributions of data and they combine features from box plots and kernel density plots.
-
-1. **Overall Shape**: The violin plot is named for its resemblance to a violin. The shape of the "violin" provides a visual representation of the distribution of the data. The width of the "violin" at any given point represents the density or number of data points at that level. This means a wider section indicates more data points lie in that range, while a narrower section means fewer data points. This is similar to a histogram but it's smoothed out, which can make the distribution clearer.
-
-2. **Dot in the Middle**: This dot often represents the median of the data. The median is the middle point of the data. That means half of all data points are below this value and half are above it. In medicine, the median is often a more useful measure than the mean because it's less affected by outliers or unusually high or low values. For example, if you're looking at the age of patients, a single 100-year-old patient won't dramatically shift the median like it would the mean.
-
-3. **Thicker Bar in the Middle**: This is an interquartile range (IQR), which captures the middle 50% of the data (from the 25th to the 75th percentile). The IQR can help you understand the spread of the central half of your data. If the IQR is small, it means the central half of your data points are clustered closely around the median. If the IQR is large, it means they're more spread out.
-
-4. **Usage**: Violin plots are particularly helpful when you want to visualize the distribution of a numerical variable across different categories. For example, you might want to compare the distribution of patient ages in different diagnostic categories. 
-
-Remember, like any statistical tool, violin plots provide a simplified representation of the data and may not capture all nuances. For example, they usually show a smoothed distribution, which might hide unusual characteristics or outliers in the data. It's always important to also consider other statistical tools and the clinical context of the data."""
-            )
+        return fig
 
  
 def create_scatterplot(df, scatter_x, scatter_y):
@@ -1492,9 +1570,82 @@ with tab1:
             box_plot = st.checkbox("Box plot", key = "show box")
             violin_plot = st.checkbox("Violin plot", key = "show violin")
             perform_pca = st.checkbox("Perform PCA", key = "show pca")
+            survival_curve = st.checkbox("Survival curve", key = "show survival")
+            cox_ph = st.checkbox("Cox Proportional Hazards", key = "show cox ph")
             full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Download a Full Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
             
+    if cox_ph:
+        df = st.session_state.df
 
+        # Select Predictor Columns
+        st.markdown("## Cox Analysis: Select Columns")
+
+        categ_columns_cox = all_categorical(df)
+        numeric_columns_cox = all_numerical(df)
+        
+        event_col = st.selectbox('Select the event column', categ_columns_cox, key='event_col')
+        selected_columns_cox = st.multiselect("Choose your feature columns", numeric_columns_cox)
+        duration_col = st.selectbox('Select the duration column', numeric_columns_cox)
+
+        if st.button("Analyze", key="analyze"):
+            if len(selected_columns_cox) < 1:
+                st.error("Select at least one column!")
+            else:
+                # Shift DataFrame to Selected Columns
+                cph_data = df[selected_columns_cox + [event_col] + [duration_col]]
+
+                # Define Event & Duration Columns here, my dear
+                # Assuming 'event' as Event Column & 'duration' as Duration Column
+                # Please change as per your data
+                # st.write(duration_col)
+                # st.write(cph_data[duration_col])
+                # st.write(cph_data)
+                cph = CoxPHFitter(penalizer=0.1)
+                cph.fit(cph_data, duration_col=duration_col, event_col=event_col)
+                summary_cox = cph.summary
+                st.session_state.df_to_download = summary_cox
+                # st.session_state.df_to_download = summary_df
+                st.subheader("Summary of the Cox PH Analysis")
+                # Display summary DataFrame
+                st.dataframe(summary_cox)
+
+                # Displaying results in all their glory!
+                # st.write(cph.print_summary())
+                # fig, ax = plt.subplots(figsize=(12,5))
+                # ax.table(cellText=cph.summary.values, colLabels=cph.summary.columns, cellLoc='center')
+                # ax.axis('off')
+                # st.write(summary_df)
+        # format = st.radio("Select the format for your report:", ('csv', 'json', 'html', 'xlsx'), key = 'report_format', horizontal = True, )
+        # file_name = f'Cox_PH_Summary.{format}'
+        # submit = st.button('Download')
+        # if submit:
+        #     df_to_download(df, file_name=file_name, format=format)
+        
+                
+                # plt.savefig('tester.png')
+
+        else:
+            st.text("Time is a-ticking! Select columns & hit 'Analyze'.")
+        if st.session_state.df_to_download is not None:
+            df_download_options(st.session_state.df_to_download, 'cox_ph_summary')
+        with st.expander("What is a Cox Proportional Hazards Analysis?"):
+            st.write(cox)
+    
+    if survival_curve:
+            # Get column names for time and event from the user
+        st.subheader("Survival Curve")
+        st.warning("This tool is for use with survival analysis data. Any depiction will not make sense if 'time' isn't a column for your dataset")
+        time_col = st.selectbox('Select the column for time', st.session_state.df.columns)
+        event_col = st.selectbox('Select the column for event', st.session_state.df.columns)
+
+        # Plot the survival curve
+        surv_curve = plot_survival_curve(st.session_state.df, time_col, event_col)
+        save_image(surv_curve, 'survival_curve.png')
+        with st.expander("What is a Kaplan-Meier Curve?"):
+            st.write(kaplan_meier)
+        
+        
+        
     if binary_categ_analysis:
         
         st.subheader("""
@@ -1642,6 +1793,7 @@ with tab1:
             if selected_col:
                 plt = plot_numeric(st.session_state.df, selected_col)
                 st.pyplot(plt)
+            save_image(plt, 'histogram.png')
             with st.expander("Expand for Python|Streamlit Code"):
                 st.code("""
 import pandas as pd
@@ -1689,6 +1841,7 @@ if selected_col:
             if cat_selected_col:
                 plt = plot_categorical(st.session_state.df, cat_selected_col)
                 st.pyplot(plt)
+            save_image(plt, 'bar_chart.png')
             with st.expander("Expand for Python|Streamlit Code"):
                 st.code("""
 import matplotlib.pyplot as plt
@@ -1733,6 +1886,7 @@ if cat_selected_col in categorical_cols:
             st.info("Correlation heatmap")
             plt = plot_corr(st.session_state.df)
             st.pyplot(plt)
+            save_image(plt, 'heatmap.png')
             with st.expander("What is a correlation heatmap?"):
                 st.write("""A correlation heatmap is a graphical representation of the correlation matrix, which is a table showing correlation coefficients between sets of variables. Each cell in the table shows the correlation between two variables. In the heatmap, correlation coefficients are color-coded, where the intensity of the color represents the magnitude of the correlation coefficient. 
 
@@ -1808,6 +1962,7 @@ plt.show()
             if cat_selected_col:
                 plt = plot_pie(st.session_state.df, cat_selected_col)
                 st.pyplot(plt)
+            save_image(plt, 'pie_chart.png')
                 
         if check_preprocess:
             st.write("Running readiness assessment...")
@@ -1929,7 +2084,32 @@ plt.show()
             # Dropdown to select columns to visualize
             numeric_col = st.selectbox('Select a numerical column:', numeric_cols, key = "box_numeric")
             categorical_col = st.selectbox('Select a categorical column:', categorical_cols, key = "box_category")  
-            create_boxplot(st.session_state.df, numeric_col, categorical_col, show_points=False)          
+            mybox = create_boxplot(st.session_state.df, numeric_col, categorical_col, show_points=False) 
+            save_image(mybox, 'box_plot.png')   
+            with st.expander('What is a box plot?'):
+                st.write("""Box plots (also known as box-and-whisker plots) are a great way to visually represent the distribution of data. They're particularly useful when you want to compare distributions between several groups. For example, you might want to compare the distribution of patients' ages across different diagnostic categories.
+(Check out age and diabetes in the sample dataset.)
+
+**Components of a box plot:**
+
+A box plot is composed of several parts:
+
+1. **Box:** The main part of the plot, the box, represents the interquartile range (IQR), which is the range between the 25th percentile (Q1, the lower edge of the box) and the 75th percentile (Q3, the upper edge of the box). The IQR contains the middle 50% of the data points.
+
+2. **Median:** The line (or sometimes a dot) inside the box represents the median of the data - the value separating the higher half from the lower half of a data sample. It's essentially the 50th percentile.
+
+3. **Whiskers:** The lines extending from the box (known as whiskers) indicate variability outside the IQR. Typically, they extend to the most extreme data point within 1.5 times the IQR from the box. 
+
+4. **Outliers:** Points plotted beyond the whiskers are considered outliers - unusually high or low values in comparison with the rest of the data.
+
+**What is the notch used for?**
+
+The notch in a notched box plot represents the confidence interval around the median. If the notches of two box plots do not overlap, it's a strong indication (though not absolute proof) that the medians differ. This can be a useful way to visually compare medians across groups. 
+
+For medical students, a good way to think about box plots might be in comparison to lab results. Just as lab results typically give a reference range and flag values outside of that range, a box plot gives a visual representation of the range of the data (through the box and whiskers) and flags outliers.
+
+The notch, meanwhile, is a bit like the statistical version of a normal range for the median. If a notch doesn't overlap with the notch from another box plot, it's a sign that the medians might be significantly different. But just like lab results, statistical tests are needed to definitively say whether a difference is significant.
+""")      
         
         if violin_plot:
             
@@ -1947,7 +2127,21 @@ plt.show()
             numeric_col = st.selectbox('Select a numerical column:', numeric_cols, key = "violin_numeric")
             categorical_col = st.selectbox('Select a categorical column:', categorical_cols, key = "violin_category")
 
-            create_violinplot(st.session_state.df, numeric_col, categorical_col)
+            violin = create_violinplot(st.session_state.df, numeric_col, categorical_col)
+            save_image(violin, 'violin_plot.png')
+            with st.expander('What is a violin plot?'):
+                st.write("""Violin plots are a great visualization tool for examining distributions of data and they combine features from box plots and kernel density plots.
+
+1. **Overall Shape**: The violin plot is named for its resemblance to a violin. The shape of the "violin" provides a visual representation of the distribution of the data. The width of the "violin" at any given point represents the density or number of data points at that level. This means a wider section indicates more data points lie in that range, while a narrower section means fewer data points. This is similar to a histogram but it's smoothed out, which can make the distribution clearer.
+
+2. **Dot in the Middle**: This dot often represents the median of the data. The median is the middle point of the data. That means half of all data points are below this value and half are above it. In medicine, the median is often a more useful measure than the mean because it's less affected by outliers or unusually high or low values. For example, if you're looking at the age of patients, a single 100-year-old patient won't dramatically shift the median like it would the mean.
+
+3. **Thicker Bar in the Middle**: This is an interquartile range (IQR), which captures the middle 50% of the data (from the 25th to the 75th percentile). The IQR can help you understand the spread of the central half of your data. If the IQR is small, it means the central half of your data points are clustered closely around the median. If the IQR is large, it means they're more spread out.
+
+4. **Usage**: Violin plots are particularly helpful when you want to visualize the distribution of a numerical variable across different categories. For example, you might want to compare the distribution of patient ages in different diagnostic categories. 
+
+Remember, like any statistical tool, violin plots provide a simplified representation of the data and may not capture all nuances. For example, they usually show a smoothed distribution, which might hide unusual characteristics or outliers in the data. It's always important to also consider other statistical tools and the clinical context of the data."""
+            )
             
         if view_full_df:
             st.dataframe(st.session_state.df)
@@ -2129,6 +2323,56 @@ with tab2:
 
         # Split into training and test sets
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        # pca_check = st.checkbox("PCA?", value=False, key="pca_check-10")
+        # if pca_check == True:
+        #     n_neighbors = 3
+        #     random_state = 0
+        #     dim = len(X[0])
+        #     n_classes = len(np.unique(y))
+
+        #     # Reduce dimension to 2 with PCA
+        #     pca = make_pipeline(StandardScaler(), PCA(n_components=2, random_state=random_state))
+
+        #     # Reduce dimension to 2 with LinearDiscriminantAnalysis
+        #     lda = make_pipeline(StandardScaler(), LinearDiscriminantAnalysis(n_components=2))
+
+        #     # Reduce dimension to 2 with NeighborhoodComponentAnalysis
+        #     nca = make_pipeline(
+        #         StandardScaler(),
+        #         NeighborhoodComponentsAnalysis(n_components=2, random_state=random_state),
+        #     )
+
+        #     # Use a nearest neighbor classifier to evaluate the methods
+        #     knn = KNeighborsClassifier(n_neighbors=n_neighbors)
+
+        #     # Make a list of the methods to be compared
+        #     dim_reduction_methods = [("PCA", pca), ("LDA", lda), ("NCA", nca)]
+
+        #     # plt.figure()
+        #     for i, (name, model) in enumerate(dim_reduction_methods):
+        #         plt.figure()
+        #         # plt.subplot(1, 3, i + 1, aspect=1)
+
+        #         # Fit the method's model
+        #         model.fit(X_train, y_train)
+
+        #         # Fit a nearest neighbor classifier on the embedded training set
+        #         knn.fit(model.transform(X_train), y_train)
+
+        #         # Compute the nearest neighbor accuracy on the embedded test set
+        #         acc_knn = knn.score(model.transform(X_test), y_test)
+
+        #         # Embed the data set in 2 dimensions using the fitted model
+        #         X_embedded = model.transform(X)
+
+        #         # Plot the projected points and show the evaluation score
+        #         plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=y, s=30, cmap="Set1")
+        #         plt.title(
+        #             "{}, KNN (k={})\nTest accuracy = {:.2f}".format(name, n_neighbors, acc_knn)
+        #         )
+        #     fig = plt.show()
+        #     st.pyplot(fig)
+            
 
         st.subheader("""
         Choose the Machine Learning Model

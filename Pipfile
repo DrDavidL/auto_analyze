@@ -25,6 +25,7 @@ beautifulsoup4 = "*"
 pillow = "*"
 missingno = "*"
 urllib3 = "1.26.6" 
+lifelines = "*"
 
 [dev-packages]
 
