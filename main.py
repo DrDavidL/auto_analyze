@@ -241,9 +241,10 @@ def plot_survival_curve(df, time_col, event_col):
 
         # Display the plot
         st.pyplot(fig)
+        return fig
     except TypeError:
         st.warning("Find the right columns for time and event.")
-    return fig
+    
 
         
 
@@ -1430,7 +1431,7 @@ with tab1:
     # st.sidebar.subheader("Upload your data") 
 
     st.sidebar.subheader("Step 1: Upload your data or view a demo dataset")
-    demo_or_custom = st.sidebar.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "Demo 3 (missing data example)", "Generate Data", "CSV Upload", "Modified Dataframe"), horizontal=True)
+    demo_or_custom = st.sidebar.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "Demo 3 (missing data example)", "Demo 4 (time series)", "Generate Data", "CSV Upload", "Modified Dataframe"), horizontal=True)
     if demo_or_custom == "CSV Upload":
         uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file:
@@ -1490,7 +1491,10 @@ with tab1:
                 st.info("Here are the first 5 rows of your generated data. Use the tools in the sidebar to explore your new dataset! And, download and save your new CSV file from the sidebar!")
                 st.write(st.session_state.df.head())
                 
-
+    if demo_or_custom == 'Demo 4 (time series)': 
+        file_path = "data/S1Data.csv"
+        st.sidebar.markdown("[About Demo 4 dataset](https://plos.figshare.com/articles/dataset/Survival_analysis_of_heart_failure_patients_A_case_study/5227684/1)")
+        st.session_state.df = load_data(file_path)
     
     with st.sidebar:
         if st.session_state.gen_csv is not None:
@@ -2237,118 +2241,120 @@ with tab2:
         st.subheader("""
         Set the Target Class Value to Predict
         """)
-        categories_to_predict = st.multiselect('Select one or more categories but not all. You need 2 options to predict a group, i.e, your target versus the rest.:', st.session_state.df[target_col].unique().tolist(), key = "target_categories-10")
+        try:
+            categories_to_predict = st.multiselect('Select one or more categories but not all. You need 2 options to predict a group, i.e, your target versus the rest.:', st.session_state.df[target_col].unique().tolist(), key = "target_categories-ml")
 
-        # Preprocess the data and exclude the target column from preprocessing
-        df_processed, included_cols, excluded_cols = preprocess(st.session_state.df.drop(columns=[target_col]), target_col)
-        df_processed[target_col] = st.session_state.df[target_col]  # Include the target column back into the dataframe
+            # Preprocess the data and exclude the target column from preprocessing
+            df_processed, included_cols, excluded_cols = preprocess(st.session_state.df.drop(columns=[target_col]), target_col)
+            df_processed[target_col] = st.session_state.df[target_col]  # Include the target column back into the dataframe
 
-        
-        st.subheader("""
-        Select Features to Include in the Model
-        """)
-        st.info(f"Available Features for your Model: {included_cols}")
-        st.warning(f"Your Selected Target for Prediction: {target_col} = {categories_to_predict}")
-        all_features = st.checkbox("Select all features", value=False, key="select_all_features-10")
-        if all_features:
-            final_columns = included_cols
-        else:        
-            final_columns = st.multiselect('Select features to include in your model:', included_cols, key = "columns_to_include-10")
-        if len(excluded_cols) > 0:
-            st.write(f"Unavailable columns for modeling: {excluded_cols}")
-
-        # Create binary target variable based on the selected categories
-        df_processed[target_col] = df_processed[target_col].apply(lambda x: 1 if x in categories_to_predict else 0)
-        X = df_processed[final_columns]
-        # st.write(X.head())
-
-        # Split the dataframe into data and labels
-        # List of available scaling options
-        scaling_options = {
-            "No Scaling": None,
-            "Standard Scaling": StandardScaler(),
-            "Min-Max Scaling": MinMaxScaler(),
-        }
-
-        # List of available normalization options
-        normalization_options = {
-            "No Normalization": None,
-            "L1 Normalization": "l1",
-            "L2 Normalization": "l2",
-        }
-        scaling_or_norm = st.checkbox("Scaling or Normalization?", value=False, key="scaling_or_norm-10")
-        # User selection for scaling option
-        if scaling_or_norm == True:
-            scaling_option = st.selectbox("Select Scaling Option", list(scaling_options.keys()))
-            # User selection for normalization option
-            normalization_option = st.selectbox("Select Normalization Option", list(normalization_options.keys()))
-
-        # Apply selected scaling and normalization options to the features
-        
-
-            if scaling_option != "No Scaling":
-                scaler = scaling_options[scaling_option]
-                X = scaler.fit_transform(X)
-
-            if normalization_option != "No Normalization":
-                normalization_type = normalization_options[normalization_option]
-                X = normalize(X, norm=normalization_type)
-        # X = df_processed.drop(columns=[target_col])
-        # X = df_processed[final_columns]
-        y = df_processed[target_col]
-
-        # Split into training and test sets
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        # pca_check = st.checkbox("PCA?", value=False, key="pca_check-10")
-        # if pca_check == True:
-        #     n_neighbors = 3
-        #     random_state = 0
-        #     dim = len(X[0])
-        #     n_classes = len(np.unique(y))
-
-        #     # Reduce dimension to 2 with PCA
-        #     pca = make_pipeline(StandardScaler(), PCA(n_components=2, random_state=random_state))
-
-        #     # Reduce dimension to 2 with LinearDiscriminantAnalysis
-        #     lda = make_pipeline(StandardScaler(), LinearDiscriminantAnalysis(n_components=2))
-
-        #     # Reduce dimension to 2 with NeighborhoodComponentAnalysis
-        #     nca = make_pipeline(
-        #         StandardScaler(),
-        #         NeighborhoodComponentsAnalysis(n_components=2, random_state=random_state),
-        #     )
-
-        #     # Use a nearest neighbor classifier to evaluate the methods
-        #     knn = KNeighborsClassifier(n_neighbors=n_neighbors)
-
-        #     # Make a list of the methods to be compared
-        #     dim_reduction_methods = [("PCA", pca), ("LDA", lda), ("NCA", nca)]
-
-        #     # plt.figure()
-        #     for i, (name, model) in enumerate(dim_reduction_methods):
-        #         plt.figure()
-        #         # plt.subplot(1, 3, i + 1, aspect=1)
-
-        #         # Fit the method's model
-        #         model.fit(X_train, y_train)
-
-        #         # Fit a nearest neighbor classifier on the embedded training set
-        #         knn.fit(model.transform(X_train), y_train)
-
-        #         # Compute the nearest neighbor accuracy on the embedded test set
-        #         acc_knn = knn.score(model.transform(X_test), y_test)
-
-        #         # Embed the data set in 2 dimensions using the fitted model
-        #         X_embedded = model.transform(X)
-
-        #         # Plot the projected points and show the evaluation score
-        #         plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=y, s=30, cmap="Set1")
-        #         plt.title(
-        #             "{}, KNN (k={})\nTest accuracy = {:.2f}".format(name, n_neighbors, acc_knn)
-        #         )
-        #     fig = plt.show()
-        #     st.pyplot(fig)
             
+            st.subheader("""
+            Select Features to Include in the Model
+            """)
+            st.info(f"Available Features for your Model: {included_cols}")
+            st.warning(f"Your Selected Target for Prediction: {target_col} = {categories_to_predict}")
+            all_features = st.checkbox("Select all features", value=False, key="select_all_features-10")
+            if all_features:
+                final_columns = included_cols
+            else:        
+                final_columns = st.multiselect('Select features to include in your model:', included_cols, key = "columns_to_include-10")
+            if len(excluded_cols) > 0:
+                st.write(f"Unavailable columns for modeling: {excluded_cols}")
+
+            # Create binary target variable based on the selected categories
+            df_processed[target_col] = df_processed[target_col].apply(lambda x: 1 if x in categories_to_predict else 0)
+            X = df_processed[final_columns]
+            # st.write(X.head())
+
+            # Split the dataframe into data and labels
+            # List of available scaling options
+            scaling_options = {
+                "No Scaling": None,
+                "Standard Scaling": StandardScaler(),
+                "Min-Max Scaling": MinMaxScaler(),
+            }
+
+            # List of available normalization options
+            normalization_options = {
+                "No Normalization": None,
+                "L1 Normalization": "l1",
+                "L2 Normalization": "l2",
+            }
+            scaling_or_norm = st.checkbox("Scaling or Normalization?", value=False, key="scaling_or_norm-10")
+            # User selection for scaling option
+            if scaling_or_norm == True:
+                scaling_option = st.selectbox("Select Scaling Option", list(scaling_options.keys()))
+                # User selection for normalization option
+                normalization_option = st.selectbox("Select Normalization Option", list(normalization_options.keys()))
+
+            # Apply selected scaling and normalization options to the features
+            
+
+                if scaling_option != "No Scaling":
+                    scaler = scaling_options[scaling_option]
+                    X = scaler.fit_transform(X)
+
+                if normalization_option != "No Normalization":
+                    normalization_type = normalization_options[normalization_option]
+                    X = normalize(X, norm=normalization_type)
+            # X = df_processed.drop(columns=[target_col])
+            # X = df_processed[final_columns]
+            y = df_processed[target_col]
+
+            # Split into training and test sets
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            # pca_check = st.checkbox("PCA?", value=False, key="pca_check-10")
+            # if pca_check == True:
+            #     n_neighbors = 3
+            #     random_state = 0
+            #     dim = len(X[0])
+            #     n_classes = len(np.unique(y))
+
+            #     # Reduce dimension to 2 with PCA
+            #     pca = make_pipeline(StandardScaler(), PCA(n_components=2, random_state=random_state))
+
+            #     # Reduce dimension to 2 with LinearDiscriminantAnalysis
+            #     lda = make_pipeline(StandardScaler(), LinearDiscriminantAnalysis(n_components=2))
+
+            #     # Reduce dimension to 2 with NeighborhoodComponentAnalysis
+            #     nca = make_pipeline(
+            #         StandardScaler(),
+            #         NeighborhoodComponentsAnalysis(n_components=2, random_state=random_state),
+            #     )
+
+            #     # Use a nearest neighbor classifier to evaluate the methods
+            #     knn = KNeighborsClassifier(n_neighbors=n_neighbors)
+
+            #     # Make a list of the methods to be compared
+            #     dim_reduction_methods = [("PCA", pca), ("LDA", lda), ("NCA", nca)]
+
+            #     # plt.figure()
+            #     for i, (name, model) in enumerate(dim_reduction_methods):
+            #         plt.figure()
+            #         # plt.subplot(1, 3, i + 1, aspect=1)
+
+            #         # Fit the method's model
+            #         model.fit(X_train, y_train)
+
+            #         # Fit a nearest neighbor classifier on the embedded training set
+            #         knn.fit(model.transform(X_train), y_train)
+
+            #         # Compute the nearest neighbor accuracy on the embedded test set
+            #         acc_knn = knn.score(model.transform(X_test), y_test)
+
+            #         # Embed the data set in 2 dimensions using the fitted model
+            #         X_embedded = model.transform(X)
+
+            #         # Plot the projected points and show the evaluation score
+            #         plt.scatter(X_embedded[:, 0], X_embedded[:, 1], c=y, s=30, cmap="Set1")
+            #         plt.title(
+            #             "{}, KNN (k={})\nTest accuracy = {:.2f}".format(name, n_neighbors, acc_knn)
+            #         )
+            #     fig = plt.show()
+            #     st.pyplot(fig)
+        except:
+            st.warning("Please select a target column first or pick a dataset with a target column avaialble.")        
 
         st.subheader("""
         Choose the Machine Learning Model
