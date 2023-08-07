@@ -35,7 +35,7 @@ from PIL import Image
 from scipy import stats
 import lifelines
 from lifelines import KaplanMeierFitter, CoxPHFitter
-from explanations.explanations  import kaplan_meier, cox
+from explanations.explanations  import kaplan_meier, cox, mult_linear_reg_explanation
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.model_selection import train_test_split
@@ -49,6 +49,8 @@ from streamlit_chat import message
 import random
 from random import randint
 import os
+from sklearn import linear_model
+import statsmodels.api as sm
 
 
 
@@ -128,7 +130,24 @@ def df_download_options(df, report_type):
             mime=mime,
         )
 
+def plot_mult_linear_reg(df, x, y):
+    # with sklearn
+    regr = linear_model.LinearRegression()
+    regr.fit(x, y)
+    st.write('Intercept: \n', regr.intercept_)
+    st.write('Coefficients: \n', regr.coef_)
 
+    # with statsmodels
+    x = sm.add_constant(x) # adding a constant
+    
+    model = sm.OLS(y, x).fit()
+    predictions = model.predict(x) 
+    
+    print_model = model.summary()
+    st.write(print_model)
+    return print_model, regr.intercept_, regr.coef_
+    
+    
 def all_categorical(df):
     categ_cols = df.select_dtypes(include=['object']).columns.tolist()
     numeric_cols = [col for col in df.columns if df[col].nunique() == 2 and df[col].dtype != 'object']
@@ -152,8 +171,10 @@ def all_numerical(df):
             if most_frequent_value != 0 and least_frequent_value != 1:
                 df[col] = np.where(df[col] == most_frequent_value, 0, 1)
                 st.write(f"Replaced most frequent value '{most_frequent_value}' with 0 and least frequent value '{least_frequent_value}' with 1 in column '{col}'.")
+                numerical_cols.append(col)  # Update numerical_cols
 
     return numerical_cols
+
 
 # Function to generate a download link
 def get_download_link(file_path, file_type):
@@ -1492,11 +1513,39 @@ with tab1:
             show_corr = st.checkbox("Correlation heatmap", key = "show corr")
             box_plot = st.checkbox("Box plot", key = "show box")
             violin_plot = st.checkbox("Violin plot", key = "show violin")
+            mult_linear_reg = st.checkbox("Multiple linear regression", key = "show mult linear reg")
             perform_pca = st.checkbox("Perform PCA", key = "show pca")
             survival_curve = st.checkbox("Survival curve", key = "show survival")
             cox_ph = st.checkbox("Cox Proportional Hazards", key = "show cox ph")
             full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Download a Full Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
             
+    if mult_linear_reg:
+        st.subheader("Multiple Linear Regression")
+        st.warning("This tool is for use with numerical data only.")
+        # Get column names for time and event from the user
+        temp_df_mlr = st.session_state.df.copy()
+        numeric_columns_mlr = all_numerical(temp_df_mlr)
+        
+        x_col = st.multiselect('Select the columns for x', numeric_columns_mlr)
+        y_col = st.selectbox('Select the column for y', numeric_columns_mlr)
+        # Convert the columns to numeric values
+        # temp_df_mlr[x_col] = temp_df_mlr[x_col].astype(float)
+        # temp_df_mlr[y_col] = temp_df_mlr[y_col].astype(float)
+        # x_col_array = np.array(x_col)
+        # y_col_array = np.array(y_col)
+
+        # x_col_reshaped = x_col_array.reshape(-1, 1)
+        # y_col_reshaped = y_col_array.reshape(-1, 1)
+        # Plot the survival curve
+        try:
+            mult_linear_reg, intercept, coef = plot_mult_linear_reg(temp_df_mlr, temp_df_mlr[x_col], temp_df_mlr[y_col])
+        except:
+            st.error("Please select at least one column for x and one column for y.")
+        # save_image(mult_linear_reg, 'mult_linear_reg.png')
+        # df_download_options(mult_linear_reg, 'csv')
+        with st.expander("What is a Multiple Linear Regression?"):
+            st.write(mult_linear_reg_explanation)
+    
     if cox_ph:
         df = st.session_state.df
 

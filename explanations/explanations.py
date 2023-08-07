@@ -44,3 +44,20 @@ Cox Proportional Hazards analysis provides valuable insights into the relationsh
 It's important to note that Cox Proportional Hazards analysis assumes certain assumptions, such as the proportional hazards assumption and the absence of interactions between predictor variables. Violation of these assumptions can affect the validity of the results.
 
 Overall, Cox Proportional Hazards analysis is a widely used statistical method in medical research for studying the factors that affect survival time. It helps researchers understand the impact of various factors on the risk of an event occurring and aids in making informed decisions about patient care and treatment strategies."""
+
+mult_linear_reg_explanation = """Multiple linear regression is a statistical technique used to model the relationship between a dependent variable and multiple independent variables. In the context of medical research, multiple linear regression can be used to explore the association between a dependent variable (e.g., a health outcome or a clinical measurement) and several independent variables (e.g., demographic characteristics, medical history, or laboratory values).
+
+The goal of multiple linear regression is to determine the best-fitting linear equation that describes the relationship between the dependent variable and the independent variables. This equation can then be used to make predictions or understand the impact of different independent variables on the dependent variable.
+
+In a medical research setting, multiple linear regression can be used in various ways. For example:
+
+1. Predicting health outcomes: Multiple linear regression can be used to predict a patient's health outcome based on their demographic information, medical history, and other relevant factors. This can help clinicians identify patients at higher risk or estimate the effectiveness of certain interventions.
+
+2. Identifying risk factors: Multiple linear regression can be used to identify the independent variables that are associated with a particular health outcome. By analyzing the regression coefficients, researchers can determine which factors have a significant impact on the outcome and potentially identify modifiable risk factors.
+
+3. Adjusting for confounding variables: Multiple linear regression can be used to adjust for the effects of confounding variables in observational studies. By including potential confounders as independent variables in the regression model, researchers can estimate the independent effect of a specific variable of interest on the outcome.
+
+It's important to note that multiple linear regression assumes a linear relationship between the dependent variable and the independent variables. Additionally, it assumes that the residuals (the differences between the observed and predicted values) are normally distributed and have constant variance.
+
+Multiple linear regression is a powerful tool for analyzing and understanding complex relationships in medical research. However, it requires careful consideration of the study design, appropriate selection of independent variables, and interpretation of the results in the context of the research question.
+"""
