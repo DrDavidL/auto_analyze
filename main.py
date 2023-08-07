@@ -1526,7 +1526,7 @@ with tab1:
         temp_df_mlr = st.session_state.df.copy()
         numeric_columns_mlr = all_numerical(temp_df_mlr)
         
-        x_col = st.multiselect('Select the columns for x', numeric_columns_mlr)
+        x_col = st.multiselect('Select the columns for x', numeric_columns_mlr, numeric_columns_mlr[1])
         y_col = st.selectbox('Select the column for y', numeric_columns_mlr)
         # Convert the columns to numeric values
         # temp_df_mlr[x_col] = temp_df_mlr[x_col].astype(float)
