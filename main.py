@@ -107,13 +107,21 @@ def save_image(plot, filename):
         file_name=filename,
         mime='image/png',
     )
+def generate_regression_equation(intercept, coef, x_col):
+    equation = f"y = {round(intercept,4)}"
+
+    for c, feature in zip(coef, x_col):
+        equation += f" + {round(c,4)} * {feature}"
+
+    return equation
+
 
 def df_download_options(df, report_type):
     format = st.radio("Select the format for your report:", ('csv', 'json', 'html', ), key = 'report_format', horizontal = True, )
     file_name = f'{report_type}.{format}'
 
     if format == 'csv':
-        data = df.to_csv(index=False)
+        data = df.to_csv(index=True)
         mime = 'text/csv'
     if format == 'json':
         data = df.to_json(orient='records')
@@ -134,8 +142,8 @@ def plot_mult_linear_reg(df, x, y):
     # with sklearn
     regr = linear_model.LinearRegression()
     regr.fit(x, y)
-    st.write('Intercept: \n', regr.intercept_)
-    st.write('Coefficients: \n', regr.coef_)
+    # st.write('Intercept: \n', regr.intercept_)
+    # st.write('Coefficients: \n', regr.coef_)
 
     # with statsmodels
     x = sm.add_constant(x) # adding a constant
@@ -143,9 +151,13 @@ def plot_mult_linear_reg(df, x, y):
     model = sm.OLS(y, x).fit()
     predictions = model.predict(x) 
     
-    print_model = model.summary()
+    print_model = model.summary2()
     st.write(print_model)
-    return print_model, regr.intercept_, regr.coef_
+    try:
+        df_mlr_output = print_model.tables[1]
+    except:
+        st.write("couldn't generate dataframe version")
+    return print_model, df_mlr_output, regr.intercept_, regr.coef_
     
     
 def all_categorical(df):
@@ -1503,7 +1515,7 @@ with tab1:
             show_table = st.checkbox("Create a Table 1", key = "show table")
             show_scatter  = st.checkbox("Scatterplot", key = "show scatter")
             view_full_df = st.checkbox("View Dataset", key = "view full df")
-            binary_categ_analysis = st.checkbox("Study data outcome analysis (For cohort or case-control datasets)", key = "binary categ analysis")
+            binary_categ_analysis = st.checkbox("Categorical outcome analysis (Cohort or case-control datasets)", key = "binary categ analysis")
             activate_chatbot = st.checkbox("Activate Chatbot (select specific bot on main window)", key = "activate chatbot")
 
         with col2:
@@ -1515,13 +1527,13 @@ with tab1:
             violin_plot = st.checkbox("Violin plot", key = "show violin")
             mult_linear_reg = st.checkbox("Multiple linear regression", key = "show mult linear reg")
             perform_pca = st.checkbox("Perform PCA", key = "show pca")
-            survival_curve = st.checkbox("Survival curve", key = "show survival")
-            cox_ph = st.checkbox("Cox Proportional Hazards", key = "show cox ph")
+            survival_curve = st.checkbox("Survival curve (need duration column)", key = "show survival")
+            cox_ph = st.checkbox("Cox Proportional Hazards (need duration column)", key = "show cox ph")
             full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Download a Full Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
             
     if mult_linear_reg:
         st.subheader("Multiple Linear Regression")
-        st.warning("This tool is for use with numerical data only.")
+        st.warning("This tool is for use with numerical data only; binary categorical variables are updated to 1 and 0 and explained below if needed.")
         # Get column names for time and event from the user
         temp_df_mlr = st.session_state.df.copy()
         numeric_columns_mlr = all_numerical(temp_df_mlr)
@@ -1538,7 +1550,15 @@ with tab1:
         # y_col_reshaped = y_col_array.reshape(-1, 1)
         # Plot the survival curve
         try:
-            mult_linear_reg, intercept, coef = plot_mult_linear_reg(temp_df_mlr, temp_df_mlr[x_col], temp_df_mlr[y_col])
+            mult_linear_reg, mlr_report, intercept, coef = plot_mult_linear_reg(temp_df_mlr, temp_df_mlr[x_col], temp_df_mlr[y_col])
+            mlr_equation = generate_regression_equation(intercept, coef, x_col)
+            show_equation = st.checkbox("Show regression equation")
+            # mlr_report
+            if show_equation:
+                st.write(mlr_equation)
+            st.write("Download your cooefficients and intercept below.")
+            df_download_options(mlr_report, 'Your Multiple Linear Regression')
+            
         except:
             st.error("Please select at least one column for x and one column for y.")
         # save_image(mult_linear_reg, 'mult_linear_reg.png')
