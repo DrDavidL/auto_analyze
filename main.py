@@ -957,7 +957,25 @@ def preprocess_for_pca(df):
 
     return df[included_cols], included_cols, excluded_cols
 
+def create_scree_plot(df):
+    temp_df_pca, included_cols, excluded_cols = preprocess_for_pca(df)
+  
+    # Standardize the features
+    x = StandardScaler().fit_transform(temp_df_pca)
 
+
+    # Create a PCA instance: n_components should be None so variance is preserved from all initial features
+    pca = PCA(n_components=None)
+    pca.fit_transform(x)
+
+    # Scree plot
+    fig, ax = plt.subplots()
+    ax.plot(np.arange(1, len(pca.explained_variance_) + 1), np.cumsum(pca.explained_variance_ratio_))
+    ax.set_title('Cumulative Explained Variance')
+    ax.set_xlabel('Number of Components')
+    ax.set_ylabel('Cumulative Explained Variance Ratio')
+    st.pyplot(fig)
+    return fig
 
 
 def perform_pca_plot(df):
@@ -1006,6 +1024,7 @@ def perform_pca_plot(df):
 
     targets = finalDf[target_col_pca].unique().tolist()
     colors = sns.color_palette('husl', n_colors=num_unique_targets)
+    # finalDf
 
     for target, color in zip(targets, colors):
         indicesToKeep = finalDf[target_col_pca] == target
@@ -1016,6 +1035,10 @@ def perform_pca_plot(df):
 
         
     ax.legend(targets)
+    
+    # Make a scree plot
+
+    
     
     # Display the plot using Streamlit
     st.pyplot(fig)
@@ -2279,8 +2302,11 @@ Remember, like any statistical tool, violin plots provide a simplified represent
             
         if perform_pca:
                 # Create PCA plot
+
             pca_fig2 = perform_pca_plot(st.session_state.df)
             save_image(pca_fig2, 'pca_plot.png')
+            scree_plot = create_scree_plot(st.session_state.df)
+            save_image(scree_plot, 'scree_plot.png')
             
             with st.expander("What is PCA?"):
                 st.write("""Principal Component Analysis, or PCA, is a method used to highlight important information in datasets that have many variables and to bring out strong patterns in a dataset. It's a way of identifying underlying structure in data.
