@@ -952,8 +952,10 @@ def preprocess_for_pca(df):
             excluded_cols.append(col)
 
     # Display binary mappings and binary encoded variables in streamlit
-    st.write("Binary Mappings: ", binary_mapping)
-    st.write("Binary Encoded Variables: ", binary_encoded_vars)
+    if binary_mapping:
+        st.write("Binary Mappings: ", binary_mapping)
+    if binary_encoded_vars:
+        st.write("Binary Encoded Variables: ", binary_encoded_vars)
 
     return df[included_cols], included_cols, excluded_cols
 
