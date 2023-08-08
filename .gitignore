@@ -6,10 +6,10 @@ output/tableone_results.csv
 output/tableone_results.xlsx
 output/tableone_results.html
 output/tableone_results.tex
-output/
+
 images/
 
 
 images/output.png
-main.py
+
 cox_ph_summary.csv

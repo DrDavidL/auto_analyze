@@ -2081,11 +2081,8 @@ plt.show()
                     # Display the combined table
                     st.write(summary_df)
                     
-                    # Display heatmap and full view
-                    # missing_matrix = msno.matrix(st.session_state.df)
-                    # st.pyplot(missing_matrix.figure)
-                    # missing_heatmap = msno.heatmap(st.session_state.df)
-                    # st.pyplot(missing_heatmap.figure)
+
+
 
                     if readiness_summary['missing_columns']:
                         st.write("Missing Columns:")
