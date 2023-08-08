@@ -922,11 +922,13 @@ def preprocess_for_pca(df):
 def perform_pca_plot(df):
     st.write("Note: For this PCA analysis, categorical columns with more than 2 categories have been excluded. Binary variables have been converted to 0 and 1.")
     
-    df, included_cols, excluded_cols = preprocess_for_pca(df)
+    temp_df_pca = df.copy()
+    
+    temp_df_pca, included_cols, excluded_cols = preprocess_for_pca(df)
     
     # Standardize the features
     x = StandardScaler().fit_transform(df)
-    
+    target_col_pca = st.selectbox("Select the target column for PCA", included_cols)
     # Create a PCA instance
     pca = PCA(n_components=2)
     principalComponents = pca.fit_transform(x)
@@ -934,13 +936,44 @@ def perform_pca_plot(df):
     # Create DataFrame for the principal components
     principalDf = pd.DataFrame(data=principalComponents, columns = ['PC1', 'PC2'])
     
-    fig, ax = plt.subplots()
+    fig1, ax = plt.subplots()
     sns.scatterplot(data=principalDf, x='PC1', y='PC2', ax=ax)
     
     ax.set_title("PCA Plot")
     
-    st.pyplot(fig)
-    return fig
+    # st.pyplot(fig1)
+    
+    
+
+
+    # Create the figure and axes
+    fig2, ax = plt.subplots(figsize=(8, 8))
+    ax.set_xlabel('Principal Component 1', fontsize=15)
+    ax.set_ylabel('Principal Component 2', fontsize=15)
+    ax.set_title('2 component PCA', fontsize=20)
+
+    # Plot the data
+    finalDf = pd.concat([principalDf, df[[target_col_pca]]], axis=1)
+    # finalDf
+    targets = df[target_col_pca].unique().tolist()
+    colors = ['r', 'g']
+    for target, color in zip(targets, colors):
+        indicesToKeep = finalDf[target_col_pca] == target
+        ax.scatter(finalDf.loc[indicesToKeep, 'PC1'],
+                finalDf.loc[indicesToKeep, 'PC2'],
+                c=color,
+                s=50)
+    ax.legend(targets)
+    ax.grid()
+
+    # Display the plot using Streamlit
+    st.pyplot(fig2)
+
+    
+    
+    
+    
+    return fig1, fig2
 
 
     
@@ -2192,8 +2225,8 @@ Remember, like any statistical tool, violin plots provide a simplified represent
             
         if perform_pca:
                 # Create PCA plot
-            pca_fig = perform_pca_plot(st.session_state.df)
-            save_image(pca_fig, 'pca_plot.png')
+            pca_fig, pca_fig2 = perform_pca_plot(st.session_state.df)
+            save_image(pca_fig2, 'pca_plot.png')
             
             with st.expander("What is PCA?"):
                 st.write("""Principal Component Analysis, or PCA, is a method used to highlight important information in datasets that have many variables and to bring out strong patterns in a dataset. It's a way of identifying underlying structure in data.
