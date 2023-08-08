@@ -2053,9 +2053,9 @@ plt.show()
             save_image(plt, 'pie_chart.png')
                 
         if check_preprocess:
-            st.write("Running readiness assessment...")
+            # st.write("Running readiness assessment...")
             readiness_summary = assess_data_readiness(st.session_state.df)
-            st.write("Readiness assessment complete.")
+            # st.write("Readiness assessment complete.")
             # Display the readiness summary using Streamlit
             # Display the readiness summary using Streamlit
             st.subheader("Data Readiness Summary")
