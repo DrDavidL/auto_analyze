@@ -26,6 +26,7 @@ pillow = "*"
 missingno = "*"
 urllib3 = "1.26.6" 
 lifelines = "*"
+category-encoders = "*"
 
 [dev-packages]
 
