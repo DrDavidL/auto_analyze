@@ -1718,6 +1718,7 @@ with tab1:
                 st.session_state.df_to_download = summary_cox
                 # st.session_state.df_to_download = summary_df
                 st.subheader("Summary of the Cox PH Analysis")
+                st.write("Note, the exp(coef) column is the hazard ratio for each variable.")
                 # Display summary DataFrame
                 st.dataframe(summary_cox)
 
