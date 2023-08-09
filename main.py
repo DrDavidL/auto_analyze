@@ -1718,12 +1718,12 @@ with tab1:
                 st.session_state.df_to_download = summary_cox
                 # st.session_state.df_to_download = summary_df
                 st.subheader("Summary of the Cox PH Analysis")
-                st.write("Note, the exp(coef) column is the hazard ratio for each variable.")
+                st.info("Note, the exp(coef) column is the hazard ratio for each variable.")
                 # Display summary DataFrame
                 st.dataframe(summary_cox)
 
         else:
-            st.text("Time is a-ticking! Select columns & hit 'Analyze'.")
+            st.text("Select columns & hit 'Analyze'.")
         if st.session_state.df_to_download is not None:
             df_download_options(st.session_state.df_to_download, 'cox_ph_summary')
         with st.expander("What is a Cox Proportional Hazards Analysis?"):
