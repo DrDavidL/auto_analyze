@@ -303,17 +303,17 @@ def check_password():
 
     if "password_correct" not in st.session_state:
         # First run, show input for password.
-        st.sidebar.text_input(
+        st.text_input(
             "GPT features require a password.", type="password", on_change=password_entered, key="password"
         )
-        st.sidebar.write("*Please contact David Liebovitz, MD if you need an updated password for access.*")
+        st.warning("*Please contact David Liebovitz, MD if you need an updated password for access.*")
         return False
     elif not st.session_state["password_correct"]:
         # Password not correct, show input + error.
-        st.sidebar.text_input(
+        st.text_input(
             "GPT features require a password.", type="password", on_change=password_entered, key="password"
         )
-        st.sidebar.error("😕 Password incorrect")
+        st.error("😕 Password incorrect")
         return False
     else:
         # Password correct.
