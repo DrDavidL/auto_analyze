@@ -1623,14 +1623,14 @@ with tab1:
         else:
             st.session_state.df = st.session_state.modified_df
             # st.sidebar.write("Download the modified dataframe as a CSV file.")
-            modified_csv = st.session_state.modified_df.to_csv(index=False) 
-            st.sidebar.download_button(
-                label="Download Modified Dataset!",
-                data=modified_csv,
-                file_name="modified_data.csv",
-                mime="text/csv",
-                ) 
-            
+        modified_csv = st.session_state.modified_df.to_csv(index=False) 
+        st.sidebar.download_button(
+            label="Download Modified Dataset!",
+            data=modified_csv,
+            file_name="modified_data.csv",
+            mime="text/csv",
+            ) 
+        
         
     if demo_or_custom == 'Generate Data':
         if check_password():
@@ -1705,9 +1705,9 @@ with tab1:
     
     if filter_data:
         current_df = st.session_state.df
-        filtered_df = filter_dataframe(current_df)
+        st.session_state.modified_df = filter_dataframe(current_df)
         st.write("Switch to Modified Dataframe (top left) to see the filtered data below and use in analysis tools.")
-        filtered_df
+        st.session_state.modified_df
         
             
     if mult_linear_reg:
