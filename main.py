@@ -1674,7 +1674,7 @@ with tab1:
 
         check_preprocess = st.checkbox("Assess dataset readiness", key = "Preprocess now needed")
         needs_preprocess = st.checkbox("Select if dataset fails readiness", key = "Open Preprocess")
-        filter_data = st.checkbox("Filter data if needed (then switch to Modified Dataframe above)", key = "Filter data")
+        filter_data = st.checkbox("Filter data if needed (Switch to Modified Dataframe after selecting)", key = "Filter data")
         
         
         
@@ -1706,6 +1706,7 @@ with tab1:
     if filter_data:
         current_df = st.session_state.df
         filtered_df = filter_dataframe(current_df)
+        st.write("Switch to Modified Dataframe (top left) to see the filtered data below and use in analysis tools.")
         filtered_df
         
             
