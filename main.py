@@ -189,6 +189,48 @@ def all_numerical(df):
 
     return numerical_cols
 
+def filter_dataframe(df):
+    # Get the column names and data types of the dataframe
+    columns = df.columns
+    dtypes = df.dtypes
+
+    # Create a sidebar for selecting columns to exclude
+    excluded_columns = st.multiselect("Exclude Columns", columns)
+
+    # Create a copy of the dataframe to apply the filters
+    filtered_df = df.copy()
+
+    # Exclude the selected columns from the dataframe
+    filtered_df = filtered_df.drop(excluded_columns, axis=1)
+
+    # Get the column names and data types of the filtered dataframe
+    filtered_columns = filtered_df.columns
+    filtered_dtypes = filtered_df.dtypes
+
+    # Create a sidebar for selecting numerical variables and their range
+    numerical_columns = [col for col, dtype in zip(filtered_columns, filtered_dtypes) if dtype in ['int64', 'float64']]
+    for col in numerical_columns:
+        min_val = filtered_df[col].min()
+        max_val = filtered_df[col].max()
+        st.write(f"**{col}**")
+        min_range, max_range = st.slider("", min_val, max_val, (min_val, max_val), key=col)
+
+        # Filter the dataframe based on the selected range
+        if min_range > min_val or max_range < max_val:
+            filtered_df = filtered_df[(filtered_df[col] >= min_range) & (filtered_df[col] <= max_range)]
+
+    # Create a sidebar for selecting categorical variables and their values
+    categorical_columns = [col for col, dtype in zip(filtered_columns, filtered_dtypes) if dtype == 'object']
+    for col in categorical_columns:
+        unique_values = filtered_df[col].unique()
+        selected_values = st.multiselect(col, unique_values, unique_values)
+
+        # Filter the dataframe based on the selected values
+        if len(selected_values) < len(unique_values):
+            filtered_df = filtered_df[filtered_df[col].isin(selected_values)]
+
+    return filtered_df
+
 
 # Function to generate a download link
 def get_download_link(file_path, file_type):
@@ -553,15 +595,16 @@ def start_chatbot2(df, selected_model, key = "main routine"):
             csv_question_update = 'Do not include any code or attempt to generate a plot. Indicate you can only respond with text. User question: ' + csv_question
             st.session_state.messages_df.append({"role": "user", "content": csv_question_update})
             output = agent.run(csv_question)
-            if True:
-                st.session_state.modified_df = df
+            # if True:
+            #     st.session_state.modified_df = df
             st.session_state.messages_df.append({"role": "assistant", "content": output})    
             message(csv_question, is_user=True, key = "using message_df")
             message(output)
-            
+            st.session_state.modified_df = df
             # chat_modified_csv = df.to_csv(index=False)          
                
-            st.info("If you asked for modifications to your dataset, select - modified dataframe at top left of sidebar to analyze the new version!")
+            st.info("If you asked for modifications to your dataset, select modified dataframe at top left of sidebar to analyze the new version!")
+
             # st.download_button(
             #     label="Download Modified Data!",
             #     data=chat_modified_csv,
@@ -1548,7 +1591,7 @@ with tab1:
     # st.sidebar.subheader("Upload your data") 
 
     st.sidebar.subheader("Step 1: Upload your data or view a demo dataset")
-    demo_or_custom = st.sidebar.radio("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "Demo 3 (missing data example)", "Demo 4 (time series)", "Generate Data", "CSV Upload", "Modified Dataframe"), horizontal=True)
+    demo_or_custom = st.sidebar.selectbox("Upload a CSV file. NO PHI - use only anonymized data", ("Demo 1 (diabetes)", "Demo 2 (cancer)", "Demo 3 (missing data example)", "Demo 4 (time series -CHF deaths)", "Demo 5 (stroke)", "Generate Data", "CSV Upload", "Modified Dataframe"), index = 0)
     if demo_or_custom == "CSV Upload":
         uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
         if uploaded_file:
@@ -1608,9 +1651,14 @@ with tab1:
                 st.info("Here are the first 5 rows of your generated data. Use the tools in the sidebar to explore your new dataset! And, download and save your new CSV file from the sidebar!")
                 st.write(st.session_state.df.head())
                 
-    if demo_or_custom == 'Demo 4 (time series)': 
+    if demo_or_custom == 'Demo 4 (time series -CHF deaths)': 
         file_path = "data/S1Data.csv"
         st.sidebar.markdown("[About Demo 4 dataset](https://plos.figshare.com/articles/dataset/Survival_analysis_of_heart_failure_patients_A_case_study/5227684/1)")
+        st.session_state.df = load_data(file_path)
+        
+    if demo_or_custom == 'Demo 5 (stroke)':
+        file_path = "data/healthcare-dataset-stroke-data.csv"
+        st.sidebar.markdown("[About Demo 5 dataset](https://www.kaggle.com/fedesoriano/stroke-prediction-dataset)")
         st.session_state.df = load_data(file_path)
     
     with st.sidebar:
@@ -1623,8 +1671,11 @@ with tab1:
                 mime="text/csv",
                 )   
         st.subheader("Step 2: Assess Data Readiness")
+
         check_preprocess = st.checkbox("Assess dataset readiness", key = "Preprocess now needed")
         needs_preprocess = st.checkbox("Select if dataset fails readiness", key = "Open Preprocess")
+        filter_data = st.checkbox("Filter data if needed (then switch to Modified Dataframe above)", key = "Filter data")
+        
         
         
         st.subheader("Step 3: Tools for Analysis")
@@ -1651,6 +1702,12 @@ with tab1:
             survival_curve = st.checkbox("Survival curve (need duration column)", key = "show survival")
             cox_ph = st.checkbox("Cox Proportional Hazards (need duration column)", key = "show cox ph")
             full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Download a Full Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
+    
+    if filter_data:
+        current_df = st.session_state.df
+        filtered_df = filter_dataframe(current_df)
+        filtered_df
+        
             
     if mult_linear_reg:
         st.subheader("Multiple Linear Regression")
