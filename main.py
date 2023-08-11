@@ -574,11 +574,12 @@ def start_chatbot2(df, selected_model, key = "main routine"):
             # sys.exit(1)
     
  
-def start_chatbot3(df):
+def start_chatbot3(df, model):
     fetch_api_key()
     openai.api_key = st.session_state.openai_api_key
     agent = create_pandas_dataframe_agent(
-    ChatOpenAI(temperature=0, model="gpt-3.5-turbo"),
+    # ChatOpenAI(temperature=0, model="gpt-3.5-turbo"),
+    ChatOpenAI(temperature=0, model=model),
     df,
     verbose=True,
     agent_type=AgentType.OPENAI_FUNCTIONS,
@@ -1846,7 +1847,9 @@ with tab1:
                         start_chatbot2(st.session_state.df, selected_model, key = "chatbot2 main")
                     if chat_context == "Generate Plots":
                         if selected_model == "gpt-3.5-turbo":
-                            start_chatbot3(st.session_state.df)
+                            start_chatbot3(st.session_state.df, selected_model)
+                        if selected_model == "gpt-3.5-turbo-16k":
+                            start_chatbot3(st.session_state.df, selected_model)
                         if selected_model == "gpt-4":
                             start_plot_gpt4(st.session_state.df)
 
