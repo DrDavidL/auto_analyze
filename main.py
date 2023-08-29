@@ -119,7 +119,8 @@ def generate_regression_equation(intercept, coef, x_col):
 
 
 def df_download_options(df, report_type):
-    format = st.radio("Select the format for your report:", ('csv', 'json', 'html', ), key = 'report_format', horizontal = True, )
+    a = randint(0, 10000000000)
+    format = st.radio("Select the format for your report:", ('csv', 'json', 'html', ), key = f'report_format_{a}', horizontal = True, )
     file_name = f'{report_type}.{format}'
 
     if format == 'csv':
