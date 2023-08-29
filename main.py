@@ -1561,15 +1561,12 @@ def process_dataframe(df):
 st.title("AutoAnalyzer")
 with st.expander('Please Read: Using AutoAnalyzer'):
     st.info("""Be sure your data is first in a 'tidy' format. Use the demo datasets for examples. (*See https://tidyr.tidyverse.org/ for more information.*)
-    Follow the steps listed in the sidebar on the left. After your exploratory analysis is complete, try the machine learning tab to see if you can predict a target variable.
-    
-    This is not intended to be a comprehensive tool for data analysis. It is meant to be a starting point for data exploration and machine learning.
-    
-    """)        
+Follow the steps listed in the sidebar on the left. After your exploratory analysis is complete, try the machine learning tab to see if you can predict a target variable.""")    
+    st.warning("This is not intended to be a comprehensive tool for data analysis. It is meant to be a starting point for data exploration and machine learning.")        
             
     # """)
     st.write("Author: David Liebovitz, MD, Northwestern University")
-    st.write("Last updated 8/3/23")
+    st.write("Last updated 8/28/23")
     
 tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
 fetch_api_key()
