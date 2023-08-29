@@ -1562,7 +1562,8 @@ st.title("AutoAnalyzer")
 with st.expander('Please Read: Using AutoAnalyzer'):
     st.info("""Be sure your data is first in a 'tidy' format. Use the demo datasets for examples. (*See https://tidyr.tidyverse.org/ for more information.*)
 Follow the steps listed in the sidebar on the left. After your exploratory analysis is complete, try the machine learning tab to see if you can predict a target variable.""")    
-    st.warning("This is not intended to be a comprehensive tool for data analysis. It is meant to be a starting point for data exploration and machine learning.")        
+    st.warning("This is not intended to be a comprehensive tool for data analysis. It is meant to be a starting point for data exploration and machine learning. Do not upload PHI. Clone the Github repository and run locally without the chatbot if you have PHI.") 
+    st.markdown('[Github Repository](https://github.com/DrDavidL/auto_analyze)')       
             
     # """)
     st.write("Author: David Liebovitz, MD, Northwestern University")
