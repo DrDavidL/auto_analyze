@@ -1232,15 +1232,15 @@ def get_categorical_and_numerical_cols(df):
  
 def plot_confusion_matrix(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(dpi=100)  # Set DPI for better clarity
     
     # Plot the heatmap
-    sns.heatmap(cm, annot=True, fmt="d", cmap='Blues', ax=ax)
+    sns.heatmap(cm, annot=True, fmt="d", cmap='Blues', ax=ax, annot_kws={"size": 16})  # Set font size
     
     # Labels, title, and ticks
-    ax.set_ylabel('Actual')
-    ax.set_xlabel('Predicted')
-    ax.set_title('Confusion Matrix')
+    ax.set_ylabel('Actual', fontsize=12)
+    ax.set_xlabel('Predicted', fontsize=12)
+    ax.set_title('Confusion Matrix', fontsize=14)
     
     # Fix for the bottom cells getting cut off
     plt.subplots_adjust(bottom=0.2)
