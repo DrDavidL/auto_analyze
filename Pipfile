@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-python_version = ">=3.9"
 streamlit = "*"
 streamlit-pandas-profiling = "*"
 pandas-profiling = "*"
