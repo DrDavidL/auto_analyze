@@ -54,6 +54,8 @@ import statsmodels.api as sm
 import category_encoders as ce
 from mpl_toolkits.mplot3d import Axes3D
 import shap
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 
 
 
@@ -1230,7 +1232,7 @@ def get_categorical_and_numerical_cols(df):
     return numeric_cols, categorical_cols
 
  
-def plot_confusion_matrix(y_true, y_pred):
+def plot_confusion_matrix_old(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
     fig, ax = plt.subplots(dpi=100)  # Set DPI for better clarity
     
@@ -1244,6 +1246,30 @@ def plot_confusion_matrix(y_true, y_pred):
     
     # Fix for the bottom cells getting cut off
     plt.subplots_adjust(bottom=0.2)
+    
+    return fig
+
+
+
+
+
+def plot_confusion_matrix(y_true, y_pred):
+    # Compute the confusion matrix
+    cm = confusion_matrix(y_true, y_pred)
+    
+    # Create the ConfusionMatrixDisplay object
+    cmd = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Class 0', 'Class 1'])
+    
+    # Create a new figure and axis for the plot
+    fig, ax = plt.subplots(dpi=100)
+    
+    # Plot the confusion matrix using the `plot` method
+    cmd.plot(ax=ax, cmap='Blues', values_format='d')
+    
+    # Customize the plot if needed
+    ax.set_title('Confusion Matrix')
+    ax.set_xlabel('Predicted')
+    ax.set_ylabel('Actual')
     
     return fig
 
