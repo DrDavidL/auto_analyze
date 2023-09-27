@@ -35,7 +35,7 @@ from PIL import Image
 from scipy import stats
 import lifelines
 from lifelines import KaplanMeierFitter, CoxPHFitter
-from explanations.explanations  import kaplan_meier, cox, mult_linear_reg_explanation
+from explanations.explanations  import *
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.model_selection import train_test_split
@@ -53,6 +53,7 @@ from sklearn import linear_model
 import statsmodels.api as sm
 import category_encoders as ce
 from mpl_toolkits.mplot3d import Axes3D
+import shap
 
 
 
@@ -2537,7 +2538,9 @@ with tab2:
             "Which machine learning model would you like to use?",
             ("Logistic Regression", "Decision Tree", "Random Forest", "Gradient Boosting Machines (GBMs)", "Support Vector Machines (SVMs)", "Neural Network")
         )
-
+        perform_shapely = st.checkbox("Include a Shapely Force Plot", value=False, key="perform_shapely-10")
+        if perform_shapely == True:
+            st.warning("Shapely interpretation of the model is computationally expensive for some models and may take a while to run. Please be patient")
         if st.button("Predict"):
             if model_option == "Logistic Regression":
                 model = LogisticRegression()
@@ -2545,6 +2548,7 @@ with tab2:
                 predictions = model.predict(X_test)
                 accuracy = accuracy_score(y_test, predictions)
                 y_scores = model.predict_proba(X_test)[:, 1]
+                    
                 with st.expander("What is logistic regression?"):
                     st.write("""
 Logistic regression is a statistical model commonly used in the field of medicine to predict binary outcomes - such as whether a patient has a disease (yes/no), whether a patient survived or not after a treatment (survived/did not survive), etc.
@@ -2572,12 +2576,47 @@ In the medical field, logistic regression can be a helpful tool to predict outco
                 features = X_train.columns
 
                 equation = "Logit(P) = " + str(model.intercept_[0])
-
+                
                 for c, feature in zip(coeff, features):
                     equation += " + " + str(c) + " * " + feature
 
                 st.write("The equation of the logistic regression model is:")
                 st.write(equation)
+                
+                if perform_shapely == True:                     # Shapely explanation
+                
+                    # Scale the features
+                    with st.expander("What is a Shapely Force Plot?"):
+                        st.markdown(shapely_explanation)  
+                    with st.spinner("Performing Analysis for the Shapely Force Plot..."):
+                        # Standardize the features
+                        scaler = StandardScaler()
+                        X_train_scaled = scaler.fit_transform(X_train)
+                        X_test_scaled = scaler.transform(X_test)
+
+                        # Shapely explanation using KernelExplainer
+                        explainer = shap.KernelExplainer(model.predict_proba, shap.sample(X_train_scaled, 100))
+                        shap_values = explainer.shap_values(X_test_scaled)
+
+                        # Sort features by absolute contribution for the first instance in the test set
+                        sorted_indices = np.argsort(np.abs(shap_values[1][0]))[::-1]
+                        sorted_shap_values = shap_values[1][0][sorted_indices]
+                        sorted_feature_names = X_test.columns[sorted_indices]
+
+                        # Create a DataFrame to display sorted features and their Shapely values
+                        sorted_features_df = pd.DataFrame({
+                            'Feature': sorted_feature_names,
+                            'Shapely_Value': sorted_shap_values
+                        })
+
+                        # Display the sorted features DataFrame in Streamlit
+                        st.table(sorted_features_df)
+
+                        # Generate and display the sorted force plot
+                        shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
+                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        with open("sorted_shap_plot.html", "r") as f:
+                            st.components.v1.html(f.read(), height=500)
 
 
             elif model_option == "Decision Tree":
@@ -2613,6 +2652,36 @@ While decision trees can be powerful and intuitive tools, there are a few caveat
 Overall, decision trees can be an excellent tool for understanding and predicting binary outcomes from medical data. They can handle a mixture of data types, deal with missing data, and the results are interpretable and explainable. Just like with any medical test, though, the results should be interpreted with care and in the context of other information available."""
                     )
                 display_metrics(y_test, predictions, y_scores)
+                if perform_shapely == True:                     # Shapely explanation
+                
+                    # Scale the features
+                    with st.expander("What is a Shapely Force Plot?"):
+                        st.markdown(shapely_explanation)  
+                    with st.spinner("Performing Analysis for the Shapely Force Plot..."):
+
+                        # Shapely explanation using TreeExplainer
+                        explainer = shap.TreeExplainer(model)
+                        shap_values = explainer.shap_values(X_test)
+
+                        # Sort features by absolute contribution for the first instance in the test set
+                        sorted_indices = np.argsort(np.abs(shap_values[1][0]))[::-1]
+                        sorted_shap_values = shap_values[1][0][sorted_indices]
+                        sorted_feature_names = X_test.columns[sorted_indices]
+
+                        # Create a DataFrame to display sorted features and their Shapely values
+                        sorted_features_df = pd.DataFrame({
+                            'Feature': sorted_feature_names,
+                            'Shapely_Value': sorted_shap_values
+                        })
+
+                        # Display the sorted features DataFrame in Streamlit
+                        st.table(sorted_features_df)
+
+                        # Generate and display the sorted force plot
+                        shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
+                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        with open("sorted_shap_plot.html", "r") as f:
+                            st.components.v1.html(f.read(), height=500)
 
             elif model_option == "Random Forest":
                 model = RandomForestClassifier()
@@ -2641,7 +2710,36 @@ One of the main strengths of Random Forest is that it can handle complex data wi
 However, it's important to note that while Random Forest often performs well, it can be somewhat of a "black box", meaning it can be hard to understand why it's making the predictions it's making. It's always crucial to validate the model's predictions against your medical knowledge and context."""
                     )
                 display_metrics(y_test, predictions, y_scores)
+                if perform_shapely == True:                     # Shapely explanation
                 
+                    # Scale the features
+                    with st.expander("What is a Shapely Force Plot?"):
+                        st.markdown(shapely_explanation)  
+                    with st.spinner("Performing Analysis for the Shapely Force Plot..."):
+                        # Shapely explanation using TreeExplainer
+                        explainer = shap.TreeExplainer(model)
+                        shap_values = explainer.shap_values(X_test)
+
+                        # Sort features by absolute contribution for the first instance in the test set
+                        sorted_indices = np.argsort(np.abs(shap_values[1][0]))[::-1]
+                        sorted_shap_values = shap_values[1][0][sorted_indices]
+                        sorted_feature_names = X_test.columns[sorted_indices]
+
+                        # Create a DataFrame to display sorted features and their Shapely values
+                        sorted_features_df = pd.DataFrame({
+                            'Feature': sorted_feature_names,
+                            'Shapely_Value': sorted_shap_values
+                        })
+
+                        # Display the sorted features DataFrame in Streamlit
+                        st.table(sorted_features_df)
+
+                        # Generate and display the sorted force plot
+                        shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
+                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        with open("sorted_shap_plot.html", "r") as f:
+                            st.components.v1.html(f.read(), height=500)
+                                
                 
             elif model_option == "Gradient Boosting Machines (GBMs)":
                 model = GradientBoostingClassifier()
@@ -2679,6 +2777,46 @@ However, GBMs do have their challenges:
 Just like with any model, it's crucial to validate the model's predictions with your medical knowledge and consider the context. It's also important to remember that while GBMs can make very accurate predictions, they don't prove causation. They can identify relationships and patterns in your data, but they can't tell you why those patterns exist.""")
                     
                 display_metrics(y_test, predictions, y_scores)
+                if perform_shapely == True:                     # Shapely explanation
+                
+                    # Scale the features
+                    with st.expander("What is a Shapely Force Plot?"):
+                        st.markdown(shapely_explanation)  
+                    with st.spinner("Performing Analysis for the Shapely Force Plot..."):
+
+
+                        # Shapely explanation
+                        explainer = shap.TreeExplainer(model)
+                        shap_values = explainer.shap_values(X_test)
+
+                        # Check if shap_values is a list (multi-class) or a single array (binary classification or regression)
+                        if isinstance(shap_values, list):
+                            shap_values_for_class = shap_values[1]  # Assuming you're interested in the second class
+                        else:
+                            shap_values_for_class = shap_values
+
+                        # Sort features by absolute contribution for the first instance in the test set
+                        sorted_indices = np.argsort(np.abs(shap_values_for_class[0]))[::-1]
+                        sorted_shap_values = shap_values_for_class[0][sorted_indices]
+                        sorted_feature_names = X_test.columns[sorted_indices]
+
+                        # Create a DataFrame to display sorted features and their Shapely values
+                        sorted_features_df = pd.DataFrame({
+                            'Feature': sorted_feature_names,
+                            'Shapely_Value': sorted_shap_values
+                        })
+
+                        # Display the sorted features DataFrame in Streamlit
+                        st.table(sorted_features_df)
+
+                        # Generate and display the sorted force plot
+                        shap_html = shap.force_plot(explainer.expected_value, sorted_shap_values, sorted_feature_names, show=False)
+                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        with open("sorted_shap_plot.html", "r") as f:
+                            st.components.v1.html(f.read(), height=500)
+
+
+
 
             elif model_option == "Support Vector Machines (SVMs)":
                 model = svm.SVC(probability=True)
@@ -2708,6 +2846,40 @@ Challenges:
 
 As with any machine learning model, while an SVM can make predictions about patient health, it's crucial to validate these predictions with medical expertise. Furthermore, an SVM can identify relationships in data, but it doesn't explain why these relationships exist. As always, correlation doesn't imply causation.""")
                 display_metrics(y_test, predictions, y_scores)
+                if perform_shapely == True:
+                    with st.expander("What is a Shapely Force Plot?"):
+                        st.markdown(shapely_explanation)  
+                    with st.spinner("Performing Analysis for the Shapely Force Plot..."):
+                    
+                        # Shapely explanation using KernelExplainer for SVM
+                        explainer = shap.KernelExplainer(model.predict_proba, shap.sample(X_train, 100))
+                        shap_values = explainer.shap_values(X_test)
+
+                        # Check if shap_values is a list (multi-class) or a single array (binary classification or regression)
+                        if isinstance(shap_values, list):
+                            shap_values_for_class = shap_values[1]  # Assuming you're interested in the second class
+                        else:
+                            shap_values_for_class = shap_values
+
+                        # Sort features by absolute contribution for the first instance in the test set
+                        sorted_indices = np.argsort(np.abs(shap_values_for_class[0]))[::-1]
+                        sorted_shap_values = shap_values_for_class[0][sorted_indices]
+                        sorted_feature_names = X_test.columns[sorted_indices]
+
+                        # Create a DataFrame to display sorted features and their Shapely values
+                        sorted_features_df = pd.DataFrame({
+                            'Feature': sorted_feature_names,
+                            'Shapely_Value': sorted_shap_values
+                        })
+
+                        # Display the sorted features DataFrame in Streamlit
+                        st.table(sorted_features_df)
+
+                        # Generate and display the sorted force plot
+                        shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
+                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        with open("sorted_shap_plot.html", "r") as f:
+                            st.components.v1.html(f.read(), height=500)
                 
             elif model_option == "Neural Network":
                 model = MLPClassifier(hidden_layer_sizes=(100,), activation='relu')
@@ -2735,6 +2907,42 @@ However, it's important to note that neural networks are computationally intensi
             """
         )
                 display_metrics(y_test, predictions, y_scores)
+                
+                if perform_shapely == True:
+                    with st.expander("What is a Shapely Force Plot?"):
+                        st.markdown(shapely_explanation)  
+                    
+                    with st.spinner("Performing Shapely Analysis..."):
+                    
+                        # Shapely explanation using KernelExplainer for MLP
+                        explainer = shap.KernelExplainer(model.predict_proba, shap.sample(X_train, 100))
+                        shap_values = explainer.shap_values(X_test)
+
+                        # Check if shap_values is a list (multi-class) or a single array (binary classification or regression)
+                        if isinstance(shap_values, list):
+                            shap_values_for_class = shap_values[1]  # Assuming you're interested in the second class
+                        else:
+                            shap_values_for_class = shap_values
+
+                        # Sort features by absolute contribution for the first instance in the test set
+                        sorted_indices = np.argsort(np.abs(shap_values_for_class[0]))[::-1]
+                        sorted_shap_values = shap_values_for_class[0][sorted_indices]
+                        sorted_feature_names = X_test.columns[sorted_indices]
+
+                        # Create a DataFrame to display sorted features and their Shapely values
+                        sorted_features_df = pd.DataFrame({
+                            'Feature': sorted_feature_names,
+                            'Shapely_Value': sorted_shap_values
+                        })
+
+                        # Display the sorted features DataFrame in Streamlit
+                        st.table(sorted_features_df)
+
+                        # Generate and display the sorted force plot
+                        shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
+                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        with open("sorted_shap_plot.html", "r") as f:
+                            st.components.v1.html(f.read(), height=500)
 
                 
 

@@ -61,3 +61,42 @@ It's important to note that multiple linear regression assumes a linear relation
 
 Multiple linear regression is a powerful tool for analyzing and understanding complex relationships in medical research. However, it requires careful consideration of the study design, appropriate selection of independent variables, and interpretation of the results in the context of the research question.
 """
+
+shapely_explanation = """### Understanding a Shapley Force Plot
+
+A Shapley force plot is a graphical representation that helps to explain the output of a machine learning model for a single prediction. It decomposes the prediction to show the impact of each feature. Here are the key components:
+
+1. **Base Value**: This is the starting point of the plot, usually at the center. It represents the average prediction for the model over the training set. In a binary classification problem, it could be the average probability of the positive class.
+
+2. **Output Value**: This is the endpoint of the plot. It represents the prediction for the specific instance being explained.
+
+3. **Feature Contributions**: Between the base value and the output value, you'll see arrows (or forces) pushing the prediction higher or lower. Each arrow corresponds to a feature in the model.
+    - **Red Arrows**: Indicate that the feature is pushing the prediction higher.
+    - **Blue Arrows**: Indicate that the feature is pushing the prediction lower.
+
+4. **Arrow Length**: The length of the arrow represents the magnitude of the feature's impact on the prediction. Longer arrows have a greater impact.
+
+5. **Arrow Direction**: The direction in which an arrow points (towards the base value or the output value) indicates whether the feature is contributing positively or negatively to the prediction.
+
+### Interpretation
+
+1. **Positive Influence**: Features with red arrows pointing towards the output value positively influence the prediction.
+  
+2. **Negative Influence**: Features with blue arrows pointing away from the output value negatively influence the prediction.
+
+3. **Neutral or Low Impact**: Features with very short arrows have minimal impact on the prediction.
+
+4. **Summation**: The sum of all the feature contributions and the base value should equal the output value.
+
+### Example
+
+Let's say you have a binary classification model predicting whether a loan will default or not. The base value is 0.4 (average default rate), and the model predicts a specific loan to have a 0.7 probability of default.
+
+- A high income (red arrow pointing right with length 0.2) may push the prediction up.
+- A low credit score (red arrow pointing right with length 0.1) may also increase the default probability.
+- A stable job (blue arrow pointing left with length -0.1) may reduce the default probability.
+
+The sum of all these contributions (0.4 base + 0.2 income + 0.1 credit score - 0.1 job) equals the output value (0.6).
+
+> For further reading, consider diving into the [Shapley Values paper](https://arxiv.org/abs/1705.07874) by Lundberg and Lee, which provides a comprehensive mathematical background on the topic.
+"""

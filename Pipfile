@@ -28,8 +28,8 @@ missingno = "*"
 urllib3 = "1.26.6" 
 lifelines = "*"
 category-encoders = "*"
+shap = "*"
 
 [dev-packages]
 
 [requires]
-
