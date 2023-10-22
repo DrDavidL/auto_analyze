@@ -62,7 +62,7 @@ It's important to note that multiple linear regression assumes a linear relation
 Multiple linear regression is a powerful tool for analyzing and understanding complex relationships in medical research. However, it requires careful consideration of the study design, appropriate selection of independent variables, and interpretation of the results in the context of the research question.
 """
 
-shapely_explanation = """### Understanding a Shapley Force Plot
+shapley_explanation = """### Understanding a Shapley Force Plot
 
 A Shapley force plot is a graphical representation that helps to explain the output of a machine learning model for a single prediction. It decomposes the prediction to show the impact of each feature. Here are the key components:
 

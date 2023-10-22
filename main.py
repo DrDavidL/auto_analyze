@@ -2573,9 +2573,9 @@ with tab2:
             "Which machine learning model would you like to use?",
             ("Logistic Regression", "Decision Tree", "Random Forest", "Gradient Boosting Machines (GBMs)", "Support Vector Machines (SVMs)", "Neural Network")
         )
-        perform_shapely = st.checkbox("Include a Shapely Force Plot", value=False, key="perform_shapely-10")
-        if perform_shapely == True:
-            st.warning("Shapely interpretation of the model is computationally expensive for some models and may take a while to run. Please be patient")
+        perform_shapley = st.checkbox("Include a Shapley Force Plot", value=False, key="perform_shapley-10")
+        if perform_shapley == True:
+            st.warning("Shapley interpretation of the model is computationally expensive for some models and may take a while to run. Please be patient")
         if st.button("Predict"):
             if model_option == "Logistic Regression":
                 model = LogisticRegression()
@@ -2618,18 +2618,18 @@ In the medical field, logistic regression can be a helpful tool to predict outco
                 st.write("The equation of the logistic regression model is:")
                 st.write(equation)
                 
-                if perform_shapely == True:                     # Shapely explanation
+                if perform_shapley == True:                     # shapley explanation
                 
                     # Scale the features
-                    with st.expander("What is a Shapely Force Plot?"):
-                        st.markdown(shapely_explanation)  
-                    with st.spinner("Performing Analysis for the Shapely Force Plot..."):
+                    with st.expander("What is a Shapley Force Plot?"):
+                        st.markdown(shapley_explanation)  
+                    with st.spinner("Performing Analysis for the Shapley Force Plot..."):
                         # Standardize the features
                         scaler = StandardScaler()
                         X_train_scaled = scaler.fit_transform(X_train)
                         X_test_scaled = scaler.transform(X_test)
 
-                        # Shapely explanation using KernelExplainer
+                        # shapley explanation using KernelExplainer
                         explainer = shap.KernelExplainer(model.predict_proba, shap.sample(X_train_scaled, 100))
                         shap_values = explainer.shap_values(X_test_scaled)
 
@@ -2638,10 +2638,10 @@ In the medical field, logistic regression can be a helpful tool to predict outco
                         sorted_shap_values = shap_values[1][0][sorted_indices]
                         sorted_feature_names = X_test.columns[sorted_indices]
 
-                        # Create a DataFrame to display sorted features and their Shapely values
+                        # Create a DataFrame to display sorted features and their shapley values
                         sorted_features_df = pd.DataFrame({
                             'Feature': sorted_feature_names,
-                            'Shapely_Value': sorted_shap_values
+                            'Shapley_Value': sorted_shap_values
                         })
 
                         # Display the sorted features DataFrame in Streamlit
@@ -2687,14 +2687,14 @@ While decision trees can be powerful and intuitive tools, there are a few caveat
 Overall, decision trees can be an excellent tool for understanding and predicting binary outcomes from medical data. They can handle a mixture of data types, deal with missing data, and the results are interpretable and explainable. Just like with any medical test, though, the results should be interpreted with care and in the context of other information available."""
                     )
                 display_metrics(y_test, predictions, y_scores)
-                if perform_shapely == True:                     # Shapely explanation
+                if perform_shapley == True:                     # shapley explanation
                 
                     # Scale the features
-                    with st.expander("What is a Shapely Force Plot?"):
-                        st.markdown(shapely_explanation)  
-                    with st.spinner("Performing Analysis for the Shapely Force Plot..."):
+                    with st.expander("What is a Shapley Force Plot?"):
+                        st.markdown(shapley_explanation)  
+                    with st.spinner("Performing Analysis for the Shapley Force Plot..."):
 
-                        # Shapely explanation using TreeExplainer
+                        # shapley explanation using TreeExplainer
                         explainer = shap.TreeExplainer(model)
                         shap_values = explainer.shap_values(X_test)
 
@@ -2703,10 +2703,10 @@ Overall, decision trees can be an excellent tool for understanding and predictin
                         sorted_shap_values = shap_values[1][0][sorted_indices]
                         sorted_feature_names = X_test.columns[sorted_indices]
 
-                        # Create a DataFrame to display sorted features and their Shapely values
+                        # Create a DataFrame to display sorted features and their shapley values
                         sorted_features_df = pd.DataFrame({
                             'Feature': sorted_feature_names,
-                            'Shapely_Value': sorted_shap_values
+                            'Shapley_Value': sorted_shap_values
                         })
 
                         # Display the sorted features DataFrame in Streamlit
@@ -2745,13 +2745,13 @@ One of the main strengths of Random Forest is that it can handle complex data wi
 However, it's important to note that while Random Forest often performs well, it can be somewhat of a "black box", meaning it can be hard to understand why it's making the predictions it's making. It's always crucial to validate the model's predictions against your medical knowledge and context."""
                     )
                 display_metrics(y_test, predictions, y_scores)
-                if perform_shapely == True:                     # Shapely explanation
+                if perform_shapley == True:                     # shapley explanation
                 
                     # Scale the features
-                    with st.expander("What is a Shapely Force Plot?"):
-                        st.markdown(shapely_explanation)  
-                    with st.spinner("Performing Analysis for the Shapely Force Plot..."):
-                        # Shapely explanation using TreeExplainer
+                    with st.expander("What is a Shapley Force Plot?"):
+                        st.markdown(shapley_explanation)  
+                    with st.spinner("Performing Analysis for the Shapley Force Plot..."):
+                        # shapley explanation using TreeExplainer
                         explainer = shap.TreeExplainer(model)
                         shap_values = explainer.shap_values(X_test)
 
@@ -2760,10 +2760,10 @@ However, it's important to note that while Random Forest often performs well, it
                         sorted_shap_values = shap_values[1][0][sorted_indices]
                         sorted_feature_names = X_test.columns[sorted_indices]
 
-                        # Create a DataFrame to display sorted features and their Shapely values
+                        # Create a DataFrame to display sorted features and their shapley values
                         sorted_features_df = pd.DataFrame({
                             'Feature': sorted_feature_names,
-                            'Shapely_Value': sorted_shap_values
+                            'Shapley_Value': sorted_shap_values
                         })
 
                         # Display the sorted features DataFrame in Streamlit
@@ -2812,15 +2812,15 @@ However, GBMs do have their challenges:
 Just like with any model, it's crucial to validate the model's predictions with your medical knowledge and consider the context. It's also important to remember that while GBMs can make very accurate predictions, they don't prove causation. They can identify relationships and patterns in your data, but they can't tell you why those patterns exist.""")
                     
                 display_metrics(y_test, predictions, y_scores)
-                if perform_shapely == True:                     # Shapely explanation
+                if perform_shapley == True:                     # shapley explanation
                 
                     # Scale the features
-                    with st.expander("What is a Shapely Force Plot?"):
-                        st.markdown(shapely_explanation)  
-                    with st.spinner("Performing Analysis for the Shapely Force Plot..."):
+                    with st.expander("What is a Shapley Force Plot?"):
+                        st.markdown(shapley_explanation)  
+                    with st.spinner("Performing Analysis for the Shapley Force Plot..."):
 
 
-                        # Shapely explanation
+                        # shapley explanation
                         explainer = shap.TreeExplainer(model)
                         shap_values = explainer.shap_values(X_test)
 
@@ -2835,10 +2835,10 @@ Just like with any model, it's crucial to validate the model's predictions with 
                         sorted_shap_values = shap_values_for_class[0][sorted_indices]
                         sorted_feature_names = X_test.columns[sorted_indices]
 
-                        # Create a DataFrame to display sorted features and their Shapely values
+                        # Create a DataFrame to display sorted features and their shapley values
                         sorted_features_df = pd.DataFrame({
                             'Feature': sorted_feature_names,
-                            'Shapely_Value': sorted_shap_values
+                            'Shapley_Value': sorted_shap_values
                         })
 
                         # Display the sorted features DataFrame in Streamlit
@@ -2881,12 +2881,12 @@ Challenges:
 
 As with any machine learning model, while an SVM can make predictions about patient health, it's crucial to validate these predictions with medical expertise. Furthermore, an SVM can identify relationships in data, but it doesn't explain why these relationships exist. As always, correlation doesn't imply causation.""")
                 display_metrics(y_test, predictions, y_scores)
-                if perform_shapely == True:
-                    with st.expander("What is a Shapely Force Plot?"):
-                        st.markdown(shapely_explanation)  
-                    with st.spinner("Performing Analysis for the Shapely Force Plot..."):
+                if perform_shapley == True:
+                    with st.expander("What is a Shapley Force Plot?"):
+                        st.markdown(shapley_explanation)  
+                    with st.spinner("Performing Analysis for the Shapley Force Plot..."):
                     
-                        # Shapely explanation using KernelExplainer for SVM
+                        # shapley explanation using KernelExplainer for SVM
                         explainer = shap.KernelExplainer(model.predict_proba, shap.sample(X_train, 100))
                         shap_values = explainer.shap_values(X_test)
 
@@ -2901,10 +2901,10 @@ As with any machine learning model, while an SVM can make predictions about pati
                         sorted_shap_values = shap_values_for_class[0][sorted_indices]
                         sorted_feature_names = X_test.columns[sorted_indices]
 
-                        # Create a DataFrame to display sorted features and their Shapely values
+                        # Create a DataFrame to display sorted features and their shapley values
                         sorted_features_df = pd.DataFrame({
                             'Feature': sorted_feature_names,
-                            'Shapely_Value': sorted_shap_values
+                            'Shapley_Value': sorted_shap_values
                         })
 
                         # Display the sorted features DataFrame in Streamlit
@@ -2943,13 +2943,13 @@ However, it's important to note that neural networks are computationally intensi
         )
                 display_metrics(y_test, predictions, y_scores)
                 
-                if perform_shapely == True:
-                    with st.expander("What is a Shapely Force Plot?"):
-                        st.markdown(shapely_explanation)  
+                if perform_shapley == True:
+                    with st.expander("What is a Shapley Force Plot?"):
+                        st.markdown(shapley_explanation)  
                     
-                    with st.spinner("Performing Shapely Analysis..."):
+                    with st.spinner("Performing Shapley Analysis..."):
                     
-                        # Shapely explanation using KernelExplainer for MLP
+                        # shapley explanation using KernelExplainer for MLP
                         explainer = shap.KernelExplainer(model.predict_proba, shap.sample(X_train, 100))
                         shap_values = explainer.shap_values(X_test)
 
@@ -2964,10 +2964,10 @@ However, it's important to note that neural networks are computationally intensi
                         sorted_shap_values = shap_values_for_class[0][sorted_indices]
                         sorted_feature_names = X_test.columns[sorted_indices]
 
-                        # Create a DataFrame to display sorted features and their Shapely values
+                        # Create a DataFrame to display sorted features and their shapley values
                         sorted_features_df = pd.DataFrame({
                             'Feature': sorted_feature_names,
-                            'Shapely_Value': sorted_shap_values
+                            'Shapley_Value': sorted_shap_values
                         })
 
                         # Display the sorted features DataFrame in Streamlit
