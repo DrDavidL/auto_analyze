@@ -28,6 +28,7 @@ urllib3 = "1.26.6"
 lifelines = "*"
 category-encoders = "*"
 shap = "*"
+matplotlib = "==3.7"
 
 [dev-packages]
 
