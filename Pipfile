@@ -29,6 +29,7 @@ lifelines = "*"
 category-encoders = "*"
 shap = "*"
 matplotlib = "==3.7"
+langchain-experimental = "*"
 
 [dev-packages]
 
