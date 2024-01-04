@@ -6,9 +6,7 @@ import io
 import sys
 from ydata_profiling import ProfileReport
 import streamlit as st
-from streamlit_pandas_profiling import st_profile_report
-import streamlit.components.v1 as components
-import numpy as np
+# from streamlit_pandas_profiling import st_profile_report
 import plotly.figure_factory as ff
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -23,7 +21,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn import svm
-from langchain.agents import create_pandas_dataframe_agent
+from langchain_experimental.agents import create_pandas_dataframe_agent
 from langchain.chat_models import ChatOpenAI
 from langchain.agents.agent_types import AgentType
 from langchain.llms import OpenAI
