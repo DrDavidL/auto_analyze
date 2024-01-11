@@ -1,2 +1,7 @@
 [theme]
 base="light"
+[server]
+runOnSave = true
+enableStaticServing = true
+enableXsrfProtection = false
+enableCORS = false

@@ -13,3 +13,4 @@ images/
 images/output.png
 
 cox_ph_summary.csv
+secrets.toml
