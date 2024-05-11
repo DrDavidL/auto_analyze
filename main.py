@@ -1970,17 +1970,18 @@ with tab1:
                 
     if full_analysis:
         st.info("Full analysis of data")
-        with st.spinner("Performing Analysis...Plesae wait"):
+        st.warning("Remember to check that your data is ready to be analyzed or you'll receive errors.")
+        with st.spinner("Performing Analysis... Please wait a minute."):
             profile = make_profile(st.session_state.df)
         # profile = ProfileReport(df, title="Profiling Report")
-        st.write(f'Since this file is large, please download and then open the full report.')
-        st.download_button(
-            label="Download report",
-            data=profile.to_html(),
-            file_name='full_report.html',
-            mime='text/html',
-        )
-        # st_profile_report(profile)
+            st.write(f'Since this file is large, please download and then open the full report.')
+            st.download_button(
+                label="Download report",
+                data=profile.to_html(),
+                file_name='full_report.html',
+                mime='text/html',
+            )
+            # st_profile_report(profile)
             
     if histogram: 
         st.info("Histogram of data")
