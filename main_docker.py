@@ -1556,7 +1556,7 @@ with tab1:
         
         
     if demo_or_custom == 'Generate Data':
-        if check_password():
+        if check_password() or st.secrets["health_universe"] == "True":
             user_input = st.sidebar.text_area("Enter comma or space separated names for columns, e.g., Na, Cr, WBC, A1c, SPB, Diabetes:")
 
             if "," in user_input:

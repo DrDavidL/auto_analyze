@@ -73,8 +73,8 @@ if 'df' not in st.session_state:
 if 'modified_df' not in st.session_state:
     st.session_state.modified_df = pd.DataFrame()
     
-if "openai_api_key" not in st.session_state:
-    st.session_state.openai_api_key = ''
+# if "openai_api_key" not in st.session_state:
+#     st.session_state.openai_api_key = st.secrets("openai_api_key")
     
 if "gen_csv" not in st.session_state:
     st.session_state.gen_csv = None
@@ -301,37 +301,37 @@ def calculate_rr_arr_nnt(tn, fp, fn, tp):
     nnt = 1 / arr if arr > 0 else np.inf
     return rr, arr, nnt
 
-def fetch_api_key():
-    api_key = None
+# def fetch_api_key():
+#     api_key = None
     
-    try:
-        # Attempt to retrieve the API key as a secret   
-        api_key = st.secrets["OPENAI_API_KEY"]
-        # os.environ["OPENAI_API_KEY"] = api_key
-        st.session_state.openai_api_key = api_key
-        os.environ['OPENAI_API_KEY'] = api_key
-        # st.write(f'Here is what we think the key is step 1: {api_key}')
-    except KeyError:
+#     try:
+#         # Attempt to retrieve the API key as a secret   
+#         api_key = st.secrets["OPENAI_API_KEY"]
+#         # os.environ["OPENAI_API_KEY"] = api_key
+#         st.session_state.openai_api_key = api_key
+#         os.environ['OPENAI_API_KEY'] = api_key
+#         # st.write(f'Here is what we think the key is step 1: {api_key}')
+#     except KeyError:
         
-        if st.session_state.openai_api_key != '':
-            api_key = st.session_state.openai_api_key
-            os.environ['OPENAI_API_KEY'] = api_key
-            # If the API key is already set, don't prompt for it again
-            # st.write(f'Here is what we think the key is step 2: {api_key}')
-            return 
-        else:        
-            # If the secret is not found, prompt the user for their API key
-            st.sidebar.warning("Oh, dear friend of mine! It seems your API key has gone astray, hiding in the shadows. Pray, reveal it to me!")
-            api_key = st.sidebar.text_input("Please, whisper your API key into my ears: ", key = 'warning2')
+#         if st.session_state.openai_api_key != '':
+#             api_key = st.session_state.openai_api_key
+#             os.environ['OPENAI_API_KEY'] = api_key
+#             # If the API key is already set, don't prompt for it again
+#             # st.write(f'Here is what we think the key is step 2: {api_key}')
+#             return 
+#         else:        
+#             # If the secret is not found, prompt the user for their API key
+#             st.sidebar.warning("Oh, dear friend of mine! It seems your API key has gone astray, hiding in the shadows. Pray, reveal it to me!")
+#             api_key = st.sidebar.text_input("Please, whisper your API key into my ears: ",)
   
-            st.session_state.openai_api_key = api_key
-            os.environ['OPENAI_API_KEY'] = api_key
-            # Save the API key as a secret
-            # st.secrets["my_api_key"] = api_key
-            # st.write(f'Here is what we think the key is step 3: {api_key}')
-            return 
+#             st.session_state.openai_api_key = api_key
+#             os.environ['OPENAI_API_KEY'] = api_key
+#             # Save the API key as a secret
+#             # st.secrets["my_api_key"] = api_key
+#             # st.write(f'Here is what we think the key is step 3: {api_key}')
+#             return 
     
-    return 
+#     return 
 
 def check_password():
 
@@ -559,11 +559,11 @@ def replace_show_with_save(code_string, filename='output.png'):
     return code_string
 
 def start_chatbot2(df, selected_model, key = "main routine"):
-    fetch_api_key()
-    openai.api_key = st.session_state.openai_api_key
-    openai_api_key = st.session_state.openai_api_key
+    # fetch_api_key()
+    openai.api_key = st.secrets["openai_api_key"]
+    openai_api_key = st.secrets["openai_api_key"]
     agent = create_pandas_dataframe_agent(
-    ChatOpenAI(temperature=0, model=selected_model),
+    ChatOpenAI(api_key= st.secrets["openai_api_key"], temperature=0, model=selected_model),
     df,
     verbose=True,
     agent_type=AgentType.OPENAI_FUNCTIONS,
@@ -575,21 +575,24 @@ def start_chatbot2(df, selected_model, key = "main routine"):
     # st.write("💬 Chatbot with access to your data...")
     
         # Check if the API key exists as an environmental variable
-    api_key = os.environ.get("OPENAI_API_KEY")
+    try:
+        api_key = os.environ.get("OPENAI_API_KEY")
+    except:
+        api_key = st.secrets["openai_api_key"]
 
-    if api_key:
-        # st.write("*API key active - ready to respond!*")
-        pass
-    else:
-        st.warning("API key not found as an environmental variable.")
-        api_key = st.text_input("Enter your OpenAI API key:")
+    # if api_key:
+    #     # st.write("*API key active - ready to respond!*")
+    #     pass
+    # else:
+    #     st.warning("API key not found as an environmental variable.")
+    #     api_key = st.text_input("Enter your OpenAI API key:")
 
-        if st.button("Save"):
-            if is_valid_api_key(api_key):
-                os.environ["OPENAI_API_KEY"] = api_key
-                st.success("API key saved as an environmental variable!")
-            else:
-                st.error("Invalid API key. Please enter a valid API key.")
+    #     if st.button("Save"):
+    #         if is_valid_api_key(api_key):
+    #             os.environ["OPENAI_API_KEY"] = api_key
+    #             st.success("API key saved as an environmental variable!")
+    #         else:
+    #             st.error("Invalid API key. Please enter a valid API key.")
     
     csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?' *Do not ask for plots for this option.*", "")
     if st.button("Send"):
@@ -620,11 +623,11 @@ def start_chatbot2(df, selected_model, key = "main routine"):
     
  
 def start_chatbot3(df, model):
-    fetch_api_key()
-    openai.api_key = st.session_state.openai_api_key
+    # fetch_api_key()
+    # openai.api_key = st.session_state.openai_api_key
     agent = create_pandas_dataframe_agent(
     # ChatOpenAI(temperature=0, model="gpt-3.5-turbo"),
-    ChatOpenAI(temperature=0, model=model),
+    ChatOpenAI(api_key= st.secrets["openai_api_key"], temperature=0, model=model),
     df,
     verbose=True,
     agent_type=AgentType.OPENAI_FUNCTIONS,
@@ -637,22 +640,22 @@ def start_chatbot3(df, model):
         If you get an error, try again.                  
         """)
     
-        # Check if the API key exists as an environmental variable
-    api_key = os.environ.get("OPENAI_API_KEY")
+    #     # Check if the API key exists as an environmental variable
+    # api_key = os.environ.get("OPENAI_API_KEY")
 
-    if api_key:
-        # st.write("*API key active - ready to respond!*")
-        pass
-    else:
-        st.warning("API key not found as an environmental variable.")
-        api_key = st.text_input("Enter your OpenAI API key:")
+    # if api_key:
+    #     # st.write("*API key active - ready to respond!*")
+    #     pass
+    # else:
+    #     st.warning("API key not found as an environmental variable.")
+    #     api_key = st.text_input("Enter your OpenAI API key:")
 
-        if st.button("Save"):
-            if is_valid_api_key(api_key):
-                os.environ["OPENAI_API_KEY"] = api_key
-                st.success("API key saved as an environmental variable!")
-            else:
-                st.error("Invalid API key. Please enter a valid API key.")
+    #     if st.button("Save"):
+    #         if is_valid_api_key(api_key):
+    #             os.environ["OPENAI_API_KEY"] = api_key
+    #             st.success("API key saved as an environmental variable!")
+    #         else:
+    #             st.error("Invalid API key. Please enter a valid API key.")
 
     csv_question = st.text_input("Your question, e.g., 'Create a scatterplot for age and BMI.' *This option only generates plots.* ", "")
     if st.button("Send"):
@@ -687,10 +690,10 @@ def start_chatbot3(df, model):
             # return None, None
             
 def start_plot_gpt4(df):
-    fetch_api_key()
-    openai.api_key = st.session_state.openai_api_key
+    # fetch_api_key()
+    # openai.api_key = st.session_state.openai_api_key
     agent = create_pandas_dataframe_agent(
-    ChatOpenAI(temperature=0, model="gpt-4"),
+    ChatOpenAI(api_key= st.secrets["openai_api_key"],temperature=0, model="gpt-4"),
     df,
     verbose=True,
     agent_type=AgentType.OPENAI_FUNCTIONS,
@@ -703,22 +706,22 @@ def start_plot_gpt4(df):
         If you get an error, try again.                
         """)
     
-        # Check if the API key exists as an environmental variable
-    api_key = os.environ.get("OPENAI_API_KEY")
+    #     # Check if the API key exists as an environmental variable
+    # api_key = os.environ.get("OPENAI_API_KEY")
 
-    if api_key:
-        # st.write("*API key active - ready to respond!*")
-        pass
-    else:
-        st.warning("API key not found as an environmental variable.")
-        api_key = st.text_input("Enter your OpenAI API key:")
+    # if api_key:
+    #     # st.write("*API key active - ready to respond!*")
+    #     pass
+    # else:
+    #     st.warning("API key not found as an environmental variable.")
+    #     api_key = st.text_input("Enter your OpenAI API key:")
 
-        if st.button("Save"):
-            if is_valid_api_key(api_key):
-                os.environ["OPENAI_API_KEY"] = api_key
-                st.success("API key saved as an environmental variable!")
-            else:
-                st.error("Invalid API key. Please enter a valid API key.")
+    #     if st.button("Save"):
+    #         if is_valid_api_key(api_key):
+    #             os.environ["OPENAI_API_KEY"] = api_key
+    #             st.success("API key saved as an environmental variable!")
+    #         else:
+    #             st.error("Invalid API key. Please enter a valid API key.")
 
     csv_question = st.text_area("Your question, e.g., 'Create a heatmap. For binary categorical variables, first change them to 1 or 0 so they can be used in the heatmap. Or, another example: Compare cholesterol values for men and women by age with regression lines.", "")
     if st.button("Send"):
@@ -756,7 +759,7 @@ def start_plot_gpt4(df):
 
 def generate_df(columns, n_rows, selected_model):
 
-    openai.api_key = st.session_state.openai_api_key
+    # openai.api_key = st.session_state.openai_api_key
     
 #     if selected_model == "gpt-3.5-turbo":
     
@@ -803,6 +806,7 @@ Number of rows: ```number```
     
     try:
         response= openai.ChatCompletion.create(
+            api_key= st.secrets["openai_api_key"],
             model= "gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -830,8 +834,8 @@ Number of rows: ```number```
     
                 
 def start_chatbot1(selected_model):
-    fetch_api_key()
-    openai.api_key = st.session_state.openai_api_key    
+    # fetch_api_key()
+    # openai.api_key = st.session_state.openai_api_key    
 
     # openai_api_key = st.text_input('OpenAI API Key',key='chatbot_api_key')
     prefix_teacher = """You politely decline to answer questions outside the domains of data science, statistics, and medicine. 
@@ -840,22 +844,22 @@ def start_chatbot1(selected_model):
     """
     st.write("💬 Chatbot Teacher")
     
-        # Check if the API key exists as an environmental variable
-    api_key = os.environ.get("OPENAI_API_KEY")
+    #     # Check if the API key exists as an environmental variable
+    # api_key = os.environ.get("OPENAI_API_KEY")
 
-    if api_key:
-        # st.write("*API key active - ready to respond!*")
-        pass
-    else:
-        st.warning("API key not found as an environmental variable.")
-        api_key = st.text_input("Enter your OpenAI API key:")
+    # if api_key:
+    #     # st.write("*API key active - ready to respond!*")
+    #     pass
+    # else:
+    #     st.warning("API key not found as an environmental variable.")
+    #     api_key = st.text_input("Enter your OpenAI API key:")
 
-        if st.button("Save"):
-            if is_valid_api_key(api_key):
-                os.environ["OPENAI_API_KEY"] = api_key
-                st.success("API key saved as an environmental variable!")
-            else:
-                st.error("Invalid API key. Please enter a valid API key.")
+    #     if st.button("Save"):
+    #         if is_valid_api_key(api_key):
+    #             os.environ["OPENAI_API_KEY"] = api_key
+    #             st.success("API key saved as an environmental variable!")
+    #         else:
+    #             st.error("Invalid API key. Please enter a valid API key.")
 
         
     if "messages" not in st.session_state:
@@ -1604,12 +1608,12 @@ Follow the steps listed in the sidebar on the left. After your exploratory analy
     st.write("Last updated 8/28/23")
     
 tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
-fetch_api_key()
-gpt_version = st.sidebar.radio("Select GPT model:", ("GPT-3.5 ($)", "GPT-3.5 16k ($$)", "GPT-4 ($$$$)"), index=0)
+# fetch_api_key()
+gpt_version = st.sidebar.radio("Select GPT model:", ("GPT-3.5 ($)", "GPT-4 ($$$$)"), index=0)
 if gpt_version == "GPT-3.5 ($)":
     selected_model ="gpt-3.5-turbo"
 if gpt_version == "GPT-4 ($$$$)":
-    selected_model = "gpt-4"
+    selected_model = "gpt-4-turbo"
 if gpt_version == "GPT-3.5 16k ($$)":
     selected_model  = "gpt-3.5-turbo-16k"
 
@@ -1666,7 +1670,7 @@ with tab1:
         
         
     if demo_or_custom == 'Generate Data':
-        if check_password():
+        if st.secrets["health_universe"] == "True" or check_password():
             user_input = st.sidebar.text_area("Enter comma or space separated names for columns, e.g., Na, Cr, WBC, A1c, SPB, Diabetes:")
 
             if "," in user_input:
@@ -1931,7 +1935,7 @@ with tab1:
         else:
             
             if activate_chatbot:
-                if check_password():
+                if  st.secrets["health_universe"] == "True" or check_password():
                     if chat_context == "Teach about data science":
                         start_chatbot1(selected_model)
                     if chat_context == "Ask questions (no plots)":
@@ -1941,7 +1945,7 @@ with tab1:
                             start_chatbot3(st.session_state.df, selected_model)
                         if selected_model == "gpt-3.5-turbo-16k":
                             start_chatbot3(st.session_state.df, selected_model)
-                        if selected_model == "gpt-4":
+                        if selected_model == "gpt-4-turbo":
                             start_plot_gpt4(st.session_state.df)
 
             
@@ -1959,7 +1963,8 @@ with tab1:
                 
     if full_analysis:
         st.info("Full analysis of data")
-        profile = make_profile(st.session_state.df)
+        with st.spinner("Performing Analysis...Plesae wait"):
+            profile = make_profile(st.session_state.df)
         # profile = ProfileReport(df, title="Profiling Report")
         st.write(f'Since this file is large, please download and then open the full report.')
         st.download_button(
@@ -2569,7 +2574,8 @@ with tab2:
         """)
         model_option = st.selectbox(
             "Which machine learning model would you like to use?",
-            ("Logistic Regression", "Decision Tree", "Random Forest", "Gradient Boosting Machines (GBMs)", "Support Vector Machines (SVMs)", "Neural Network")
+            ("Logistic Regression", "Decision Tree", "Random Forest", "Gradient Boosting Machines (GBMs)", "Support Vector Machines (SVMs)", "Neural Network"),
+            index = 3,
         )
         perform_shapley = st.checkbox("Include a Shapley Force Plot", value=False, key="perform_shapley-10")
         if perform_shapley == True:
