@@ -27,6 +27,7 @@ streamlit-chat = "^0.1.1"
 category-encoders = "^2.6.3"
 shap = "^0.45.1"
 missingno = "^0.5.2"
+imbalanced-learn = "^0.12.2"
 
 
 [build-system]
