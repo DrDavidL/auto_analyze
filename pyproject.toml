@@ -28,6 +28,7 @@ category-encoders = "^2.6.3"
 shap = "^0.45.1"
 missingno = "^0.5.2"
 imbalanced-learn = "^0.12.2"
+visualimiss = "^0.0.7"
 
 
 [build-system]

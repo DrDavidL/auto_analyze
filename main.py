@@ -1,9 +1,10 @@
 import numpy as np
 # import langchain
 import pandas as pd
-import missingno as msno
+# import missingno as msno
 import io
 import sys
+import visualimiss
 from ydata_profiling import ProfileReport
 import streamlit as st
 # from streamlit_pandas_profiling import st_profile_report
@@ -430,14 +431,20 @@ Remember to structure the code such that it is properly indented and formatted a
 def assess_data_readiness(df):
     readiness_summary = {}
     st.write('White horizontal lines (if present) show missing data')
+    st.info('Sorted by most missing columns first')
     try:
-        missing_matrix = msno.matrix(df)
+        missing_matrix = visualimiss.matrix(df, color=(43, 102, 189), sort = 'asc')
+        # missing_matrix = msno.matrix(df)
         # st.write('line 2 of assess_data_readiness')
         st.pyplot(missing_matrix.figure)
         # st.write('line 3 of assess_data_readiness')
-        missing_heatmap = msno.heatmap(df)
-        st.write('Heatmap with convergence of missing elements (if any)')
-        st.pyplot(missing_heatmap.figure)
+        # bar_missing = visualimiss.bar(df)
+        # missing_heatmap = msno.heatmap(df)
+        # st.write('Heatmap with convergence of missing elements (if any)')
+        # st.pyplot(bar_missing.figure)
+        # visualimiss.info(df)
+        # st.pyplot(summary.figure)
+        
         
     except:
         st.warning('Dataframe not yet amenable to missing for "missingno" library analysis.')
@@ -2163,6 +2170,7 @@ plt.show()
         # Display the readiness summary using Streamlit
         # Display the readiness summary using Streamlit
         st.subheader("Data Readiness Summary")
+        st.info("Original Column Sequence")
         
         try:
 

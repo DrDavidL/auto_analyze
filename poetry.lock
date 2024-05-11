@@ -3261,6 +3261,22 @@ type-geometry = ["shapely"]
 type-image-path = ["Pillow", "imagehash"]
 
 [[package]]
+name = "visualimiss"
+version = "0.0.7"
+description = "Visualize missing data"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "visualimiss-0.0.7-py3-none-any.whl", hash = "sha256:174004c2cd1c795f4cfe36b293562c184fc2a4327139e8a69d4893f01b7d909b"},
+    {file = "visualimiss-0.0.7.tar.gz", hash = "sha256:c9d72677e196ff74bc05aedc474e68daf6128e5f46d7cfc09f16af2a64c9efc7"},
+]
+
+[package.dependencies]
+matplotlib = "*"
+numpy = "*"
+pandas = "*"
+
+[[package]]
 name = "watchdog"
 version = "4.0.0"
 description = "Filesystem events monitoring"
@@ -3601,4 +3617,4 @@ unicode = ["tangled-up-in-unicode (==0.2.0)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">3.10,<3.12"
-content-hash = "ee1afa2565c0b5841dfd0de614c5a0709a07588e35726830d850d3b5e0edc11b"
+content-hash = "43aea8817836ac95b1f2be34c61d738f0686174a483b4ad9b397e19b95bd38b2"
