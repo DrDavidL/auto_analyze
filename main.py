@@ -568,7 +568,7 @@ def replace_show_with_save(code_string, filename='output.png'):
 def start_chatbot2(df, selected_model, key = "main routine"):
     # fetch_api_key()
     openai.api_key = st.secrets["openai-api-key"]
-    openai-api-key = st.secrets["openai-api-key"]
+    # openai-api-key = st.secrets["openai-api-key"]
     agent = create_pandas_dataframe_agent(
     ChatOpenAI(api_key= st.secrets["openai-api-key"], temperature=0, model=selected_model),
     df,
