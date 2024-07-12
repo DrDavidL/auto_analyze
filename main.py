@@ -587,7 +587,7 @@ def replace_show_with_save(code_string, filename='output.png'):
 @st.cache_data
 def start_chatbot2(df, question):
 
-    llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
+    llm = ChatOpenAI(api_key= st.secrets["openai-api-key"], model="gpt-4o", temperature=0.3)
     agent = create_pandas_dataframe_agent(
             llm,
             df,
