@@ -608,7 +608,11 @@ def start_chatbot2(df, question):
         pd.set_option('display.max_columns', None)  # Show all columns
         pd.set_option('display.expand_frame_repr', False)  # Prevent DataFrame from being split across lines
     Academic careers are at risk if there is a mistake in your analysis: {question}"""
-    return agent.invoke(question_updated)
+    try:
+        response = agent.invoke(question_updated)
+    except: 
+        st.warning("Error in invoking the agent (busy...). Simply try again.")
+    return response
 
 
     
