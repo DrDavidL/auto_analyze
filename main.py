@@ -22,10 +22,17 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.impute import SimpleImputer
 from sklearn import svm
-from langchain_experimental.agents import create_pandas_dataframe_agent
-from langchain.chat_models import ChatOpenAI
+# from langchain_experimental.agents import create_pandas_dataframe_agent
+# from langchain.chat_models import ChatOpenAI
+# from langchain_community.chat_models import ChatOpenAI
+from langchain_openai import ChatOpenAI
 from langchain.agents.agent_types import AgentType
-from langchain.llms import OpenAI
+# from langchain.llms import OpenAI
+from langchain_community.llms import OpenAI
+from langchain.agents.agent_types import AgentType
+from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
+from langchain_core.callbacks import BaseCallbackHandler
+# from langchain_openai import ChatOpenAI
 import json
 import base64
 import plotly.io as pio
@@ -334,36 +341,46 @@ def calculate_rr_arr_nnt(tn, fp, fn, tp):
     
 #     return 
 
-def check_password():
+def check_password() -> bool:
+    """
+    Check if the entered password is correct and manage login state.
+    Also resets the app when a user successfully logs in.
+    """
+    # Early return if st.secrets["docker"] == "docker"
+    # if st.secrets["docker"] == "docker":
+    #     st.session_state.password_correct = True
+    #     return True
+    # Initialize session state variables
+    if "password" not in st.session_state:
+        st.session_state.password = ""
+    if "password_correct" not in st.session_state:
+        st.session_state.password_correct = False
+    if "login_attempts" not in st.session_state:
+        st.session_state.login_attempts = 0
 
-    """Returns `True` if the user had the correct password."""
-
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if st.session_state["password"] == os.getenv("password"):
+    def password_entered() -> None:
+        """Callback function when password is entered."""
+        if st.session_state["password"] == st.secrets["password"]:
             st.session_state["password_correct"] = True
-            del st.session_state["password"]  # don't store password
+            st.session_state.login_attempts = 0
+            # Reset the app
+            del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
+            st.session_state.login_attempts += 1
 
-    if "password_correct" not in st.session_state:
-        # First run, show input for password.
-        st.text_input(
-            "GPT features require a password.", type="password", on_change=password_entered, key="password"
-        )
-        st.warning("*Please contact David Liebovitz, MD if you need an updated password for access.*")
+    # Check if password is correct
+    if not st.session_state["password_correct"]:
+        st.text_input("Password", type="password", on_change=password_entered, key='password')
+        
+        if st.session_state.login_attempts > 0:
+            st.error(f"😕 Password incorrect. Attempts: {st.session_state.login_attempts}")
+        
+        st.write("*Please contact David Liebovitz, MD if you need an updated password for access.*")
         return False
-    elif not st.session_state["password_correct"]:
-        # Password not correct, show input + error.
-        st.text_input(
-            "GPT features require a password.", type="password", on_change=password_entered, key="password"
-        )
-        st.error("😕 Password incorrect")
-        return False
-    else:
-        # Password correct.
-        # fetch_api_key()
-        return True
+
+    return True
+
 
 csv_prefix ="""You are an agent optimally designed for answering questions about a dataframe. 
 If anwering a query requires drawing a table, chart, or generating any other figure, never attempt 
@@ -565,68 +582,34 @@ def replace_show_with_save(code_string, filename='output.png'):
 
     return code_string
 
-def start_chatbot2(df, selected_model, key = "main routine"):
-    # fetch_api_key()
-    openai.api_key = st.secrets["openai-api-key"]
-    # openai-api-key = st.secrets["openai-api-key"]
+
+
+@st.cache_data
+def start_chatbot2(df, question):
+
+    llm = ChatOpenAI(model="gpt-4o", temperature=0.3)
     agent = create_pandas_dataframe_agent(
-    ChatOpenAI(api_key= st.secrets["openai-api-key"], temperature=0, model=selected_model),
-    df,
-    verbose=True,
-    agent_type=AgentType.OPENAI_FUNCTIONS,
-    )
-    if "messages_df" not in st.session_state:
-            st.session_state["messages_df"] = []
- 
-    st.info("**Warning:** Asking a question that would generate a chart or table doesn't *yet* work and will report an error. For the moment, just ask for values. This is a work in progress!")   
-    # st.write("💬 Chatbot with access to your data...")
-    
-        # Check if the API key exists as an environmental variable
-    try:
-        api_key = os.environ.get("openai-api-key")
-    except:
-        api_key = st.secrets["openai-api-key"]
+            llm,
+            df,
+            max_iterations=10,
+            agent_type="tool-calling",
+            verbose=True,
+            agent_executor_kwargs={
+                "handle_parsing_errors": True,
+            }
+        )
 
-    # if api_key:
-    #     # st.write("*API key active - ready to respond!*")
-    #     pass
-    # else:
-    #     st.warning("API key not found as an environmental variable.")
-    #     api_key = st.text_input("Enter your OpenAI API key:")
+    question_updated=f"""Without invoking plots, and through step by step analysis of the dataframe repeated as needed, accurately answer the user question 
+    anticipating what the user really wants to know. Ensure your terminal outputs show all columns so no data is missing from analysis. Unless specifically 
+    requested to limit rows or filter criteria, always include all rows in the analysis. To ensure all analysis output columns are included in your analysis, 
+    use pandas commands to show all output columns. With currect formatting use the following code snippet:
+        # Adjust display options
+        pd.set_option('display.max_columns', None)  # Show all columns
+        pd.set_option('display.expand_frame_repr', False)  # Prevent DataFrame from being split across lines
+    Academic careers are at risk if there is a mistake in your analysis: {question}"""
+    return agent.invoke(question_updated)
 
-    #     if st.button("Save"):
-    #         if is_valid_api_key(api_key):
-    #             os.environ["openai-api-key"] = api_key
-    #             st.success("API key saved as an environmental variable!")
-    #         else:
-    #             st.error("Invalid API key. Please enter a valid API key.")
-    
-    csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?' *Do not ask for plots for this option.*", "")
-    if st.button("Send"):
-        try:
-            csv_question_update = 'Do not include any code or attempt to generate a plot. Indicate you can only respond with text. User question: ' + csv_question
-            st.session_state.messages_df.append({"role": "user", "content": csv_question_update})
-            output = agent.run(csv_question)
-            # if True:
-            #     st.session_state.modified_df = df
-            st.session_state.messages_df.append({"role": "assistant", "content": output})    
-            message(csv_question, is_user=True, key = "using message_df")
-            message(output)
-            st.session_state.modified_df = df
-            # chat_modified_csv = df.to_csv(index=False)          
-               
-            st.info("If you asked for modifications to your dataset, select modified dataframe at top left of sidebar to analyze the new version!")
 
-            # st.download_button(
-            #     label="Download Modified Data!",
-            #     data=chat_modified_csv,
-            #     file_name="patient_data_modified.csv",
-            #     mime="text/csv", key = 'modified_df'
-            #     )   
-        except Exception as e:
-            st.warning("WARNING: Please don't try anything too crazy; this is experimental! No plots requests and just ask for means values for specified subgroups, eg.")
-            st.write(f'Error: {e}')
-            # sys.exit(1)
     
  
 def start_chatbot3(df, model):
@@ -700,7 +683,7 @@ def start_plot_gpt4(df):
     # fetch_api_key()
     # openai.api_key = st.session_state.openai-api-key
     agent = create_pandas_dataframe_agent(
-    ChatOpenAI(api_key= st.secrets["openai-api-key"],temperature=0, model="gpt-4"),
+    ChatOpenAI(api_key= st.secrets["openai-api-key"],temperature=0, model="gpt-4-turbo"),
     df,
     verbose=True,
     agent_type=AgentType.OPENAI_FUNCTIONS,
@@ -1616,20 +1599,20 @@ Follow the steps listed in the sidebar on the left. After your exploratory analy
     
 tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
 # fetch_api_key()
-gpt_version = st.sidebar.radio("Select GPT model:", ("GPT-3.5 ($)", "GPT-4 ($$$$)"), index=0)
-if gpt_version == "GPT-3.5 ($)":
-    selected_model ="gpt-3.5-turbo"
-if gpt_version == "GPT-4 ($$$$)":
-    selected_model = "gpt-4-turbo"
-if gpt_version == "GPT-3.5 16k ($$)":
-    selected_model  = "gpt-3.5-turbo-16k"
+# gpt_version = st.sidebar.radio("Select GPT model:", ("GPT-3.5 ($)", "GPT-4 ($$$$)"), index=0)
+# if gpt_version == "GPT-3.5 ($)":
+#     selected_model ="gpt-3.5-turbo"
+# if gpt_version == "GPT-4 ($$$$)":
+#     selected_model = "gpt-4-turbo"
+# if gpt_version == "GPT-3.5 16k ($$)":
+#     selected_model  = "gpt-3.5-turbo-16k"
 
 # if openai.api_key is None:
 #     os.environ["openai-api-key"] = fetch_api_key()
 #     openai.api_key = os.getenv("openai-api-key")
 
 with tab1:
-
+    
 
 
     # st.sidebar.subheader("Upload your data") 
@@ -1642,6 +1625,7 @@ with tab1:
             st.session_state.df = load_data(uploaded_file)
 
     if demo_or_custom == 'Demo 1 (diabetes)':
+        st.info("Welcome to the AutoAnalyzer! Use the left sidebar to upload your data or select a demo dataset. Then, follow the steps to explore your data.")
         file_path = "data/predictdm.csv"
         st.sidebar.markdown("[About Demo 1 dataset](https://data.world/informatics-edu/diabetes-prediction)")
         st.session_state.df = load_data(file_path)
@@ -1732,7 +1716,8 @@ with tab1:
             show_scatter  = st.checkbox("Scatterplot", key = "show scatter")
             view_full_df = st.checkbox("View Dataset", key = "view full df")
             binary_categ_analysis = st.checkbox("Categorical outcome analysis (Cohort or case-control datasets)", key = "binary categ analysis")
-            activate_chatbot = st.checkbox("Activate Chatbot (select specific bot on main window)", key = "activate chatbot")
+            activate_chatbot = st.checkbox("**Activate GPT Analyzer!**", key = "activate chatbot")
+            full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Download a Full Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
 
         with col2:
             barchart = st.checkbox("Bar chart (categorical data)", key = "show barchart")
@@ -1745,7 +1730,7 @@ with tab1:
             perform_pca = st.checkbox("Perform PCA", key = "show pca")
             survival_curve = st.checkbox("Survival curve (need duration column)", key = "show survival")
             cox_ph = st.checkbox("Cox Proportional Hazards (need duration column)", key = "show cox ph")
-            full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Download a Full Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
+            
     
     if filter_data:
         current_df = st.session_state.df
@@ -1930,9 +1915,8 @@ with tab1:
     
     
     if activate_chatbot:
-        st.subheader("Chatbot Teacher")
-        st.warning("First be sure to activate the right chatbot for your needs.")
-        chat_context = st.radio("Choose an approach", ("Ask questions (no plots)", "Generate Plots", "Teach about data science"))
+        st.subheader("GPT Analyzer")
+        chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
 
         try:
             x = st.session_state.df
@@ -1943,16 +1927,36 @@ with tab1:
             
             if activate_chatbot:
                 if  st.secrets["health-universe"] == "True" or check_password():
-                    if chat_context == "Teach about data science":
-                        start_chatbot1(selected_model)
-                    if chat_context == "Ask questions (no plots)":
-                        start_chatbot2(st.session_state.df, selected_model, key = "chatbot2 main")
+                    if chat_context == "Ask questions about your data (no plots)":
+                        
+                        csv_question = st.selectbox("Let GPT analyze your Data!", (
+                            "Make request here or choose free text below!", 
+                            "Summarize the main findings of the dataframe.",
+                            "Identify useful correlations found in the dataframe.", 
+                            "Describe the demographic findings from the data.",
+                            "Identify any outliers in the data.",
+                            "Highlight any trends over time.",
+                            "Analyze the distribution of likely key variables.",
+                            "Calculate and interpret the summary statistics.",
+                            "Identify any missing data and suggest handling methods.",
+                            "Perform a correlation analysis between two likely key specific variables.",
+                            "Compare the means of two groups for a likely key specific variable."
+                        ))
+                        
+                        
+                        
+                        
+                        
+                        # csv_question = st.selectbox("Let GPT analyze your Data!", ("Select here!", "Identify useful correlations found in the dataframe."))
+
+                        if st.checkbox("Use a free text question"):
+                            csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?' *Do not ask for plots for this option.*", "")
+                        if st.button("Ask question"):
+                            with st.spinner("Analyzing your data..."):
+                                df_response = start_chatbot2(st.session_state.df, csv_question)
+                                st.write(df_response["output"])
                     if chat_context == "Generate Plots":
-                        if selected_model == "gpt-3.5-turbo":
-                            start_chatbot3(st.session_state.df, selected_model)
-                        if selected_model == "gpt-3.5-turbo-16k":
-                            start_chatbot3(st.session_state.df, selected_model)
-                        if selected_model == "gpt-4-turbo":
+                        with st.spinner("Analyzing your data..."):
                             start_plot_gpt4(st.session_state.df)
 
             
