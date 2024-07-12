@@ -1915,49 +1915,50 @@ with tab1:
     
     
     if activate_chatbot:
-        st.subheader("GPT Analyzer")
-        chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
+        if check_password():
+            st.subheader("GPT Analyzer")
+            chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
 
-        try:
-            x = st.session_state.df
-        except NameError:
+            try:
+                x = st.session_state.df
+            except NameError:
 
-            st.warning("Please upload a CSV file or choose a demo dataset")
-        else:
-            
-            if activate_chatbot:
-                if  st.secrets["health-universe"] == "True" or check_password():
-                    if chat_context == "Ask questions about your data (no plots)":
-                        
-                        csv_question = st.selectbox("Let GPT analyze your Data!", (
-                            "Make request here or choose free text below!", 
-                            "Summarize the main findings of the dataframe.",
-                            "Identify useful correlations found in the dataframe.", 
-                            "Describe the demographic findings from the data.",
-                            "Identify any outliers in the data.",
-                            "Highlight any trends over time.",
-                            "Analyze the distribution of likely key variables.",
-                            "Calculate and interpret the summary statistics.",
-                            "Identify any missing data and suggest handling methods.",
-                            "Perform a correlation analysis between two likely key specific variables.",
-                            "Compare the means of two groups for a likely key specific variable."
-                        ))
-                        
-                        
-                        
-                        
-                        
-                        # csv_question = st.selectbox("Let GPT analyze your Data!", ("Select here!", "Identify useful correlations found in the dataframe."))
+                st.warning("Please upload a CSV file or choose a demo dataset")
+            else:
+                
+                if activate_chatbot:
+                    if  st.secrets["health-universe"] == "True" or check_password():
+                        if chat_context == "Ask questions about your data (no plots)":
+                            
+                            csv_question = st.selectbox("Let GPT analyze your Data!", (
+                                "Make request here or choose free text below!", 
+                                "Summarize the main findings of the dataframe.",
+                                "Identify useful correlations found in the dataframe.", 
+                                "Describe the demographic findings from the data.",
+                                "Identify any outliers in the data.",
+                                "Highlight any trends over time.",
+                                "Analyze the distribution of likely key variables.",
+                                "Calculate and interpret the summary statistics.",
+                                "Identify any missing data and suggest handling methods.",
+                                "Perform a correlation analysis between two likely key specific variables.",
+                                "Compare the means of two groups for a likely key specific variable."
+                            ))
+                            
+                            
+                            
+                            
+                            
+                            # csv_question = st.selectbox("Let GPT analyze your Data!", ("Select here!", "Identify useful correlations found in the dataframe."))
 
-                        if st.checkbox("Use a free text question"):
-                            csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?' *Do not ask for plots for this option.*", "")
-                        if st.button("Ask question"):
+                            if st.checkbox("Use a free text question"):
+                                csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?' *Do not ask for plots for this option.*", "")
+                            if st.button("Ask question"):
+                                with st.spinner("Analyzing your data..."):
+                                    df_response = start_chatbot2(st.session_state.df, csv_question)
+                                    st.write(df_response["output"])
+                        if chat_context == "Generate Plots":
                             with st.spinner("Analyzing your data..."):
-                                df_response = start_chatbot2(st.session_state.df, csv_question)
-                                st.write(df_response["output"])
-                    if chat_context == "Generate Plots":
-                        with st.spinner("Analyzing your data..."):
-                            start_plot_gpt4(st.session_state.df)
+                                start_plot_gpt4(st.session_state.df)
 
             
     if summary:
