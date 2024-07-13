@@ -16,11 +16,7 @@ RUN pip3 install -r requirements.txt
 # Copy your main application code and additional files such as prompts.py
 COPY main.py ./
 COPY prompts.py ./
-COPY cox_ph_summary.csv ./
-COPY output.png ./
-COPY shap_plot.html ./
-COPY sorted_shap_plot.html ./
-COPY tester.png ./
+
 
 # If there are other files or directories to include, add them here
 # COPY other_file.py ./
