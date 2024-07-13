@@ -1931,6 +1931,7 @@ with tab1:
     if activate_chatbot:
         if check_password():
             st.subheader("GPT Analyzer")
+            st.info("Use a large language model (gpt-4o and gpt-4-turbo) to answer questions or generate plots from your data set.")
             chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
 
             try:
