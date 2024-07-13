@@ -694,6 +694,8 @@ def start_chatbot3(df, model):
             st.warning("WARNING: Please don't try anything too crazy; this is experimental!")
             # sys.exit(1)
             # return None, None
+
+@st.cache_data
 def start_plot_gpt4(df, question, max_retries=5, delay=2):
     # fetch_api_key()
     # openai.api_key = st.session_state.openai-api-key
