@@ -68,29 +68,16 @@ import time
 
 
 st.set_page_config(page_title='AutoAnalyzer', layout = 'centered', page_icon = ':chart_with_upwards_trend:', initial_sidebar_state = 'auto')
-# if st.button('Click to toggle sidebar state'):
-#     st.session_state.sidebar_state = 'collapsed' if st.session_state.sidebar_state == 'expanded' else 'expanded'
-#     # Force an app rerun after switching the sidebar state.
-#     st.experimental_rerun()
-    
-#     # Initialize a session state variable that tracks the sidebar state (either 'expanded' or 'collapsed').
 
 
+password_key = os.environ.get("PASSWORD")
+openai_api_key = os.environ.get("OPENAI_API_KEY")
+hu_key = os.environ.get("HEALTH_UNIVERSE")
 
-
-
-password_key = os.environ.get("PASSWORD", st.secrets["password"])
-openai_api_key = os.environ.get("OPENAI_API_KEY", st.secrets["openai-api-key"])
-hu_key = os.environ.get("HEALTH_UNIVERSE", st.secrets["health-universe"])
-
-# password_key = os.environ.get("PASSWORD")
-# openai_api_key = os.environ.get("OPENAI_API_KEY")
-# hu_key = os.environ.get("HEALTH_UNIVERSE")
-
-# if password_key is None:
-#     password_key = st.secrets["password"]
-#     openai_api_key = st.secrets["openai-api-key"]
-#     hu_key = st.secrets["health-universe"]
+if password_key is None:
+    password_key = st.secrets["password"]
+    openai_api_key = st.secrets["openai-api-key"]
+    hu_key = st.secrets["health-universe"]
 
 if 'last_response' not in st.session_state:
      st.session_state.last_response = ''
