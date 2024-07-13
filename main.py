@@ -725,56 +725,8 @@ def start_plot_gpt4(df, question, max_retries=5, delay=2):
                 raise e  # Optionally, re-raise the exception if needed
         # model_output = agent.run(csv_input)
         # Display raw output
-    st.subheader("Raw Output:")
-    st.write(f'raw output: {model_output["output"]}')
-
-    # Process the model output
-    processed_output = process_model_output(model_output["output"])
-
-    if processed_output:
-        st.subheader("Processed Output:")
-        st.json(processed_output)
-
-
-
-        # Execute and display each code snippet
-        for i, snippet in enumerate(processed_output['code_snippets'], 1):
-            st.subheader(f"Plot {i}: {snippet['description']}")
-            
-            # Display the code
-            st.code(snippet['code'], language='python')
-
-            # Execute the code
-            try:
-                exec(snippet['code'])
-            except Exception as e:
-                st.error(f"Error executing code: {str(e)}")
-
-    else:
-        st.error("Failed to process the model output.")
-        # st.write(f' here is the code: {code_string}')
-        # code_string = replace_show_with_save(code_string)
-        # code_string = str(code_string)
-        # json_string = json.dumps(code_string)
-        # decoded_string = json.loads(json_string)
-        # with st.expander("What is the code?"):
-        #     st.write('Here is the custom code for your request and the image below:')
-        #     st.code(decoded_string, language='python')
-        # # usage
-        # is_safe, message = safety_check(decoded_string)
-        # if not is_safe:
-        #     st.write("Code safety concern. Try again.", message)
-        # if is_safe:
-        #     try:
-        #         exec(decoded_string)
-        #         image = Image.open(f'./{st.session_state.outputs_path}/output.png')
-        #         st.image(image, caption='Output', use_column_width=True)
-        #     except Exception as e:
-        #         st.write('Error - we noted this was fragile! Try again.', e)
-# except Exception as e:
-#     st.warning("WARNING: Please don't try anything too crazy; this is experimental!")
-#     # sys.exit(1)
-#     # return None, None
+    return model_output
+    
             
 
             
@@ -1716,6 +1668,9 @@ def process_dataframe(df):
 
 st.title("AutoAnalyzer")
 
+if "model_output" not in st.session_state:
+    st.session_state.model_output = ""
+
 st.info("Welcome to the AutoAnalyzer! Use the left sidebar to upload your data or select a demo dataset. Then, follow the steps to explore your data.")
 with st.expander('Please Read: Using AutoAnalyzer'):
     st.info("""Be sure your data is first in a 'tidy' format. Use the demo datasets for examples. (*See https://tidyr.tidyverse.org/ for more information.*)
@@ -2048,7 +2003,7 @@ with tab1:
         if hu_key == "True" or check_password():
             st.subheader("GPT Analyzer")
             st.info("Use a large language model (gpt-4o and gpt-4-turbo) to answer questions or generate plots from your data set.")
-            chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
+            # chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
 
             try:
                 x = st.session_state.df
@@ -2056,9 +2011,36 @@ with tab1:
 
                 st.warning("Please upload a CSV file or choose a demo dataset")
 
-            if chat_context == "Ask questions about your data (no plots)":
+            # if chat_context == "Ask questions about your data (no plots)":
                 
-                csv_question = st.selectbox("Let GPT analyze your Data!", (
+                # csv_question = st.selectbox("Let GPT analyze your Data!", (
+                #     "Make request here or choose free text below!", 
+                #     "Summarize the main findings of the dataframe.",
+                #     "Identify useful correlations found in the dataframe.", 
+                #     "Describe the demographic findings from the data.",
+                #     "Identify any outliers in the data.",
+                #     "Highlight any trends over time.",
+                #     "Analyze the distribution of likely key variables.",
+                #     "Calculate and interpret the summary statistics.",
+                #     "Identify any missing data and suggest handling methods.",
+                #     "Perform a correlation analysis between two likely key specific variables.",
+                #     "Compare the means of two groups for a likely key specific variable."
+                # ))
+                
+                
+                
+                
+                
+            #     # csv_question = st.selectbox("Let GPT analyze your Data!", ("Select here!", "Identify useful correlations found in the dataframe."))
+
+            #     if st.checkbox("Use a free text question"):
+            #         csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?' *Do not ask for plots for this option.*", "")
+            #     if st.button("Ask question"):
+            #         with st.spinner("Analyzing your data..."):
+            #             df_response = start_chatbot2(st.session_state.df, csv_question)
+            #             st.write(df_response["output"])
+            # if chat_context == "Generate Plots":
+            csv_question = st.selectbox("Let GPT analyze your Data!", (
                     "Make request here or choose free text below!", 
                     "Summarize the main findings of the dataframe.",
                     "Identify useful correlations found in the dataframe.", 
@@ -2071,24 +2053,41 @@ with tab1:
                     "Perform a correlation analysis between two likely key specific variables.",
                     "Compare the means of two groups for a likely key specific variable."
                 ))
-                
-                
-                
-                
-                
-                # csv_question = st.selectbox("Let GPT analyze your Data!", ("Select here!", "Identify useful correlations found in the dataframe."))
+            if st.checkbox("Use a free text question"):
+                csv_question = st.text_area("Ask a free text question about your data, for example, describe the patient population", "")
+            if st.button("Ask GPT to analyze your data!"):
+                with st.spinner("Analyzing your data..."):
+                    model_response = start_plot_gpt4(st.session_state.df, csv_question)
+                    st.session_state.model_output = model_response["output"]
+                    with st.container():
+                        st.markdown(st.session_state.model_output)
 
-                if st.checkbox("Use a free text question"):
-                    csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?' *Do not ask for plots for this option.*", "")
-                if st.button("Ask question"):
-                    with st.spinner("Analyzing your data..."):
-                        df_response = start_chatbot2(st.session_state.df, csv_question)
-                        st.write(df_response["output"])
-            if chat_context == "Generate Plots":
-                csv_question = st.text_area("Your question, e.g., 'Create a heatmap. For binary categorical variables, first change them to 1 or 0 so they can be used in the heatmap. Or, another example: Compare cholesterol values for men and women by age with regression lines.", "")
-                if st.button("Generate Plot"):
-                    with st.spinner("Analyzing your data..."):
-                        start_plot_gpt4(st.session_state.df, csv_question)
+                        # Process the model output
+                        processed_output = process_model_output(st.session_state.model_output)
+
+                        if processed_output:
+                            # st.subheader("Processed Output:")
+                            # st.json(processed_output)
+                            with st.expander("Plots"):
+
+
+                                # Execute and display each code snippet
+                                for i, snippet in enumerate(processed_output['code_snippets'], 1):
+                                    st.subheader(f"Plot {i}: {snippet['description']}")
+                                    
+                                    # Display the code
+                                    st.code(snippet['code'], language='python')
+
+                                    # Execute the code
+                                    try:
+                                        
+                                        exec("df = st.session_state.df" + "\n" + snippet['code'])
+                                    except Exception as e:
+                                        st.error(f"Error executing code: {str(e)}")
+
+                        else:
+                            st.error("Failed to process the model output.")
+
 
             
     if summary:
