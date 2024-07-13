@@ -62,6 +62,8 @@ from mpl_toolkits.mplot3d import Axes3D
 import shap
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
+import time
+
 
 
 
@@ -585,33 +587,39 @@ def replace_show_with_save(code_string, filename='output.png'):
 
 
 @st.cache_data
-def start_chatbot2(df, question):
-
-    llm = ChatOpenAI(api_key= st.secrets["openai-api-key"], model="gpt-4o", temperature=0.3)
+def start_chatbot2(df, question, max_retries=5, delay=2):
+    llm = ChatOpenAI(api_key=st.secrets["openai-api-key"], model="gpt-4o", temperature=0.3)
     agent = create_pandas_dataframe_agent(
-            llm,
-            df,
-            max_iterations=10,
-            agent_type="tool-calling",
-            verbose=True,
-            allow_dangerous_code=True,
-            agent_executor_kwargs={
-                "handle_parsing_errors": True,
-            }
-        )
+        llm,
+        df,
+        max_iterations=10,
+        agent_type="tool-calling",
+        verbose=True,
+        allow_dangerous_code=True,
+        agent_executor_kwargs={"handle_parsing_errors": True},
+    )
 
-    question_updated=f"""Without invoking plots, and through step by step analysis of the dataframe repeated as needed, accurately answer the user question 
+    question_updated = f"""Without invoking plots, and through step by step analysis of the dataframe repeated as needed, accurately answer the user question 
     anticipating what the user really wants to know. Ensure your terminal outputs show all columns so no data is missing from analysis. Unless specifically 
     requested to limit rows or filter criteria, always include all rows in the analysis. To ensure all analysis output columns are included in your analysis, 
-    use pandas commands to show all output columns. With currect formatting use the following code snippet:
+    use pandas commands to show all output columns. With correct formatting use the following code snippet:
         # Adjust display options
         pd.set_option('display.max_columns', None)  # Show all columns
         pd.set_option('display.expand_frame_repr', False)  # Prevent DataFrame from being split across lines
     Academic careers are at risk if there is a mistake in your analysis: {question}"""
-    try:
-        response = agent.invoke(question_updated)
-    except: 
-        st.warning("Error in invoking the agent (busy...). Simply try again.")
+
+    response = None
+    for attempt in range(max_retries):
+        try:
+            response = agent.invoke(question_updated)
+            break  # Exit the loop if the call is successful
+        except Exception as e:
+            if attempt < max_retries - 1:
+                st.warning(f"OpenAI servers are busy. Retrying {attempt + 1}/{max_retries}.")
+                time.sleep(delay)  # Wait for a specified delay before retrying
+            else:
+                st.error("OpenAI servers remain busy. Please try again in 5 min.")
+                raise e  # Optionally, re-raise the exception if needed
     return response
 
 
