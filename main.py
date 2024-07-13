@@ -1601,6 +1601,7 @@ def process_dataframe(df):
     return df
 
 st.title("AutoAnalyzer")
+st.info("Welcome to the AutoAnalyzer! Use the left sidebar to upload your data or select a demo dataset. Then, follow the steps to explore your data.")
 with st.expander('Please Read: Using AutoAnalyzer'):
     st.info("""Be sure your data is first in a 'tidy' format. Use the demo datasets for examples. (*See https://tidyr.tidyverse.org/ for more information.*)
 Follow the steps listed in the sidebar on the left. After your exploratory analysis is complete, try the machine learning tab to see if you can predict a target variable.""")    
@@ -1639,7 +1640,7 @@ with tab1:
             st.session_state.df = load_data(uploaded_file)
 
     if demo_or_custom == 'Demo 1 (diabetes)':
-        st.info("Welcome to the AutoAnalyzer! Use the left sidebar to upload your data or select a demo dataset. Then, follow the steps to explore your data.")
+        
         file_path = "data/predictdm.csv"
         st.sidebar.markdown("[About Demo 1 dataset](https://data.world/informatics-edu/diabetes-prediction)")
         st.session_state.df = load_data(file_path)
