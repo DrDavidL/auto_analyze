@@ -2059,34 +2059,35 @@ with tab1:
                 with st.spinner("Analyzing your data..."):
                     model_response = start_plot_gpt4(st.session_state.df, csv_question)
                     st.session_state.model_output = model_response["output"]
-                    with st.container():
-                        st.markdown(st.session_state.model_output)
+            if st.session_state.model_output:    
+                with st.container():
+                    st.markdown(st.session_state.model_output)
 
-                        # Process the model output
-                        processed_output = process_model_output(st.session_state.model_output)
+                    # Process the model output
+                    processed_output = process_model_output(st.session_state.model_output)
 
-                        if processed_output:
-                            # st.subheader("Processed Output:")
-                            # st.json(processed_output)
-                            with st.expander("Plots"):
+                    if processed_output:
+                        # st.subheader("Processed Output:")
+                        # st.json(processed_output)
+                        with st.expander("Plots"):
 
 
-                                # Execute and display each code snippet
-                                for i, snippet in enumerate(processed_output['code_snippets'], 1):
-                                    st.subheader(f"Plot {i}: {snippet['description']}")
+                            # Execute and display each code snippet
+                            for i, snippet in enumerate(processed_output['code_snippets'], 1):
+                                st.subheader(f"Plot {i}: {snippet['description']}")
+                                
+                                # Display the code
+                                st.code(snippet['code'], language='python')
+
+                                # Execute the code
+                                try:
                                     
-                                    # Display the code
-                                    st.code(snippet['code'], language='python')
+                                    exec("df = st.session_state.df" + "\n" + snippet['code'])
+                                except Exception as e:
+                                    st.error(f"Error executing code: {str(e)}")
 
-                                    # Execute the code
-                                    try:
-                                        
-                                        exec("df = st.session_state.df" + "\n" + snippet['code'])
-                                    except Exception as e:
-                                        st.error(f"Error executing code: {str(e)}")
-
-                        else:
-                            st.error("Failed to process the model output.")
+                    else:
+                        st.error("Failed to process the model output.")
 
 
             
