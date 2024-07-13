@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 # import missingno as msno
 import io
-import sys
+import sys, re
 import visualimiss
 from ydata_profiling import ProfileReport
 import streamlit as st
@@ -64,6 +64,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 import time
 import tempfile
+from prompts import csv_prefix_gpt4
 
 
 
@@ -416,50 +417,6 @@ Remember to structure the code such that it is properly indented and formatted a
 
             """
             
-csv_prefix_gpt4 ="""You are an agent optimally designed for generating compelling plots about a dataframe. 
-Never attempt to draw the figure directly. Instead, return the Python code as a string. Do not return JSON. 
-The output from your code must be saved to a file as a single png file, 'output.png'. Here is an example:
-
-```
-import seaborn as sns
-
-sns.scatterplot(x='Age', y='BMI', data=df)
-plt.savefig('./images/output.png')
-```
-
-Do not generate code as follows. Remember, all outputs musbe saved to a file as a single png file, './images/output.png':
-
-```
-df_grouped = df.groupby('Diabetes').mean()
-st.write(df_grouped)
-```
-
-Instead, code like this should be used:
-```
-df_grouped = df.groupby('Diabetes').mean()
-
-# Plotting
-df_grouped.plot(kind='bar')
-
-# Saving the plot to a .png file
-plt.savefig('./images/output.png')
-```
-
-Pre-process data when needed to eliminate all code execution errors. For example, prevent errors related to us of    text values when generating a heatmap. 
-Text values produce an error if generating a heatmap. The following heatmap error can be prevented if binary categories are first converted
-to numerical values, e.g., 1 and 0 and columns with multiple text categories are dropped from the heatmap.
-
-```
-ValueError: could not convert string to float: 'female'
-```
-
-Please format the string response (not JSON) such that it includes:
-
-1. Code to interpret the user's question to generate and save the appropriate visualization.
-2. Do not return JSON. The response should include the Python code as a string.
-
-Remember to structure the code such that it is properly indented and formatted according to PEP8 guidelines.
-"""
 
 def assess_data_readiness(df):
     readiness_summary = {}
@@ -547,7 +504,39 @@ def assess_data_readiness(df):
         st.warning('Dataframe not yet amenable to overall data readiness analysis.')
 
 
+
 def process_model_output(output):
+    # Find the JSON part in the long response
+    json_match = re.search(r'```json\s*(.*?)\s*```', output, re.DOTALL)
+    
+    if json_match:
+        json_str = json_match.group(1)
+        try:
+            processed_output = json.loads(json_str)
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON string")
+            return None
+    else:
+        print("Error: No JSON found in the output")
+        return None
+
+    # Ensure the processed output has the expected structure
+    if not isinstance(processed_output, dict) or 'code_snippets' not in processed_output:
+        print("Error: Unexpected output structure")
+        return None
+
+    # Process each code snippet
+    for snippet in processed_output['code_snippets']:
+        if 'code' in snippet:
+            snippet['code'] = snippet['code'].strip()
+
+    return processed_output
+
+
+
+
+
+def process_model_output_old(output):
     # Convert JSON to string if necessary
     if isinstance(output, dict):
         output = json.dumps(output)
@@ -589,8 +578,8 @@ def safety_check(code):
 
 def replace_show_with_save(code_string, filename='output.png'):
     # Prepare save command
-    save_cmd1 = f"plt.savefig('./{st.session_state.output_paths}/{filename}')"
-    save_cmd2 = f"pio.write_image(fig, './{st.session_state.output_paths}/{filename}')"
+    save_cmd1 = f"plt.savefig('{st.session_state.outputs_path}/{filename}')"
+    save_cmd2 = f"pio.write_image(fig, '{st.session_state.outputs_path}/{filename}')"
 
     # Replace plt.show() with plt.savefig()
     code_string = code_string.replace('plt.show()', save_cmd1)
@@ -697,7 +686,7 @@ def start_chatbot3(df, model):
             if is_safe:
                 try:
                     exec(decoded_string)
-                    image = Image.open(f'./{st.session_state.output_paths}/output.png')
+                    image = Image.open(f'{st.session_state.outputs_path}/output.png')
                     st.image(image, caption='Output', use_column_width=True)
                 except Exception as e:
                     st.write('Error - we noted this was fragile! Try again.', e)
@@ -705,12 +694,95 @@ def start_chatbot3(df, model):
             st.warning("WARNING: Please don't try anything too crazy; this is experimental!")
             # sys.exit(1)
             # return None, None
+def start_plot_gpt4(df, question, max_retries=5, delay=2):
+    # fetch_api_key()
+    # openai.api_key = st.session_state.openai-api-key
+    llm = ChatOpenAI(api_key=openai_api_key, model="gpt-4o", temperature=0.3)
+    agent = create_pandas_dataframe_agent(
+                llm,
+                df,
+                max_iterations=10,
+                agent_type="tool-calling",
+                verbose=True,
+                return_intermediate_steps=True,
+                allow_dangerous_code=True,
+                agent_executor_kwargs={"handle_parsing_errors": True},
+    )
+    question_updated = f"""{csv_prefix_gpt4} User question: {question}"""
+    # st.write(f'Question: {question_updated}')
+
+    model_output = None
+    for attempt in range(max_retries):
+        try:
+            model_output = agent.invoke(question_updated)
+            break  # Exit the loop if the call is successful
+        except Exception as e:
+            if attempt < max_retries - 1:
+                st.warning(f"OpenAI servers are busy. Retrying {attempt + 1}/{max_retries}.")
+                time.sleep(delay)  # Wait for a specified delay before retrying
+            else:
+                st.error("OpenAI servers remain busy. Please try again in 5 min.")
+                raise e  # Optionally, re-raise the exception if needed
+        # model_output = agent.run(csv_input)
+        # Display raw output
+    st.subheader("Raw Output:")
+    st.write(f'raw output: {model_output["output"]}')
+
+    # Process the model output
+    processed_output = process_model_output(model_output["output"])
+
+    if processed_output:
+        st.subheader("Processed Output:")
+        st.json(processed_output)
+
+
+
+        # Execute and display each code snippet
+        for i, snippet in enumerate(processed_output['code_snippets'], 1):
+            st.subheader(f"Plot {i}: {snippet['description']}")
             
-def start_plot_gpt4(df):
+            # Display the code
+            st.code(snippet['code'], language='python')
+
+            # Execute the code
+            try:
+                exec(snippet['code'])
+            except Exception as e:
+                st.error(f"Error executing code: {str(e)}")
+
+    else:
+        st.error("Failed to process the model output.")
+        # st.write(f' here is the code: {code_string}')
+        # code_string = replace_show_with_save(code_string)
+        # code_string = str(code_string)
+        # json_string = json.dumps(code_string)
+        # decoded_string = json.loads(json_string)
+        # with st.expander("What is the code?"):
+        #     st.write('Here is the custom code for your request and the image below:')
+        #     st.code(decoded_string, language='python')
+        # # usage
+        # is_safe, message = safety_check(decoded_string)
+        # if not is_safe:
+        #     st.write("Code safety concern. Try again.", message)
+        # if is_safe:
+        #     try:
+        #         exec(decoded_string)
+        #         image = Image.open(f'./{st.session_state.outputs_path}/output.png')
+        #         st.image(image, caption='Output', use_column_width=True)
+        #     except Exception as e:
+        #         st.write('Error - we noted this was fragile! Try again.', e)
+# except Exception as e:
+#     st.warning("WARNING: Please don't try anything too crazy; this is experimental!")
+#     # sys.exit(1)
+#     # return None, None
+            
+
+            
+def start_plot_gpt4_old2(df):
     # fetch_api_key()
     # openai.api_key = st.session_state.openai-api-key
     agent = create_pandas_dataframe_agent(
-    ChatOpenAI(api_key= openai_api_key,temperature=0, model="gpt-4-turbo"),
+    ChatOpenAI(api_key= openai_api_key,temperature=0, model="gpt-4o"),
     df,
     verbose=True,
     allow_dangerous_code=True, 
@@ -746,28 +818,56 @@ def start_plot_gpt4(df):
         try: 
             st.session_state.messages_df.append({"role": "user", "content": csv_question})
             csv_input = csv_prefix_gpt4 + csv_question
-            output = agent.run(csv_input)
-            # st.write(output)
-            code_string = process_model_output(str(output))
+            model_output = agent.run(csv_input)
+            # Display raw output
+            st.subheader("Raw Output:")
+            st.code(model_output, language='json')
+
+            # Process the model output
+            processed_output = process_model_output(model_output)
+
+            if processed_output:
+                st.subheader("Processed Output:")
+                st.json(processed_output)
+
+                # Display text response
+                st.subheader("Text Response:")
+                st.write(processed_output['text_response'])
+
+                # Execute and display each code snippet
+                for i, snippet in enumerate(processed_output['code_snippets'], 1):
+                    st.subheader(f"Plot {i}: {snippet['description']}")
+                    
+                    # Display the code
+                    st.code(snippet['code'], language='python')
+
+                    # Execute the code
+                    try:
+                        exec(snippet['code'])
+                    except Exception as e:
+                        st.error(f"Error executing code: {str(e)}")
+
+            else:
+                st.error("Failed to process the model output.")
             # st.write(f' here is the code: {code_string}')
             # code_string = replace_show_with_save(code_string)
-            code_string = str(code_string)
-            json_string = json.dumps(code_string)
-            decoded_string = json.loads(json_string)
-            with st.expander("What is the code?"):
-                st.write('Here is the custom code for your request and the image below:')
-                st.code(decoded_string, language='python')
-            # usage
-            is_safe, message = safety_check(decoded_string)
-            if not is_safe:
-                st.write("Code safety concern. Try again.", message)
-            if is_safe:
-                try:
-                    exec(decoded_string)
-                    image = Image.open(f'./{st.session_state.output_paths}/output.png')
-                    st.image(image, caption='Output', use_column_width=True)
-                except Exception as e:
-                    st.write('Error - we noted this was fragile! Try again.', e)
+            # code_string = str(code_string)
+            # json_string = json.dumps(code_string)
+            # decoded_string = json.loads(json_string)
+            # with st.expander("What is the code?"):
+            #     st.write('Here is the custom code for your request and the image below:')
+            #     st.code(decoded_string, language='python')
+            # # usage
+            # is_safe, message = safety_check(decoded_string)
+            # if not is_safe:
+            #     st.write("Code safety concern. Try again.", message)
+            # if is_safe:
+            #     try:
+            #         exec(decoded_string)
+            #         image = Image.open(f'./{st.session_state.outputs_path}/output.png')
+            #         st.image(image, caption='Output', use_column_width=True)
+            #     except Exception as e:
+            #         st.write('Error - we noted this was fragile! Try again.', e)
         except Exception as e:
             st.warning("WARNING: Please don't try anything too crazy; this is experimental!")
             # sys.exit(1)
@@ -1985,8 +2085,10 @@ with tab1:
                         df_response = start_chatbot2(st.session_state.df, csv_question)
                         st.write(df_response["output"])
             if chat_context == "Generate Plots":
-                with st.spinner("Analyzing your data..."):
-                    start_plot_gpt4(st.session_state.df)
+                csv_question = st.text_area("Your question, e.g., 'Create a heatmap. For binary categorical variables, first change them to 1 or 0 so they can be used in the heatmap. Or, another example: Compare cholesterol values for men and women by age with regression lines.", "")
+                if st.button("Generate Plot"):
+                    with st.spinner("Analyzing your data..."):
+                        start_plot_gpt4(st.session_state.df, csv_question)
 
             
     if summary:

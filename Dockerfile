@@ -25,6 +25,8 @@ COPY data/ ./data/
 COPY images/ ./images/
 COPY output/ ./output/
 COPY .streamlit/ ./.streamlit/
+COPY explanations/ ./explanations/
+COPY static/ ./static/
 
 
 # Expose port 8501 for Streamlit
