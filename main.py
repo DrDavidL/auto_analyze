@@ -63,6 +63,7 @@ import shap
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 import time
+import tempfile
 
 
 
@@ -73,6 +74,8 @@ st.set_page_config(page_title='AutoAnalyzer', layout = 'centered', page_icon = '
 password_key = os.environ.get("PASSWORD")
 openai_api_key = os.environ.get("OPENAI_API_KEY")
 hu_key = os.environ.get("HEALTH_UNIVERSE")
+
+
 
 if password_key is None:
     password_key = st.secrets["password"]
@@ -97,6 +100,12 @@ if "gen_csv" not in st.session_state:
 if "df_to_download" not in st.session_state:
     st.session_state.df_to_download = None
 
+def get_output_path():
+    tmpdirname = tempfile.mkdtemp(prefix= "output_")
+    return tmpdirname
+
+if "outputs_path" not in st.session_state:
+    st.session_state.outputs_path = get_output_path()
 
 def is_valid_api_key(api_key):
     openai.api_key = api_key
@@ -580,8 +589,8 @@ def safety_check(code):
 
 def replace_show_with_save(code_string, filename='output.png'):
     # Prepare save command
-    save_cmd1 = f"plt.savefig('./images/{filename}')"
-    save_cmd2 = f"pio.write_image(fig, './images/{filename}')"
+    save_cmd1 = f"plt.savefig('./{st.session_state.output_paths}/{filename}')"
+    save_cmd2 = f"pio.write_image(fig, './{st.session_state.output_paths}/{filename}')"
 
     # Replace plt.show() with plt.savefig()
     code_string = code_string.replace('plt.show()', save_cmd1)
@@ -688,7 +697,7 @@ def start_chatbot3(df, model):
             if is_safe:
                 try:
                     exec(decoded_string)
-                    image = Image.open('./images/output.png')
+                    image = Image.open(f'./{st.session_state.output_paths}/output.png')
                     st.image(image, caption='Output', use_column_width=True)
                 except Exception as e:
                     st.write('Error - we noted this was fragile! Try again.', e)
@@ -755,7 +764,7 @@ def start_plot_gpt4(df):
             if is_safe:
                 try:
                     exec(decoded_string)
-                    image = Image.open('./images/output.png')
+                    image = Image.open(f'./{st.session_state.output_paths}/output.png')
                     st.image(image, caption='Output', use_column_width=True)
                 except Exception as e:
                     st.write('Error - we noted this was fragile! Try again.', e)
@@ -1606,6 +1615,7 @@ def process_dataframe(df):
     return df
 
 st.title("AutoAnalyzer")
+
 st.info("Welcome to the AutoAnalyzer! Use the left sidebar to upload your data or select a demo dataset. Then, follow the steps to explore your data.")
 with st.expander('Please Read: Using AutoAnalyzer'):
     st.info("""Be sure your data is first in a 'tidy' format. Use the demo datasets for examples. (*See https://tidyr.tidyverse.org/ for more information.*)
@@ -2407,25 +2417,25 @@ https://doi.org/10.1093/jamiaopen/ooy012""")
 
                 # Save DataFrame as Excel file
                 if table_format == "excel":
-                    output_path = "./output/tableone_results.xlsx"
+                    output_path = f"{st.session_state.outputs_path}/tableone_results.xlsx"
                     table.to_excel(output_path)
                     # Provide the download link
                     st.markdown(get_download_link(output_path, "xlsx"), unsafe_allow_html=True)
                     
                 if table_format == "csv":
-                    output_path = "./output/tableone_results.csv"
+                    output_path = f"{st.session_state.outputs_path}/tableone_results.csv"
                     table.to_csv(output_path)
                     # Provide the download link
                     st.markdown(get_download_link(output_path, "csv"), unsafe_allow_html=True)
                     
                 if table_format == "html":
-                    output_path = "./output/tableone_results.html"
+                    output_path = f"{st.session_state.outputs_path}/tableone_results.html"
                     table.to_html(output_path)
                     # Provide the download link
                     st.markdown(get_download_link(output_path, "html"), unsafe_allow_html=True)
                     
                 if table_format == "latex":
-                    output_path = "./output/tableone_results.tex"
+                    output_path = f"{st.session_state.outputs_path}/tableone_results.tex"
                     table.to_latex(output_path)
                     st.markdown(get_download_link(output_path, "tex"), unsafe_allow_html=True)
 
@@ -2438,10 +2448,11 @@ https://doi.org/10.1093/jamiaopen/ooy012""")
     if perform_pca:
             # Create PCA plot
 
+
         pca_fig2 = perform_pca_plot(st.session_state.df)
-        save_image(pca_fig2, 'pca_plot.png')
+        save_image(pca_fig2, f"./{st.session_state.outputs_path}/pca_plot.png")
         scree_plot = create_scree_plot(st.session_state.df)
-        save_image(scree_plot, 'scree_plot.png')
+        save_image(scree_plot, f"./{st.session_state.outputs_path}/scree_plot.png")
         
         with st.expander("What is PCA?"):
             st.write("""Principal Component Analysis, or PCA, is a method used to highlight important information in datasets that have many variables and to bring out strong patterns in a dataset. It's a way of identifying underlying structure in data.
@@ -2688,7 +2699,7 @@ In the medical field, logistic regression can be a helpful tool to predict outco
 
                         # Generate and display the sorted force plot
                         shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
                         with open("sorted_shap_plot.html", "r") as f:
                             st.components.v1.html(f.read(), height=500)
 
@@ -2753,7 +2764,7 @@ Overall, decision trees can be an excellent tool for understanding and predictin
 
                         # Generate and display the sorted force plot
                         shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
                         with open("sorted_shap_plot.html", "r") as f:
                             st.components.v1.html(f.read(), height=500)
 
@@ -2810,7 +2821,7 @@ However, it's important to note that while Random Forest often performs well, it
 
                         # Generate and display the sorted force plot
                         shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
                         with open("sorted_shap_plot.html", "r") as f:
                             st.components.v1.html(f.read(), height=500)
                                 
@@ -2885,7 +2896,7 @@ Just like with any model, it's crucial to validate the model's predictions with 
 
                         # Generate and display the sorted force plot
                         shap_html = shap.force_plot(explainer.expected_value, sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
                         with open("sorted_shap_plot.html", "r") as f:
                             st.components.v1.html(f.read(), height=500)
 
@@ -2951,7 +2962,7 @@ As with any machine learning model, while an SVM can make predictions about pati
 
                         # Generate and display the sorted force plot
                         shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
                         with open("sorted_shap_plot.html", "r") as f:
                             st.components.v1.html(f.read(), height=500)
                 
@@ -3014,7 +3025,7 @@ However, it's important to note that neural networks are computationally intensi
 
                         # Generate and display the sorted force plot
                         shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html("sorted_shap_plot.html", shap_html)
+                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
                         with open("sorted_shap_plot.html", "r") as f:
                             st.components.v1.html(f.read(), height=500)
 

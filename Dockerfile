@@ -1,7 +1,7 @@
 # app/Dockerfile
 
 # Use Python 3.9 slim image as the base image
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 # Set the working directory to /my_team within the container
 WORKDIR /auto_analyze
@@ -14,7 +14,7 @@ COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
 # Copy your main application code and additional files such as prompts.py
-COPY main_docker.py ./
+COPY main.py ./
 COPY prompts.py ./
 COPY cox_ph_summary.csv ./
 COPY output.png ./
