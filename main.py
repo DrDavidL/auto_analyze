@@ -1609,8 +1609,8 @@ Follow the steps listed in the sidebar on the left. After your exploratory analy
     st.markdown('[Github Repository](https://github.com/DrDavidL/auto_analyze)')       
             
     # """)
-    st.write("Author: David Liebovitz, MD, Northwestern University")
-    st.write("Last updated 8/28/23")
+    st.write("Author: David Liebovitz, MD, Northwestern University, davidl at northwestern dot edu")
+    st.write("Last updated 7/12/24")
     
 tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
 # fetch_api_key()
