@@ -74,6 +74,24 @@ st.set_page_config(page_title='AutoAnalyzer', layout = 'centered', page_icon = '
 #     st.experimental_rerun()
     
 #     # Initialize a session state variable that tracks the sidebar state (either 'expanded' or 'collapsed').
+
+
+
+
+
+password_key = os.environ.get("PASSWORD", st.secrets["password"])
+openai_api_key = os.environ.get("OPENAI_API_KEY", st.secrets["openai-api-key"])
+hu_key = os.environ.get("HEALTH_UNIVERSE", st.secrets["health-universe"])
+
+# password_key = os.environ.get("PASSWORD")
+# openai_api_key = os.environ.get("OPENAI_API_KEY")
+# hu_key = os.environ.get("HEALTH_UNIVERSE")
+
+# if password_key is None:
+#     password_key = st.secrets["password"]
+#     openai_api_key = st.secrets["openai-api-key"]
+#     hu_key = st.secrets["health-universe"]
+
 if 'last_response' not in st.session_state:
      st.session_state.last_response = ''
      
@@ -362,7 +380,7 @@ def check_password() -> bool:
 
     def password_entered() -> None:
         """Callback function when password is entered."""
-        if st.session_state["password"] == st.secrets["password"]:
+        if st.session_state["password"] == password_key:
             st.session_state["password_correct"] = True
             st.session_state.login_attempts = 0
             # Reset the app
@@ -588,7 +606,7 @@ def replace_show_with_save(code_string, filename='output.png'):
 
 @st.cache_data
 def start_chatbot2(df, question, max_retries=5, delay=2):
-    llm = ChatOpenAI(api_key=st.secrets["openai-api-key"], model="gpt-4o", temperature=0.3)
+    llm = ChatOpenAI(api_key=openai_api_key, model="gpt-4o", temperature=0.3)
     agent = create_pandas_dataframe_agent(
         llm,
         df,
@@ -630,7 +648,7 @@ def start_chatbot3(df, model):
     # openai.api_key = st.session_state.openai-api-key
     agent = create_pandas_dataframe_agent(
     # ChatOpenAI(temperature=0, model="gpt-3.5-turbo"),
-    ChatOpenAI(api_key= st.secrets["openai-api-key"], temperature=0, model=model),
+    ChatOpenAI(api_key= openai_api_key, temperature=0, model=model),
     df,
     verbose=True,
     agent_type=AgentType.OPENAI_FUNCTIONS,
@@ -696,7 +714,7 @@ def start_plot_gpt4(df):
     # fetch_api_key()
     # openai.api_key = st.session_state.openai-api-key
     agent = create_pandas_dataframe_agent(
-    ChatOpenAI(api_key= st.secrets["openai-api-key"],temperature=0, model="gpt-4-turbo"),
+    ChatOpenAI(api_key= openai_api_key,temperature=0, model="gpt-4-turbo"),
     df,
     verbose=True,
     allow_dangerous_code=True, 
@@ -810,7 +828,7 @@ Number of rows: ```number```
     
     try:
         response= openai.ChatCompletion.create(
-            api_key= st.secrets["openai-api-key"],
+            api_key= openai_api_key,
             model= "gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -1676,7 +1694,7 @@ with tab1:
         
         
     if demo_or_custom == 'Generate Data':
-        if st.secrets["health-universe"] == "True" or check_password():
+        if hu_key == "True" or check_password():
             user_input = st.sidebar.text_area("Enter comma or space separated names for columns, e.g., Na, Cr, WBC, A1c, SPB, Diabetes:")
 
             if "," in user_input:
@@ -1943,7 +1961,7 @@ with tab1:
             else:
                 
                 if activate_chatbot:
-                    if  st.secrets["health-universe"] == "True" or check_password():
+                    if  hu_key == "True" or check_password():
                         if chat_context == "Ask questions about your data (no plots)":
                             
                             csv_question = st.selectbox("Let GPT analyze your Data!", (
