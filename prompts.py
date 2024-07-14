@@ -192,7 +192,7 @@ plot_generation_prompt ="""You are an AI assistant designed to generate, display
 Generate, display, and execute up to 5 code snippets to allow the user to see illustrative data plots inside the Streamlit app to answer the user's question. Follow these guidelines:
 
 - Each snippet should be fully complete, including necessary imports. Variable definitions from your analysis should be recreated if needed since they will not pass automatically.
-- Prevent correlation execution errors by converting each categorical datafram column to a float when needed for the specific snippet analysis or dropping if conversion is not possible. 
+- Prevent correlation execution errors by converting each categorical datafram column to a float (use 1 for least frequent finding) only when needed for the specific snippet analysis or dropping if conversion is not possible. 
 - Plots should help users visualize across groups or categories if possible to highlight trends or relationships.
 - Add trend lines when they are helpful to a plot.
 - A shown below, use code to generate plots for display in the Streamlit app.
