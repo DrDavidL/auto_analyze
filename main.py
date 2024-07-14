@@ -64,14 +64,24 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 import time
 import tempfile
-from prompts import csv_prefix_gpt4
+from prompts import csv_prefix_gpt4, data_analysis_prompt, plot_generation_prompt
+from concurrent.futures import ThreadPoolExecutor
+import time
+import asyncio
+import time
+import nest_asyncio
+import asyncio
+import aiohttp
+from langchain.callbacks.base import AsyncCallbackHandler
+from langchain_core.outputs import LLMResult
+from typing import Any, Dict, List
 
 
 
 
 st.set_page_config(page_title='AutoAnalyzer', layout = 'centered', page_icon = ':chart_with_upwards_trend:', initial_sidebar_state = 'auto')
 
-
+# nest_asyncio.apply()
 password_key = os.environ.get("PASSWORD")
 openai_api_key = os.environ.get("OPENAI_API_KEY")
 hu_key = os.environ.get("HEALTH_UNIVERSE")
@@ -506,19 +516,26 @@ def assess_data_readiness(df):
 
 
 def process_model_output(output):
-    # Find the JSON part in the long response
-    json_match = re.search(r'```json\s*(.*?)\s*```', output, re.DOTALL)
-    
-    if json_match:
-        json_str = json_match.group(1)
+    # Check if the output is already a dictionary
+    if isinstance(output, dict):
+        processed_output = output
+    else:
+        # Remove any leading/trailing whitespace
+        output = output.strip()
+        
+        # Check if the output is wrapped in ```json ... ``` markers
+        if output.startswith('```json') and output.endswith('```'):
+            # Remove the markers
+            json_str = output[7:-3].strip()
+        else:
+            # Assume the entire output is JSON
+            json_str = output
+        
         try:
             processed_output = json.loads(json_str)
-        except json.JSONDecodeError:
-            print("Error: Invalid JSON string")
+        except json.JSONDecodeError as e:
+            print(f"Error: Invalid JSON string - {str(e)}")
             return None
-    else:
-        print("Error: No JSON found in the output")
-        return None
 
     # Ensure the processed output has the expected structure
     if not isinstance(processed_output, dict) or 'code_snippets' not in processed_output:
@@ -695,7 +712,7 @@ def start_chatbot3(df, model):
             # sys.exit(1)
             # return None, None
 
-@st.cache_data
+
 def start_plot_gpt4(df, question, max_retries=5, delay=2):
     # fetch_api_key()
     # openai.api_key = st.session_state.openai-api-key
@@ -707,16 +724,17 @@ def start_plot_gpt4(df, question, max_retries=5, delay=2):
                 agent_type="tool-calling",
                 verbose=True,
                 return_intermediate_steps=True,
+                number_of_head_rows=-1,
                 allow_dangerous_code=True,
                 agent_executor_kwargs={"handle_parsing_errors": True},
     )
-    question_updated = f"""{csv_prefix_gpt4} User question: {question}"""
+    
     # st.write(f'Question: {question_updated}')
 
     model_output = None
     for attempt in range(max_retries):
         try:
-            model_output = agent.invoke(question_updated)
+            model_output = agent.invoke(question)
             break  # Exit the loop if the call is successful
         except Exception as e:
             if attempt < max_retries - 1:
@@ -729,7 +747,64 @@ def start_plot_gpt4(df, question, max_retries=5, delay=2):
         # Display raw output
     return model_output
     
-            
+class StreamlitAsyncCallbackHandler(AsyncCallbackHandler):
+    def __init__(self, progress_bar):
+        self.progress_bar = progress_bar
+        self.token_count = 0
+        self.total_tokens = 100  # Estimate, adjust as needed
+
+    async def on_llm_new_token(self, token: str, **kwargs) -> None:
+        self.token_count += 1
+        progress = min(self.token_count / self.total_tokens, 1.0)
+        self.progress_bar.progress(progress)
+
+    async def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+        self.progress_bar.progress(1.0)
+
+async def start_plot_gpt4_async(df, question, progress_bar, max_retries=5, delay=2):
+    callback_handler = StreamlitAsyncCallbackHandler(progress_bar)
+    
+    llm = ChatOpenAI(
+        api_key=openai_api_key, 
+        model="gpt-4", 
+        temperature=0.3,
+        streaming=True,
+        callbacks=[callback_handler]
+    )
+    
+    agent = create_pandas_dataframe_agent(
+        llm,
+        df,
+        max_iterations=10,
+        agent_type="tool-calling",
+        verbose=True,
+        return_intermediate_steps=True,
+        allow_dangerous_code=True,
+        agent_executor_kwargs={"handle_parsing_errors": True},
+    )
+    
+    for attempt in range(max_retries):
+        try:
+            model_output = await agent.ainvoke(question)
+            return model_output
+        except Exception as e:
+            if attempt < max_retries - 1:
+                st.warning(f"OpenAI servers are busy. Retrying {attempt + 1}/{max_retries}.")
+                await asyncio.sleep(delay)
+            else:
+                st.error("OpenAI servers remain busy. Please try again in 5 min.")
+                raise e
+
+async def run_analysis(df, question1, question2):
+    progress_bar1 = st.progress(0)
+    progress_bar2 = st.progress(0)
+
+    task1 = asyncio.create_task(start_plot_gpt4_async(df, question1, progress_bar1))
+    task2 = asyncio.create_task(start_plot_gpt4_async(df, question2, progress_bar2))
+
+    result1, result2 = await asyncio.gather(task1, task2)
+
+    return result1, result2
 
             
 def start_plot_gpt4_old2(df):
@@ -1670,8 +1745,11 @@ def process_dataframe(df):
 
 st.title("AutoAnalyzer")
 
-if "model_output" not in st.session_state:
-    st.session_state.model_output = ""
+if "model_output1" not in st.session_state:
+    st.session_state.model_output1 = ""
+    
+if "model_output2" not in st.session_state:
+    st.session_state.model_output2 = ""
 
 st.info("Welcome to the AutoAnalyzer! Use the left sidebar to upload your data or select a demo dataset. Then, follow the steps to explore your data.")
 with st.expander('Please Read: Using AutoAnalyzer'):
@@ -2004,7 +2082,7 @@ with tab1:
     if activate_chatbot:
         if hu_key == "True" or check_password():
             st.subheader("GPT Analyzer")
-            st.info("Use a large language model (gpt-4o and gpt-4-turbo) to answer questions or generate plots from your data set.")
+            st.info("Leverage a large language model (gpt-4o) with custom scripting to answer questions about your data set.")
             # chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
 
             try:
@@ -2013,83 +2091,66 @@ with tab1:
 
                 st.warning("Please upload a CSV file or choose a demo dataset")
 
-            # if chat_context == "Ask questions about your data (no plots)":
-                
-                # csv_question = st.selectbox("Let GPT analyze your Data!", (
-                #     "Make request here or choose free text below!", 
-                #     "Summarize the main findings of the dataframe.",
-                #     "Identify useful correlations found in the dataframe.", 
-                #     "Describe the demographic findings from the data.",
-                #     "Identify any outliers in the data.",
-                #     "Highlight any trends over time.",
-                #     "Analyze the distribution of likely key variables.",
-                #     "Calculate and interpret the summary statistics.",
-                #     "Identify any missing data and suggest handling methods.",
-                #     "Perform a correlation analysis between two likely key specific variables.",
-                #     "Compare the means of two groups for a likely key specific variable."
-                # ))
-                
-                
-                
-                
-                
-            #     # csv_question = st.selectbox("Let GPT analyze your Data!", ("Select here!", "Identify useful correlations found in the dataframe."))
 
-            #     if st.checkbox("Use a free text question"):
-            #         csv_question = st.text_input("Your question, e.g., 'What is the mean age for men with diabetes?' *Do not ask for plots for this option.*", "")
-            #     if st.button("Ask question"):
-            #         with st.spinner("Analyzing your data..."):
-            #             df_response = start_chatbot2(st.session_state.df, csv_question)
-            #             st.write(df_response["output"])
-            # if chat_context == "Generate Plots":
-            csv_question = st.selectbox("Let GPT analyze your Data!", (
-                    "Make request here or choose free text below!", 
+            csv_question = st.selectbox("Some likely questions or use free text specific for your dataset.", (
                     "Summarize the main findings of the dataframe.",
                     "Identify useful correlations found in the dataframe.", 
-                    "Describe the demographic findings from the data.",
-                    "Identify any outliers in the data.",
-                    "Highlight any trends over time.",
+                    "Describe the population.",
+                    "Identify outliers in the data.",
+                    "Uncover any trends over time.",
                     "Analyze the distribution of likely key variables.",
                     "Calculate and interpret the summary statistics.",
                     "Identify any missing data and suggest handling methods.",
-                    "Perform a correlation analysis between two likely key specific variables.",
-                    "Compare the means of two groups for a likely key specific variable."
+                    "Perform a correlation analysis among likely key variables.",
+                    "Compare the means of two groups for likely key variables."
                 ))
             if st.checkbox("Use a free text question"):
                 csv_question = st.text_area("Ask a free text question about your data, for example, describe the patient population", "")
             if st.button("Ask GPT to analyze your data!"):
                 with st.spinner("Analyzing your data..."):
-                    model_response = start_plot_gpt4(st.session_state.df, csv_question)
-                    st.session_state.model_output = model_response["output"]
-            if st.session_state.model_output:    
-                with st.container():
-                    st.markdown(st.session_state.model_output)
+                    # model_response = start_plot_gpt4(st.session_state.df, csv_question)
+                    # st.session_state.model_output = model_response["output"]
+                    question1 = f"""{data_analysis_prompt} User question: {csv_question}"""
+                    question2 = f"""{plot_generation_prompt} User question: {csv_question}"""
+                    # Submit both tasks
+                    container = st.container(border=True)
+                    result1 = start_plot_gpt4(st.session_state.df, question1)
+                    st.session_state_model_output1= result1["output"]
+                    container.write(st.session_state_model_output1) # Write the output to the container
+                    
+                    result2 = start_plot_gpt4(st.session_state.df, question2)
+                    st.session_state_model_output2 = result2["output"]
+                    container.write(st.session_state_model_output2) # Write the output to the container
+                    
+                    
+    
 
-                    # Process the model output
-                    processed_output = process_model_output(st.session_state.model_output)
 
-                    if processed_output:
-                        # st.subheader("Processed Output:")
-                        # st.json(processed_output)
-                        with st.expander("Plots"):
+                # Process the model output
+                # processed_output = process_model_output(st.session_state.model_output2)
+
+                # if processed_output:
+                #     # st.subheader("Processed Output:")
+                #     # st.json(processed_output)
+                #     with st.expander("Plots"):
 
 
-                            # Execute and display each code snippet
-                            for i, snippet in enumerate(processed_output['code_snippets'], 1):
-                                st.subheader(f"Plot {i}: {snippet['description']}")
+                #         # Execute and display each code snippet
+                #         for i, snippet in enumerate(processed_output['code_snippets'], 1):
+                #             st.subheader(f"Plot {i}: {snippet['description']}")
+                            
+                #             # Display the code
+                #             st.code(snippet['code'], language='python')
+
+                #             # Execute the code
+                #             try:
                                 
-                                # Display the code
-                                st.code(snippet['code'], language='python')
+                #                 exec("df = st.session_state.df" + "\n" + snippet['code'])
+                #             except Exception as e:
+                #                 st.error(f"Error executing code: {str(e)}")
 
-                                # Execute the code
-                                try:
-                                    
-                                    exec("df = st.session_state.df" + "\n" + snippet['code'])
-                                except Exception as e:
-                                    st.error(f"Error executing code: {str(e)}")
-
-                    else:
-                        st.error("Failed to process the model output.")
+                # else:
+                #     st.error("Failed to process the model output.")
 
 
             

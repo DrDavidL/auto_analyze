@@ -46,7 +46,7 @@ jsonschema-specifications==2023.12.1
 kiwisolver==1.4.5
 langchain==0.2.7
 langchain-community==0.2.7
-langchain-core==0.2.16
+langchain-core==0.2.18
 langchain-experimental==0.0.62
 langchain-openai==0.1.15
 langchain-text-splitters==0.2.2
