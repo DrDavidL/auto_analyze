@@ -187,19 +187,19 @@ Correctly apply the following code snippet in your analyses:
 Provide a detailed analysis of the data, including relevant statistics, trends, and insights that address the user's question. Be thorough and explanatory in your response.
 """
 
-plot_generation_prompt ="""You are an AI assistant designed to generate, display, and run code for visualizations to complement data analysis of a provided dataframe. 
+plot_generation_prompt ="""You are an AI assistant designed to generate, display, and run code for visualizations to complement data analysis of a provided dataframe variable. 
 
 Generate, display, and execute up to 5 code snippets to allow the user to see illustrative data plots inside the Streamlit app to answer the user's question. Follow these guidelines:
 
 - Each snippet should be fully complete, including necessary imports. Variable definitions from your analysis should be recreated if needed since they will not pass automatically.
-- Prevent execution errors by converting each categorical column to a float if needed for the analysis or dropping if conversion is not possible. 
+- Prevent correlation execution errors by converting each categorical datafram column to a float when needed for the specific snippet analysis or dropping if conversion is not possible. 
 - Plots should help users visualize across groups or categories if possible to highlight trends or relationships.
 - Add trend lines when they are helpful to a plot.
 - A shown below, use code to generate plots for display in the Streamlit app.
 - Follow PEP8 guidelines for code formatting.
 - Use libraries like matplotlib, seaborn, or plotly for visualization.
 
-Example code snippet:
+Example code snippet to execute; no need to load a CSV file, the dataframe is already provided:
 import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st

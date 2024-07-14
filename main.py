@@ -716,7 +716,7 @@ def start_chatbot3(df, model):
 def start_plot_gpt4(df, question, max_retries=5, delay=2):
     # fetch_api_key()
     # openai.api_key = st.session_state.openai-api-key
-    llm = ChatOpenAI(api_key=openai_api_key, model="gpt-4o", temperature=0.3)
+    llm = ChatOpenAI(api_key=openai_api_key, model="gpt-4o", temperature=0.3, seed=42)
     agent = create_pandas_dataframe_agent(
                 llm,
                 df,
