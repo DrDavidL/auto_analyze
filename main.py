@@ -41,7 +41,7 @@ from PIL import Image
 from scipy import stats
 import lifelines
 from lifelines import KaplanMeierFitter, CoxPHFitter
-from explanations.explanations  import *
+from explanations.explanations import shapley_explanation, mult_linear_reg_explanation, cox, kaplan_meier
 from sklearn.decomposition import PCA
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.model_selection import train_test_split
@@ -313,7 +313,7 @@ def plot_survival_curve(df, time_col, event_col):
 
         # Plot the survival curve
         fig, ax = plt.subplots()
-        kmf.plot(ax=ax)
+        kmf.plot_survival_function(ax=ax)
 
         # Add labels and title to the plot
         ax.set_xlabel('Time')
@@ -716,7 +716,13 @@ def start_chatbot3(df, model):
 def start_plot_gpt4(df, question, max_retries=5, delay=2):
     # fetch_api_key()
     # openai.api_key = st.session_state.openai-api-key
-    llm = ChatOpenAI(api_key=openai_api_key, model="gpt-4o", temperature=0.3, seed=42)
+    llm = ChatOpenAI(api_key=openai_api_key,
+                     model="gpt-4o", 
+                     temperature=0.3, 
+                     model_kwargs={
+                        'seed': 42, 
+                        },
+                     )
     agent = create_pandas_dataframe_agent(
                 llm,
                 df,
@@ -1114,7 +1120,7 @@ def preprocess_for_pca(df):
     bin_encoder = ce.BinaryEncoder()
 
     for col in df.columns:
-        if pd.api.types.is_categorical_dtype(df[col]) or df[col].dtype == 'object':
+        if isinstance(df[col].dtype, pd.CategoricalDtype) or df[col].dtype == 'object':
             unique = df[col].nunique()
 
             # For binary categorical columns
@@ -1750,6 +1756,9 @@ if "model_output1" not in st.session_state:
     
 if "model_output2" not in st.session_state:
     st.session_state.model_output2 = ""
+    
+if "full_gpt_response" not in st.session_state:
+    st.session_state.full_gpt_response = ""
 
 st.info("Welcome to the AutoAnalyzer! Use the left sidebar to upload your data or select a demo dataset. Then, follow the steps to explore your data.")
 with st.expander('Please Read: Using AutoAnalyzer'):
@@ -2082,7 +2091,9 @@ with tab1:
     if activate_chatbot:
         if hu_key == "True" or check_password():
             st.subheader("GPT Analyzer")
-            st.info("Leverage a large language model (gpt-4o) with custom scripting to answer questions about your data set.")
+            st.info("""Ask a large language model (gpt-4o with access to python tools) to analyze your dataset. 
+                    Right click to save plots.                 
+                    """)
             # chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
 
             try:
@@ -2092,7 +2103,7 @@ with tab1:
                 st.warning("Please upload a CSV file or choose a demo dataset")
 
 
-            csv_question = st.selectbox("Some likely questions or use free text specific for your dataset.", (
+            csv_question = st.selectbox("Some helpful generic questions or choose free text specific for the content in your dataset.", (
                     "Summarize the main findings of the dataframe.",
                     "Identify useful correlations found in the dataframe.", 
                     "Describe the population.",
@@ -2106,6 +2117,12 @@ with tab1:
                 ))
             if st.checkbox("Use a free text question"):
                 csv_question = st.text_area("Ask a free text question about your data, for example, describe the patient population", "")
+            
+            if st.session_state.model_output1 != "":
+                with st.expander("Prior GPT Analysis"):
+                    st.write(st.session_state.model_output1)
+                    st.write(st.session_state.model_output2)
+            
             if st.button("Ask GPT to analyze your data!"):
                 with st.spinner("Analyzing your data..."):
                     # model_response = start_plot_gpt4(st.session_state.df, csv_question)
@@ -2115,42 +2132,15 @@ with tab1:
                     # Submit both tasks
                     container = st.container(border=True)
                     result1 = start_plot_gpt4(st.session_state.df, question1)
-                    st.session_state_model_output1= result1["output"]
-                    container.write(st.session_state_model_output1) # Write the output to the container
+                    st.session_state.model_output1= result1["output"]
+                    container.write(st.session_state.model_output1) # Write the output to the container
+                    
                     
                     result2 = start_plot_gpt4(st.session_state.df, question2)
-                    st.session_state_model_output2 = result2["output"]
-                    container.write(st.session_state_model_output2) # Write the output to the container
+                    st.session_state.model_output2 = result2["output"]
+                    container.write(st.session_state.model_output2) # Write the output to the container
                     
                     
-    
-
-
-                # Process the model output
-                # processed_output = process_model_output(st.session_state.model_output2)
-
-                # if processed_output:
-                #     # st.subheader("Processed Output:")
-                #     # st.json(processed_output)
-                #     with st.expander("Plots"):
-
-
-                #         # Execute and display each code snippet
-                #         for i, snippet in enumerate(processed_output['code_snippets'], 1):
-                #             st.subheader(f"Plot {i}: {snippet['description']}")
-                            
-                #             # Display the code
-                #             st.code(snippet['code'], language='python')
-
-                #             # Execute the code
-                #             try:
-                                
-                #                 exec("df = st.session_state.df" + "\n" + snippet['code'])
-                #             except Exception as e:
-                #                 st.error(f"Error executing code: {str(e)}")
-
-                # else:
-                #     st.error("Failed to process the model output.")
 
 
             
