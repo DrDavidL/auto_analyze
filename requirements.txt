@@ -62,6 +62,7 @@ missingno==0.5.2
 multidict==6.0.5
 multimethod==1.11.2
 mypy-extensions==1.0.0
+nest-asyncio==1.6.0
 networkx==3.3
 numba==0.59.1
 numpy==1.26.4
