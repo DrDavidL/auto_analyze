@@ -74,6 +74,7 @@ import asyncio
 import aiohttp
 from langchain.callbacks.base import AsyncCallbackHandler
 from langchain_core.outputs import LLMResult
+from langchain_openai import AzureChatOpenAI, AzureOpenAI
 from typing import Any, Dict, List
 
 
@@ -85,6 +86,7 @@ st.set_page_config(page_title='AutoAnalyzer', layout = 'centered', page_icon = '
 password_key = os.environ.get("PASSWORD")
 openai_api_key = os.environ.get("OPENAI_API_KEY")
 hu_key = os.environ.get("HEALTH_UNIVERSE")
+openai_base_url = os.environ.get("OPENAI_BASE_URL")
 
 
 
@@ -92,6 +94,7 @@ if password_key is None:
     password_key = st.secrets["password"]
     openai_api_key = st.secrets["openai-api-key"]
     hu_key = st.secrets["health-universe"]
+    openai_base_url = st.secrets["openai-base-url"]
 
 if 'last_response' not in st.session_state:
      st.session_state.last_response = ''
@@ -608,7 +611,11 @@ def replace_show_with_save(code_string, filename='output.png'):
 
 @st.cache_data
 def start_chatbot2(df, question, max_retries=5, delay=2):
-    llm = ChatOpenAI(api_key=openai_api_key, model="gpt-4o", temperature=0.3)
+    llm = AzureChatOpenAI(
+        endpoint=openai_base_url, 
+        api_key=openai_api_key, 
+        model="gpt-4o", 
+        temperature=0.3)
     agent = create_pandas_dataframe_agent(
         llm,
         df,
@@ -712,17 +719,21 @@ def start_chatbot3(df, model):
             # sys.exit(1)
             # return None, None
 
-
 def start_plot_gpt4(df, question, max_retries=5, delay=2):
-    # fetch_api_key()
-    # openai.api_key = st.session_state.openai-api-key
-    llm = ChatOpenAI(api_key=openai_api_key,
-                     model="gpt-4o", 
-                     temperature=0.3, 
-                     model_kwargs={
+
+    llm = AzureChatOpenAI(
+                    azure_deployment="auto-analyzer-deploy",
+                    api_version="2024-02-01",
+                    azure_endpoint=openai_base_url,
+                    api_key=openai_api_key,  
+                    temperature=0.3,
+                    max_tokens=None,
+                    timeout=None,
+                    max_retries=2,
+                    model_kwargs={
                         'seed': 42, 
                         },
-                     )
+                    )
     agent = create_pandas_dataframe_agent(
                 llm,
                 df,
