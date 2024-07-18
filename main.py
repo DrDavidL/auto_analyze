@@ -64,7 +64,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 import time
 import tempfile
-from prompts import csv_prefix_gpt4, data_analysis_prompt, plot_generation_prompt
+from prompts import csv_prefix_gpt4, data_analysis_prompt, plot_generation_prompt, quick_analysis_prompt
 from concurrent.futures import ThreadPoolExecutor
 import time
 import asyncio
@@ -76,6 +76,7 @@ from langchain.callbacks.base import AsyncCallbackHandler
 from langchain_core.outputs import LLMResult
 from langchain_openai import AzureChatOpenAI, AzureOpenAI
 from typing import Any, Dict, List
+from markdown_to_docx import markdown_to_docx
 
 
 
@@ -95,6 +96,9 @@ if password_key is None:
     openai_api_key = st.secrets["openai-api-key"]
     hu_key = st.secrets["health-universe"]
     openai_base_url = st.secrets["openai-base-url"]
+    
+if 'full_gpt_response' not in st.session_state:
+    st.session_state.full_gpt_response = ""
 
 if 'last_response' not in st.session_state:
      st.session_state.last_response = ''
@@ -117,6 +121,48 @@ if "df_to_download" not in st.session_state:
 def get_output_path():
     tmpdirname = tempfile.mkdtemp(prefix= "output_")
     return tmpdirname
+
+def convert_markdown_to_docx(markdown_text, file_name):
+    # Create a temporary markdown file
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".md") as temp_markdown:
+        temp_markdown.write(markdown_text.encode('utf-8'))
+        temp_markdown_path = temp_markdown.name
+    
+    # Create the Markdown2docx project using the temporary markdown file
+    project = Markdown2docx(temp_markdown_path[:-3])  # Remove the ".md" extension
+    project.eat_soup()
+    
+    # Save the DOCX file
+    docx_file_path = file_name + ".docx"
+    project.save()
+    
+    # Move the generated docx file to the desired location
+    os.rename(temp_markdown_path[:-3] + ".docx", docx_file_path)
+
+    # Clean up the temporary markdown file
+    os.remove(temp_markdown_path)
+    
+    return docx_file_path
+    
+    
+    # Markdown2docx(md_temp_filename, docx_temp_filename)
+    
+    # # Read the docx file content into memory to provide a download button
+    # with open(gpt_analysis, "rb") as f:
+    #     docx_file_data = f.read()
+    
+    # # Provide a download button for the docx content
+    # st.download_button(
+    #     label="Download DOCX",
+    #     data=docx_file_data,
+    #     file_name="gpt-analysis.docx",
+    #     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    # )
+    
+    # Clean up the temporary files after the download
+    # os.remove(md_temp_filename)
+    # os.remove(docx_temp_filename)
+
 
 if "outputs_path" not in st.session_state:
     st.session_state.outputs_path = get_output_path()
@@ -995,113 +1041,6 @@ Number of rows: ```number```
         # sys.exit(1)
         # return None, None
 
-    
-                
-def start_chatbot1(selected_model):
-    # fetch_api_key()
-    # openai.api_key = st.session_state.openai-api-key    
-
-    # openai-api-key = st.text_input('OpenAI API Key',key='chatbot_api_key')
-    prefix_teacher = """You politely decline to answer questions outside the domains of data science, statistics, and medicine. 
-    If the question is appropriate, you teach for students at all levels. Your response appears next to a web  
-    tool that can generate bar charts, violin charts, histograms, pie charts, scatterplots, and summary statistics for  sample datasets or a user supplied CSV file.         
-    """
-    st.write("💬 Chatbot Teacher")
-    
-    #     # Check if the API key exists as an environmental variable
-    # api_key = os.environ.get("openai-api-key")
-
-    # if api_key:
-    #     # st.write("*API key active - ready to respond!*")
-    #     pass
-    # else:
-    #     st.warning("API key not found as an environmental variable.")
-    #     api_key = st.text_input("Enter your OpenAI API key:")
-
-    #     if st.button("Save"):
-    #         if is_valid_api_key(api_key):
-    #             os.environ["openai-api-key"] = api_key
-    #             st.success("API key saved as an environmental variable!")
-    #         else:
-    #             st.error("Invalid API key. Please enter a valid API key.")
-
-        
-    if "messages" not in st.session_state:
-        st.session_state["messages"] = [
-            # {"role": "system", "content": prefix_teacher},
-            # {"role": "user", "content": "Who won the world series in 2020?"},
-            # {"role": "assistant", "content": "I'm sorry, that is outside my expertise in data science and medicine."},
-            {"role": "assistant", "content": "Hi! Ask me anything about data science and I'll try to answer it."}
-            ]
-
-    with st.form("chat_input", clear_on_submit=True):
-        a, b = st.columns([4, 1])
-        user_input = a.text_input(
-            label="Your question:",
-            placeholder="e.g., teach me about violin plots",
-            label_visibility="collapsed",
-        )
-        b.form_submit_button("Send", use_container_width=True)
-
-    for msg in st.session_state.messages:
-        a = randint(0, 10000000000)
-        message(msg["content"], is_user=msg["role"] == "user", key = a)
-
-    # if user_input and not openai-api-key:
-    #     st.info("Please add your OpenAI API key to continue.")
-        
-    if user_input:
-        st.session_state.messages.append({"role": "system", "content": prefix_teacher})
-        st.session_state.messages.append({"role": "user", "content": user_input})
-        try:
-            #Make your OpenAI API request here
-            # response = openai.Completion.create(model="gpt-3.5-turbo",                     
-            #             prompt="Hello world")['choices'][0]['text']
-            # system_set = {"role": "system", "content": prefix_teacher}
-            # prefixed_message = prefix_teacher + st.session_state.messages
-            response = openai.ChatCompletion.create(model=selected_model, messages=st.session_state.messages)
-        except openai.error.Timeout as e:
-            #Handle timeout error, e.g. retry or log
-            st.write(f"I'm super busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
-            pass
-        except openai.error.APIError as e:
-            #Handle API error, e.g. retry or log
-            st.write(f"OpenAI API returned an API Error: {e}")
-            pass
-        except openai.error.APIConnectionError as e:
-            #Handle connection error, e.g. check network or log
-            st.write(f"OpenAI API request failed to connect: {e}")
-            pass
-        except openai.error.InvalidRequestError as e:
-            #Handle invalid request error, e.g. validate parameters or log
-            st.write(f"OpenAI API request was invalid: {e}")
-            pass
-        except openai.error.AuthenticationError as e:
-            #Handle authentication error, e.g. check credentials or log
-            st.write(f"OpenAI API request was not authorized: {e}")
-            pass
-        except openai.error.PermissionError as e:
-            #Handle permission error, e.g. check scope or log
-            st.write(f"OpenAI API request was not permitted: {e}")
-            pass
-        except openai.error.RateLimitError as e:
-            #Handle rate limit error, e.g. wait or log
-            st.write(f"I'm so busy! Please try again in a moment. Thanks! Here's the error detail: {e}")
-            pass
-
-        # response = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=st.session_state.messages)
-        msg = response.choices[0].message
-        st.session_state.messages.append(msg)      
-        message(user_input, is_user=True, key = "using message")
-        message(msg.content, key = "last message")
-                    
-def generate_table_old(df, categorical_variable):
-    mytable = TableOne(df,
-                       columns=df.columns.tolist(),
-                       categorical=categorical,
-                       groupby=categorical_variable, 
-                       pval=True)
-    return mytable
 
 def generate_table(df, categorical_variable, nonnormal_variables):
 
@@ -2102,9 +2041,9 @@ with tab1:
     if activate_chatbot:
         if hu_key == "True" or check_password():
             st.subheader("GPT Analyzer")
-            st.info("""Ask a large language model (gpt-4o with access to python tools) to analyze your dataset. 
-                    Right click to save plots.                 
+            st.info("""Ask a large language model (gpt-4o with access to python tools) to analyze your dataset.     
                     """)
+
             # chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
 
             try:
@@ -2113,47 +2052,75 @@ with tab1:
 
                 st.warning("Please upload a CSV file or choose a demo dataset")
 
+            full_gpt_analysis = st.checkbox("Full GPT Analysis (Takes a couple minutes and returns a comprehensive answer to your query.)")
+            if full_gpt_analysis:
+                csv_question = st.selectbox("Some helpful generic questions or choose free text specific for the content in your dataset.", (
+                        "Summarize the main findings of the dataframe.",
+                        "Identify useful correlations found in the dataframe.", 
+                        "Describe the population.",
+                        "Identify outliers in the data.",
+                        "Uncover any trends over time.",
+                        "Analyze the distribution of likely key variables.",
+                        "Calculate and interpret the summary statistics.",
+                        "Identify any missing data and suggest handling methods.",
+                        "Perform a correlation analysis among likely key variables.",
+                        "Compare the means of two groups for likely key variables."
+                    ))
+                if st.checkbox("Enter a free text question for a full analysis."):
+                    csv_question = st.text_area("Ask a free text question about your data, for example, describe the patient population", "")
+                
+                if st.session_state.model_output1 != "":
+                    with st.expander("Prior GPT Analysis"):
+                        st.write(st.session_state.model_output1)
+                        st.write(st.session_state.model_output2)
+                
+                if st.button("Ask GPT for the full analysis of the data for your question!"):
+                    
+                    with st.spinner("Analyzing your data..."):
+                        
+                        question1 = f"""{data_analysis_prompt} User question: {csv_question}"""
+                        question2 = f"""{plot_generation_prompt} User question: {csv_question}"""
+                        # Submit both tasks
+                        container = st.container(border=True)
+                        result1 = start_plot_gpt4(st.session_state.df, question1)
+                        st.session_state.model_output1= result1["output"]
+                        container.write(st.session_state.model_output1) # Write the output to the container
+                        
+                        
+                        
+                        result2 = start_plot_gpt4(st.session_state.df, question2)
+                        st.session_state.model_output2 = result2["output"]
+                        container.write(st.session_state.model_output2) # Write the output to the container
+                        # st.session_state.full_gpt_response = result1["output"] + result2["output"] # Save the full response
 
-            csv_question = st.selectbox("Some helpful generic questions or choose free text specific for the content in your dataset.", (
-                    "Summarize the main findings of the dataframe.",
-                    "Identify useful correlations found in the dataframe.", 
-                    "Describe the population.",
-                    "Identify outliers in the data.",
-                    "Uncover any trends over time.",
-                    "Analyze the distribution of likely key variables.",
-                    "Calculate and interpret the summary statistics.",
-                    "Identify any missing data and suggest handling methods.",
-                    "Perform a correlation analysis among likely key variables.",
-                    "Compare the means of two groups for likely key variables."
-                ))
-            if st.checkbox("Use a free text question"):
-                csv_question = st.text_area("Ask a free text question about your data, for example, describe the patient population", "")
+                st.warning("Right click to save plots.")
+
+            else:
+                csv_question = st.text_area("Ask a focused question about your data!", help="For example, with the test diabetes dataset: Create a plot for age versus cholesterol for women with/without diabetes distinguished")
+                if st.button("Ask GPT a focused question"):
+                    
+                    with st.spinner("Analyzing your data..."):
+                        quick_answer = start_plot_gpt4(st.session_state.df, f'{quick_analysis_prompt} User question: {csv_question}')
+                        st.session_state.model_output1= quick_answer["output"]
+                        st.write(st.session_state.model_output1) # Write the output to the container
+                st.warning("Right click to save plots.")
             
-            if st.session_state.model_output1 != "":
-                with st.expander("Prior GPT Analysis"):
-                    st.write(st.session_state.model_output1)
-                    st.write(st.session_state.model_output2)
+    if st.session_state.model_output1 != "":
+        if st.button("Download Last GPT Analysis"):
+            try:
+                docx_file = markdown_to_docx("gpt_analysis", st.session_state.model_output1)
+                with open(docx_file, "rb") as file:
+                    btn = st.download_button(
+                        label="Download DOCX",
+                        data=file,
+                        file_name="gpt_analysis.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    )
+                os.remove(docx_file)  # Clean up the file after offering download
+            except Exception as e:
+                st.error(f"An error occurred while creating the DOCX file: {str(e)}")
+
             
-            if st.button("Ask GPT to analyze your data!"):
-                with st.spinner("Analyzing your data..."):
-                    # model_response = start_plot_gpt4(st.session_state.df, csv_question)
-                    # st.session_state.model_output = model_response["output"]
-                    question1 = f"""{data_analysis_prompt} User question: {csv_question}"""
-                    question2 = f"""{plot_generation_prompt} User question: {csv_question}"""
-                    # Submit both tasks
-                    container = st.container(border=True)
-                    result1 = start_plot_gpt4(st.session_state.df, question1)
-                    st.session_state.model_output1= result1["output"]
-                    container.write(st.session_state.model_output1) # Write the output to the container
-                    
-                    
-                    result2 = start_plot_gpt4(st.session_state.df, question2)
-                    st.session_state.model_output2 = result2["output"]
-                    container.write(st.session_state.model_output2) # Write the output to the container
-                    
-                    
-
-
             
     if summary:
         st.info("Summary of numerical data")

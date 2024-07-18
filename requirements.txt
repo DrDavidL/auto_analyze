@@ -9,6 +9,7 @@ autograd==1.6.2
 autograd-gamma==0.5.0
 beautifulsoup4==4.12.3
 blinker==1.8.2
+bs4==0.0.2
 cachetools==5.3.3
 category-encoders==2.6.3
 certifi==2024.7.4
@@ -53,7 +54,10 @@ langchain-text-splitters==0.2.2
 langsmith==0.1.85
 lifelines==0.28.0
 llvmlite==0.42.0
+lxml==5.2.2
 markdown-it-py==3.0.0
+markdown2==2.5.0
+Markdown2docx==0.1.0
 MarkupSafe==2.1.5
 marshmallow==3.21.3
 matplotlib==3.8.4
@@ -83,6 +87,7 @@ pydeck==0.9.1
 Pygments==2.18.0
 pyparsing==3.1.2
 python-dateutil==2.9.0.post0
+python-docx==1.1.2
 pytz==2024.1
 PyWavelets==1.6.0
 PyYAML==6.0.1

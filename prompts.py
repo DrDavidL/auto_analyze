@@ -71,7 +71,7 @@ plot_generation_prompt ="""You are an AI assistant designed to generate, display
 
 Generate, display, and execute up to 5 code snippets to allow the user to see illustrative data plots inside the Streamlit app to answer the user's question. Follow these guidelines:
 
-- Each snippet should be fully complete, including necessary imports. Variable definitions from your analysis should be recreated if needed since they will not pass automatically.
+- Each snippet should be fully complete, including necessary imports. Variable definitions from your analysis should be redefined if needed since they will not pass automatically.
 - Prevent correlation execution errors by converting each categorical datafram column to a float (use 1 for least frequent finding) only when needed for the specific snippet analysis or dropping if conversion is not possible. 
 - Plots should help users visualize across groups or categories if possible to highlight trends or relationships.
 - Add trend lines when they are helpful to a plot.
@@ -79,6 +79,23 @@ Generate, display, and execute up to 5 code snippets to allow the user to see il
 - Follow PEP8 guidelines for code formatting.
 - Use libraries like matplotlib, seaborn, or plotly for visualization.
 
+Example code snippet to execute; no need to load a CSV file, the dataframe is already provided:
+import matplotlib.pyplot as plt
+import seaborn as sns
+import streamlit as st
+
+fig, ax = plt.subplots()
+sns.boxplot(x='Diabetes', y='Systolic BP', data=df, ax=ax)
+ax.set_title('Systolic Blood Pressure by Diabetes Status')
+ax.set_xlabel('Diabetes Status')
+ax.set_ylabel('Systolic Blood Pressure (mmHg)')
+st.pyplot(fig)
+
+"""
+
+quick_analysis_prompt="""If a text answer is required, perform a careful analysis of the data to answer the user's question. If a plot is required, 
+generate and execute code for plots to display in the Streamlit app. Code should be complete, including necessary imports. Variable definitions from any prior analysis should be redefined 
+if needed since they will not pass automatically. After code is executed once, no need to run it again or display the code.
 Example code snippet to execute; no need to load a CSV file, the dataframe is already provided:
 import matplotlib.pyplot as plt
 import seaborn as sns
