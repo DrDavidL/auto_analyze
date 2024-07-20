@@ -16,7 +16,7 @@ RUN pip3 install -r requirements.txt
 # Copy your main application code and additional files such as prompts.py
 COPY main.py ./
 COPY prompts.py ./
-
+COPY markdown_to_docx.py ./
 
 # If there are other files or directories to include, add them here
 # COPY other_file.py ./
