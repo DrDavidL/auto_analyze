@@ -5,7 +5,7 @@ import pandas as pd
 import io
 import sys, re
 import visualimiss
-from ydata_profiling import ProfileReport
+# from ydata_profiling import ProfileReport
 import streamlit as st
 # from streamlit_pandas_profiling import st_profile_report
 import plotly.figure_factory as ff
@@ -133,7 +133,7 @@ def convert_markdown_to_docx(markdown_text, file_name):
         temp_markdown_path = temp_markdown.name
     
     # Create the Markdown2docx project using the temporary markdown file
-    project = Markdown2docx(temp_markdown_path[:-3])  # Remove the ".md" extension
+    project = markdown_to_docx(temp_markdown_path[:-3])  # Remove the ".md" extension
     project.eat_soup()
     
     # Save the DOCX file
@@ -1650,8 +1650,8 @@ def plot_corr(df):
 
 
 @st.cache_resource
-def make_profile(df):
-    return ProfileReport(df, title="Profiling Report")
+# def make_profile(df):
+#     return ProfileReport(df, title="Profiling Report")
 
     
 # Function to plot bar chart
@@ -2140,17 +2140,18 @@ with tab1:
                 
     if full_analysis:
         st.info("Full analysis of data")
-        st.warning("Remember to check that your data is ready to be analyzed or you'll receive errors.")
-        with st.spinner("Performing Analysis... Please wait a minute."):
-            profile = make_profile(st.session_state.df)
-        # profile = ProfileReport(df, title="Profiling Report")
-            st.write(f'Since this file is large, please download and then open the full report.')
-            st.download_button(
-                label="Download report",
-                data=profile.to_html(),
-                file_name='full_report.html',
-                mime='text/html',
-            )
+        st.write("Pending library update. See the Gpt analysis in the meantime!")
+        # st.warning("Remember to check that your data is ready to be analyzed or you'll receive errors.")
+        # with st.spinner("Performing Analysis... Please wait a minute."):
+        #     profile = make_profile(st.session_state.df)
+        # # profile = ProfileReport(df, title="Profiling Report")
+        #     st.write(f'Since this file is large, please download and then open the full report.')
+        #     st.download_button(
+        #         label="Download report",
+        #         data=profile.to_html(),
+        #         file_name='full_report.html',
+        #         mime='text/html',
+        #     )
             # st_profile_report(profile)
             
     if histogram: 
