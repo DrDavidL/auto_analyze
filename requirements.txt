@@ -78,7 +78,7 @@ openai==1.40.2
 openpyxl==3.1.5
 orjson==3.10.6
 packaging==24.1
-pandas==2.2.2
+pandas==1.5.3
 pandasai==2.2.14
 patsy==0.5.6
 phik==0.12.4
