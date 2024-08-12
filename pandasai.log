@@ -8672,3 +8672,120 @@ print(result)
 
 So, in essence, we took the glucose data from our table, calculated the average, and presented that as our result.
                 
+2024-08-12 14:10:53 [INFO] Question: What is the mean glucose?
+2024-08-12 14:10:53 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-12 14:10:53 [INFO] Prompt ID: 09045358-0847-4d30-9156-7db99c06e6aa
+2024-08-12 14:10:53 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-12 14:10:53 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-12 14:10:53 [INFO] Executing Step 1: CacheLookup
+2024-08-12 14:10:53 [INFO] Using cached response
+2024-08-12 14:10:53 [INFO] Executing Step 2: PromptGeneration
+2024-08-12 14:10:53 [INFO] Executing Step 2: Skipping...
+2024-08-12 14:10:53 [INFO] Executing Step 3: CodeGenerator
+2024-08-12 14:10:53 [INFO] Executing Step 3: Skipping...
+2024-08-12 14:10:53 [INFO] Executing Step 4: CachePopulation
+2024-08-12 14:10:53 [INFO] Executing Step 4: Skipping...
+2024-08-12 14:10:53 [INFO] Executing Step 5: CodeCleaning
+2024-08-12 14:10:53 [INFO] 
+Code running:
+```
+data = {'Cholesterol': [269, 219, 172], 'Glucose': [233, 98, 65], 'HDL Chol': [29, 14, 51], 'Chol/HDL ratio': [2.3, 3.1, 7.6], 'Age': [48, 50, 30], 'Gender': ['female', 'male', 'female'], 'Height': [68, 61, 70], 'Weight': [162, 262, 119], 'BMI': [35.5, 32.6, 22.4], 'Systolic BP': [136, 178, 199], 'Diastolic BP': [68, 84, 118], 'waist': [55, 43, 40], 'hip': [41, 50, 35], 'Waist/hip ratio': [0.78, 0.94, 0.68], 'Diabetes': ['Diabetes', 'No diabetes', 'Diabetes']}
+mean_glucose = dfs[0]['Glucose'].mean()
+result = {'type': 'number', 'value': mean_glucose}
+print(result)
+        ```
+2024-08-12 14:10:53 [INFO] Executing Step 6: CodeExecution
+2024-08-12 14:10:53 [INFO] Executing Step 7: ResultValidation
+2024-08-12 14:10:53 [INFO] Answer: {'type': 'number', 'value': 107.33846153846154}
+2024-08-12 14:10:53 [INFO] Executing Step 8: ResultParsing
+2024-08-12 14:10:58 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 14:10:58 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Data Collection**: Imagine we have a small table with different health-related information for three people. This table includes things like their cholesterol levels, glucose levels, age, gender, height, weight, and some other health metrics.
+
+2. **Focus on Glucose Levels**: From this table, we are particularly interested in the glucose levels of these three individuals.
+
+3. **Calculate the Average**: To understand the general glucose level among these people, we calculate the average (mean) of their glucose values. This means we add up all their glucose levels and then divide by the number of people.
+
+4. **Result**: The result we get from this calculation is the average glucose level, which is 107.34. This gives us a single number that represents the typical glucose level in our small group.
+
+So, in essence, we took the glucose information from our table, did some simple math to find the average, and got a meaningful number that helps us understand the overall glucose level better.
+                
+2024-08-12 14:11:53 [INFO] Question: What is the mean glucose?
+2024-08-12 14:11:53 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-12 14:11:53 [INFO] Prompt ID: c27a9824-83db-44a9-812f-2746f6540956
+2024-08-12 14:11:53 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-12 14:11:53 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-12 14:11:53 [INFO] Executing Step 1: CacheLookup
+2024-08-12 14:11:53 [INFO] Using cached response
+2024-08-12 14:11:53 [INFO] Executing Step 2: PromptGeneration
+2024-08-12 14:11:53 [INFO] Executing Step 2: Skipping...
+2024-08-12 14:11:53 [INFO] Executing Step 3: CodeGenerator
+2024-08-12 14:11:53 [INFO] Executing Step 3: Skipping...
+2024-08-12 14:11:53 [INFO] Executing Step 4: CachePopulation
+2024-08-12 14:11:53 [INFO] Executing Step 4: Skipping...
+2024-08-12 14:11:53 [INFO] Executing Step 5: CodeCleaning
+2024-08-12 14:11:53 [INFO] 
+Code running:
+```
+data = {'Cholesterol': [269, 219, 172], 'Glucose': [233, 98, 65], 'HDL Chol': [29, 14, 51], 'Chol/HDL ratio': [2.3, 3.1, 7.6], 'Age': [48, 50, 30], 'Gender': ['female', 'male', 'female'], 'Height': [68, 61, 70], 'Weight': [162, 262, 119], 'BMI': [35.5, 32.6, 22.4], 'Systolic BP': [136, 178, 199], 'Diastolic BP': [68, 84, 118], 'waist': [55, 43, 40], 'hip': [41, 50, 35], 'Waist/hip ratio': [0.78, 0.94, 0.68], 'Diabetes': ['Diabetes', 'No diabetes', 'Diabetes']}
+mean_glucose = dfs[0]['Glucose'].mean()
+result = {'type': 'number', 'value': mean_glucose}
+print(result)
+        ```
+2024-08-12 14:11:53 [INFO] Executing Step 6: CodeExecution
+2024-08-12 14:11:53 [INFO] Executing Step 7: ResultValidation
+2024-08-12 14:11:53 [INFO] Answer: {'type': 'number', 'value': 107.33846153846154}
+2024-08-12 14:11:53 [INFO] Executing Step 8: ResultParsing
+2024-08-12 14:11:55 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 14:11:55 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Data Collection**: Imagine we have a small table with different health-related information for three people. This table includes things like their cholesterol levels, glucose levels, age, gender, height, weight, and so on.
+
+2. **Focus on Glucose Levels**: From this table, we specifically look at the column that lists the glucose levels of these three individuals.
+
+3. **Calculate the Average**: We then find the average (mean) of these glucose levels. To do this, we add up all the glucose values and divide by the number of people.
+
+4. **Result**: The result is a single number that represents the average glucose level for these three individuals. In our case, this average is approximately 107.34.
+
+So, the code essentially helps us to quickly find and calculate this average glucose level from the given data.
+                
+2024-08-12 14:12:07 [INFO] Question: What is the mean glucose?
+2024-08-12 14:12:07 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-12 14:12:07 [INFO] Prompt ID: 021f39bf-814b-430c-a3ec-07401a6fa326
+2024-08-12 14:12:07 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-12 14:12:07 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-12 14:12:07 [INFO] Executing Step 1: CacheLookup
+2024-08-12 14:12:07 [INFO] Using cached response
+2024-08-12 14:12:07 [INFO] Executing Step 2: PromptGeneration
+2024-08-12 14:12:07 [INFO] Executing Step 2: Skipping...
+2024-08-12 14:12:07 [INFO] Executing Step 3: CodeGenerator
+2024-08-12 14:12:07 [INFO] Executing Step 3: Skipping...
+2024-08-12 14:12:07 [INFO] Executing Step 4: CachePopulation
+2024-08-12 14:12:07 [INFO] Executing Step 4: Skipping...
+2024-08-12 14:12:07 [INFO] Executing Step 5: CodeCleaning
+2024-08-12 14:12:07 [INFO] 
+Code running:
+```
+data = {'Cholesterol': [269, 219, 172], 'Glucose': [233, 98, 65], 'HDL Chol': [29, 14, 51], 'Chol/HDL ratio': [2.3, 3.1, 7.6], 'Age': [48, 50, 30], 'Gender': ['female', 'male', 'female'], 'Height': [68, 61, 70], 'Weight': [162, 262, 119], 'BMI': [35.5, 32.6, 22.4], 'Systolic BP': [136, 178, 199], 'Diastolic BP': [68, 84, 118], 'waist': [55, 43, 40], 'hip': [41, 50, 35], 'Waist/hip ratio': [0.78, 0.94, 0.68], 'Diabetes': ['Diabetes', 'No diabetes', 'Diabetes']}
+mean_glucose = dfs[0]['Glucose'].mean()
+result = {'type': 'number', 'value': mean_glucose}
+print(result)
+        ```
+2024-08-12 14:12:07 [INFO] Executing Step 6: CodeExecution
+2024-08-12 14:12:07 [INFO] Executing Step 7: ResultValidation
+2024-08-12 14:12:07 [INFO] Answer: {'type': 'number', 'value': 107.33846153846154}
+2024-08-12 14:12:07 [INFO] Executing Step 8: ResultParsing
+2024-08-12 14:12:10 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 14:12:10 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Data Collection**: Imagine we have a small table with different health-related information for three people. This table includes things like their cholesterol levels, glucose levels, age, gender, height, weight, and so on.
+
+2. **Focus on Glucose Levels**: From this table, we are particularly interested in the glucose levels of these three individuals.
+
+3. **Calculate the Average**: To find out the average glucose level, we add up the glucose levels of all three people and then divide that total by the number of people (which is three in this case).
+
+4. **Result**: The result we get from this calculation is the average glucose level, which is 107.34 (rounded to two decimal places).
+
+So, in essence, we took the glucose levels from our table, added them together, divided by the number of people, and found the average glucose level.
+                

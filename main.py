@@ -3249,10 +3249,10 @@ with tab3:
                 })
                 response = agent.chat(agent_question)
                 explanation = agent.explain()
-                st.write("""### Code used to generate the response is below.""")
+                st.write("""### Code used to generate the response:""")
                 st.code(agent.last_code_executed)
                 if isinstance(response, float):
-                    st.write(round(response, 2))
+                    st.write(f'Answer: **{round(response, 2)}**')
                 else:
                     st.write(response)
                 # st.write("The explanation is", explanation) 
