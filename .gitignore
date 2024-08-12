@@ -14,3 +14,7 @@ images/output.png
 
 cox_ph_summary.csv
 secrets.toml
+pandasai.log
+__pycache__/markdown_to_docx.cpython-311.pyc
+__pycache__/prompts.cpython-311.pyc
+pandasai.log
