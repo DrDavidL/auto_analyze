@@ -77,6 +77,10 @@ from langchain_core.outputs import LLMResult
 from langchain_openai import AzureChatOpenAI, AzureOpenAI
 from typing import Any, Dict, List
 from markdown_to_docx import markdown_to_docx
+from pandasai import SmartDataframe, Agent
+from pandasai.llm import AzureOpenAI
+
+
 
 
 
@@ -1721,7 +1725,7 @@ Follow the steps listed in the sidebar on the left. After your exploratory analy
     st.write("Author: David Liebovitz, MD, Northwestern University, davidl at northwestern dot edu")
     st.write("Last updated 7/12/24")
     
-tab1, tab2 = st.tabs(["Data Exploration", "Machine Learning"])
+tab1, tab2, tab3 = st.tabs(["Data Exploration", "Machine Learning", "Analyze with GPT"])
 # fetch_api_key()
 # gpt_version = st.sidebar.radio("Select GPT model:", ("GPT-3.5 ($)", "GPT-4 ($$$$)"), index=0)
 # if gpt_version == "GPT-3.5 ($)":
@@ -3160,6 +3164,100 @@ However, it's important to note that neural networks are computationally intensi
                             st.components.v1.html(f.read(), height=500)
 
                 
+with tab3:
+    # Set up the Streamlit app
+    st.title("Analyze using GPTs")
+    st.info("""Data types (e.g., numerical, versus categorical) should be consistent within columns as noted at the top of the app. (*See https://tidyr.tidyverse.org/ for more information.*)
+        As needed by a request, 3 randomly selected values from each column may be sent to the GPT model to establish data types. Generated python code runs on your host machine. A `dfs` object 
+        in generated code refers to the SmartDataframe used by the PandasAI library.""")
 
+    # Initialize the OpenAI LLM with the API key
+    # llm = OpenAI(api_token=api_key)
 
+    azure_openai_api_key = st.secrets["azure_openai_api_key"]
+    azure_base_url = st.secrets["azure_base_url"]
+
+    llm = AzureOpenAI(
+        api_token=azure_openai_api_key,
+        azure_endpoint=azure_base_url,
+        api_version="2024-02-01",
+        deployment_name="auto-analyzer-deploy",
+        temperature=0,
+        seed=42,
+    )
+
+    # File uploader
+    data_source = st.radio("Select data source", ["Use existing dataframe", "Upload a new file"], horizontal=True)
+
+    if data_source == "Upload a new file":
+        uploaded_file_gpt = st.file_uploader("Use existing dataframe or upload a new Excel or CSV file", type=["csv", "xlsx"])
+
+        if uploaded_file_gpt is None:
+            st.warning("Please upload a file to continue.")
+    
+        else:
+            # Read the file
+            if uploaded_file_gpt.name.endswith(".csv"):
+                st.session_state.df = pd.read_csv(uploaded_file_gpt)
+            else:
+                st.session_state.df = pd.read_excel(uploaded_file_gpt)
         
+    if data_source == "Use existing dataframe":
+        # Display the dataframe
+        st.write("### Current Data Frame")
+        st.dataframe(st.session_state.df, height=200)
+        
+        # # Create a temporary directory for saving plots
+        # with tempfile.TemporaryDirectory() as temp_dir:
+        #     # Initialize SmartDataframe with the uploaded data and temp directory for saving charts
+        #     sdf = SmartDataframe(st.session_state.df, config={
+        #         "llm": llm,
+        #         "enforce_privacy": True,
+        #         "save_charts": True,
+        #         "save_charts_path": temp_dir,
+        #     })
+
+        #     # User input for question
+        #     question = st.text_input("Ask a question about the data:")
+
+        #     if question:
+        #         # Get the response from PandasAI
+        #         response = sdf.chat(question)
+                
+        #         # Display the response
+        #         st.write("""### Code used to generate the response is below.""")
+        #         st.code(sdf.last_code_generated)
+        #         st.write(response)
+                
+        #         # Optionally, display saved plots
+        #         with tempfile.TemporaryDirectory() as temp_dir:
+        #             chart_files = os.listdir(temp_dir)
+        #             for chart_file in chart_files:
+        #                 st.image(os.path.join(temp_dir, chart_file))
+            
+            
+    with tempfile.TemporaryDirectory() as temp_dir:        
+        agent_question = st.text_input("Ask a question to the AI agent:")
+        if agent_question:
+            agent = Agent([pd.DataFrame(st.session_state.df)], description= "You are a data analysis agent. Your main goal is to help physician researchers analyze data", config={
+                "llm": llm, 
+                "enforce_privacy": True,
+                "save_charts": True,
+                "save_charts_path": temp_dir,
+            })
+            response = agent.chat(agent_question)
+            explanation = agent.explain()
+            st.write("""### Code used to generate the response is below.""")
+            st.code(agent.last_code_executed)
+            if isinstance(response, float):
+                st.write(round(response, 2))
+            else:
+                st.write(response)
+            # st.write("The explanation is", explanation) 
+                            # Optionally, display saved plots
+
+            chart_files = os.listdir(temp_dir)
+            for chart_file in chart_files:
+                st.image(os.path.join(temp_dir, chart_file))
+
+            
