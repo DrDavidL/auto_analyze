@@ -104,7 +104,7 @@ requests==2.32.3
 rich==13.7.1
 rpds-py==0.20.0
 scikit-learn==1.5.1
-scipy==1.14.0
+scipy==1.13.1
 seaborn==0.13.2
 setuptools==65.5.0
 shap==0.45.1
