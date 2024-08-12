@@ -170,6 +170,28 @@ def convert_markdown_to_docx(markdown_text, file_name):
 
 if "outputs_path" not in st.session_state:
     st.session_state.outputs_path = get_output_path()
+    
+@st.cache_data(show_spinner=False)
+def generate_agent_response(dataframe, question, temp_dir, description="You are a data analysis agent. Your main goal is to help physician researchers analyze data"):
+    if not question or dataframe is None:
+        return None, None, None
+    
+    agent = Agent(
+        [pd.DataFrame(dataframe)], 
+        description=description, 
+        config={
+            "llm": llm,  # LLM is not part of the function signature
+            "enforce_privacy": True,
+            "save_charts": True,
+            "save_charts_path": temp_dir,
+        }
+    )
+    
+    response = agent.chat(question)
+    explanation = agent.explain()
+    code_used = agent.last_code_executed
+
+    return response, explanation, code_used
 
 def is_valid_api_key(api_key):
     openai.api_key = api_key
@@ -3209,57 +3231,25 @@ with tab3:
             st.write("### Current Data Frame")
             st.dataframe(st.session_state.df, height=200)
             
-            # # Create a temporary directory for saving plots
-            # with tempfile.TemporaryDirectory() as temp_dir:
-            #     # Initialize SmartDataframe with the uploaded data and temp directory for saving charts
-            #     sdf = SmartDataframe(st.session_state.df, config={
-            #         "llm": llm,
-            #         "enforce_privacy": True,
-            #         "save_charts": True,
-            #         "save_charts_path": temp_dir,
-            #     })
-
-            #     # User input for question
-            #     question = st.text_input("Ask a question about the data:")
-
-            #     if question:
-            #         # Get the response from PandasAI
-            #         response = sdf.chat(question)
-                    
-            #         # Display the response
-            #         st.write("""### Code used to generate the response is below.""")
-            #         st.code(sdf.last_code_generated)
-            #         st.write(response)
-                    
-            #         # Optionally, display saved plots
-            #         with tempfile.TemporaryDirectory() as temp_dir:
-            #             chart_files = os.listdir(temp_dir)
-            #             for chart_file in chart_files:
-            #                 st.image(os.path.join(temp_dir, chart_file))
-                
-                
-        with tempfile.TemporaryDirectory() as temp_dir:        
+        with tempfile.TemporaryDirectory() as temp_dir:
             agent_question = st.text_input("Ask a question to the AI agent:")
             if agent_question:
-                agent = Agent([pd.DataFrame(st.session_state.df)], description= "You are a data analysis agent. Your main goal is to help physician researchers analyze data", config={
-                    "llm": llm, 
-                    "enforce_privacy": True,
-                    "save_charts": True,
-                    "save_charts_path": temp_dir,
-                })
-                response = agent.chat(agent_question)
-                explanation = agent.explain()
-                st.write("""### Code used to generate the response:""")
-                st.code(agent.last_code_executed)
+                with st.spinner("Evaluating data structures..."):
+                    response, explanation, code_used = generate_agent_response(st.session_state.df, agent_question, temp_dir)
+                
+                if code_used:
+                    st.write("### Code used to generate the response:")
+                    st.code(code_used)
+                
                 if isinstance(response, float):
                     st.write(f'Answer: **{round(response, 2)}**')
+
+                # Check if the first four characters start with "/var"
+                elif response.startswith("/var"):
+                    st.write(f"Plot saved in temporary directory: {response}")
                 else:
                     st.write(response)
-                # st.write("The explanation is", explanation) 
-                                # Optionally, display saved plots
-
+                
                 chart_files = os.listdir(temp_dir)
                 for chart_file in chart_files:
                     st.image(os.path.join(temp_dir, chart_file))
-
-                
