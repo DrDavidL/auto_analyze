@@ -79,6 +79,9 @@ from typing import Any, Dict, List
 from markdown_to_docx import markdown_to_docx
 from pandasai import SmartDataframe, Agent
 from pandasai.llm import AzureOpenAI
+import sweetviz as sv
+import streamlit.components.v1 as components
+
 
 
 
@@ -121,6 +124,12 @@ if "gen_csv" not in st.session_state:
     
 if "df_to_download" not in st.session_state:
     st.session_state.df_to_download = None
+    
+@st.cache_resource
+def make_sweet_report(df, output_path):
+    report = sv.analyze(df)
+    report.show_html(filepath=output_path, open_browser=False, layout='vertical', scale=1.0)
+
 
 def get_output_path():
     tmpdirname = tempfile.mkdtemp(prefix= "output_")
@@ -1671,8 +1680,9 @@ def plot_corr(df):
     return plt
 
 
-@st.cache_resource
+# @st.cache_resource
 # def make_profile(df):
+#     sv.analyze(df)
 #     return ProfileReport(df, title="Profiling Report")
 
     
@@ -2160,21 +2170,33 @@ with tab1:
         st.info("First 5 Rows of Data")
         st.write(st.session_state.df.head())
                 
+
+
+
     if full_analysis:
-        st.info("Full analysis of data")
-        st.write("Pending library update. See the Gpt analysis in the meantime!")
-        # st.warning("Remember to check that your data is ready to be analyzed or you'll receive errors.")
-        # with st.spinner("Performing Analysis... Please wait a minute."):
-        #     profile = make_profile(st.session_state.df)
-        # # profile = ProfileReport(df, title="Profiling Report")
-        #     st.write(f'Since this file is large, please download and then open the full report.')
-        #     st.download_button(
-        #         label="Download report",
-        #         data=profile.to_html(),
-        #         file_name='full_report.html',
-        #         mime='text/html',
-        #     )
-            # st_profile_report(profile)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
+            st.info("Full analysis of data using [*Sweetviz*](https://github.com/fbdesignpro/sweetviz)")
+            
+            # Generate the Sweetviz report and save it to a temporary file
+            report_path = temp_file.name
+            make_sweet_report(st.session_state.df, report_path)
+            
+            # Provide a download button for the user to download the HTML report
+            with open(report_path, 'rb') as file:
+                st.download_button(
+                    label="Download Sweetviz Report",
+                    data=file,
+                    file_name="SWEETVIZ_REPORT.html",
+                    mime="text/html"
+                )
+
+            # Read the report from the temp directory for display in Streamlit
+            with open(report_path, 'r', encoding='utf-8') as display:
+                source_code = display.read()
+
+            # Display the report in the Streamlit app
+            components.html(source_code, height=1200, scrolling=True)
+
             
     if histogram: 
         st.info("Histogram of data")
