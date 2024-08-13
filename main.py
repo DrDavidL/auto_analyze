@@ -100,7 +100,7 @@ openai_base_url = os.environ.get("OPENAI_BASE_URL")
 
 if password_key is None:
     password_key = st.secrets["password"]
-    openai_api_key = st.secrets["openai-api-key"]
+    openai_api_key = st.secrets["azure-openai-api-key"]
     hu_key = st.secrets["health-universe"]
     openai_base_url = st.secrets["openai-base-url"]
     
@@ -3136,8 +3136,7 @@ with tab3:
         # Set up the Streamlit app
         st.title("Analyze using GPTs")
         st.info("""Data types (e.g., numerical, versus categorical) should be consistent within columns as noted at the top of the app. (*See https://tidyr.tidyverse.org/ for more information.*)
-            As needed by a request, 3 randomly selected values from each column may be sent to the GPT model to establish data types. Generated python code runs on your host machine. A `dfs` object 
-            in generated code refers to the SmartDataframe used by the PandasAI library.""")
+            Generated python code runs on your host machine. A `dfs` object in generated code refers to the SmartDataframe used by the PandasAI library.""")
 
         # Initialize the OpenAI LLM with the API key
         # llm = OpenAI(api_token=api_key)
@@ -3173,18 +3172,17 @@ with tab3:
         # if data_source == "Use existing dataframe":
             # Display the dataframe
         
-        gpt_method=st.radio("Choose the method for GPT based analyses", ("Brief", "More Explanations"), horizontal=True)
+        gpt_method=st.radio("Choose the method for GPT based analyses", ("Focused", "Expansive"), horizontal=True)
         with st.expander("View the current dataframe", expanded=True):
             st.write("### Current Data Frame")
             st.dataframe(st.session_state.df, height=200)
             
+        agent_question = st.text_input("Ask a question to the AI agent:")
         
-        
-        if gpt_method == "Brief":
+        if gpt_method == "Focused":
                 
             with tempfile.TemporaryDirectory() as temp_dir:
-                agent_question = st.text_input("Ask a question to the AI agent:")
-                if agent_question:
+                if st.button("Submit"):
                     with st.spinner("Evaluating data structures..."):
                         response, explanation, code_used = generate_agent_response(st.session_state.df, agent_question, temp_dir)
                     
@@ -3205,7 +3203,7 @@ with tab3:
                     for chart_file in chart_files:
                         st.image(os.path.join(temp_dir, chart_file))
                         
-        if gpt_method == "More Explanations":
+        if gpt_method == "Expansive":
             # st.subheader("GPT Analyzer")
             # st.info("""Ask a large language model (gpt-4o with access to python tools) to analyze your dataset.     
             #         """)
@@ -3220,32 +3218,33 @@ with tab3:
 
             full_gpt_analysis = st.checkbox("Full GPT Analysis (Takes a couple minutes and returns a comprehensive answer to your query.)")
             if full_gpt_analysis:
-                csv_question = st.selectbox("Some helpful generic questions or choose free text specific for the content in your dataset.", (
-                        "Summarize the main findings of the dataframe.",
-                        "Identify useful correlations found in the dataframe.", 
-                        "Describe the population.",
-                        "Identify outliers in the data.",
-                        "Uncover any trends over time.",
-                        "Analyze the distribution of likely key variables.",
-                        "Calculate and interpret the summary statistics.",
-                        "Identify any missing data and suggest handling methods.",
-                        "Perform a correlation analysis among likely key variables.",
-                        "Compare the means of two groups for likely key variables."
-                    ))
-                if st.checkbox("Enter a free text question for a full analysis."):
-                    csv_question = st.text_area("Ask a free text question about your data, for example, describe the patient population", "")
+                if st.checkbox('Use a pre-made question for the analysis'):
+                    agent_question = st.selectbox("Some helpful generic questions or choose free text specific for the content in your dataset.", (
+                            "Summarize the main findings of the dataframe.",
+                            "Identify useful correlations found in the dataframe.", 
+                            "Describe the population.",
+                            "Identify outliers in the data.",
+                            "Uncover any trends over time.",
+                            "Analyze the distribution of likely key variables.",
+                            "Calculate and interpret the summary statistics.",
+                            "Identify any missing data and suggest handling methods.",
+                            "Perform a correlation analysis among likely key variables.",
+                            "Compare the means of two groups for likely key variables."
+                        ))
+                # if st.checkbox("Enter a free text question for a full analysis."):
+                #     csv_question = st.text_area("Ask a free text question about your data, for example, describe the patient population", "")
                 
                 if st.session_state.model_output1 != "":
                     with st.expander("Prior GPT Analysis"):
                         st.write(st.session_state.model_output1)
                         st.write(st.session_state.model_output2)
                 
-                if st.button("Ask GPT for the full analysis of the data for your question!"):
+                if st.button("CLICK HERE to submit your question."):
                     
                     with st.spinner("Analyzing your data..."):
                         
-                        question1 = f"""{data_analysis_prompt} User question: {csv_question}"""
-                        question2 = f"""{plot_generation_prompt} User question: {csv_question}"""
+                        question1 = f"""{data_analysis_prompt} User question: {agent_question}"""
+                        question2 = f"""{plot_generation_prompt} User question: {agent_question}"""
                         # Submit both tasks
                         container = st.container(border=True)
                         result1 = start_plot_gpt4(st.session_state.df, question1)
@@ -3259,17 +3258,17 @@ with tab3:
                         container.write(st.session_state.model_output2) # Write the output to the container
                         # st.session_state.full_gpt_response = result1["output"] + result2["output"] # Save the full response
 
-                st.warning("Right click to save plots.")
+                # st.warning("Right click to save plots.")
 
             else:
-                csv_question = st.text_area("Ask a question about your data!", help="For example, with the test diabetes dataset: Create a plot for age versus cholesterol for women with/without diabetes distinguished")
-                if st.button("Ask GPT a question"):
+                # csv_question = st.text_area("Ask a question about your data!", help="For example, with the test diabetes dataset: Create a plot for age versus cholesterol for women with/without diabetes distinguished")
+                if st.button("CLICK **HERE** to submit your question"):
                     
                     with st.spinner("Analyzing your data..."):
-                        quick_answer = start_plot_gpt4(st.session_state.df, f'{quick_analysis_prompt} User question: {csv_question}')
+                        quick_answer = start_plot_gpt4(st.session_state.df, f'{quick_analysis_prompt} User question: {agent_question}')
                         st.session_state.model_output1= quick_answer["output"]
                         st.write(st.session_state.model_output1) # Write the output to the container
-                st.warning("Right click to save plots.")
+                # st.warning("Right click to save plots.")
             
     if st.session_state.model_output1 != "":
         if st.button("Download Last GPT Analysis"):

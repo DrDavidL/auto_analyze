@@ -10835,3 +10835,522 @@ This way, you get a clear picture of how age and height are connected, with a he
 2024-08-12 22:38:24 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
 2024-08-12 22:38:36 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
 2024-08-12 22:38:40 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:30:40 [INFO] Question: Does cholesterol get higher with age?
+2024-08-13 14:30:40 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-13 14:30:40 [INFO] Prompt ID: efff4f63-3128-482f-96b6-3654fc583e6a
+2024-08-13 14:30:40 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-13 14:30:40 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-13 14:30:40 [INFO] Executing Step 1: CacheLookup
+2024-08-13 14:30:40 [INFO] Executing Step 2: PromptGeneration
+2024-08-13 14:30:40 [INFO] Using prompt: <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+152,125,87,5.5,70,female,55,128,38.4,119,99,46,52,0.97,Diabetes
+271,267,40,7.3,29,male,74,224,27.7,145,84,43,60,0.98,Diabetes
+170,269,76,2.4,25,male,71,142,42.7,184,79,36,50,0.93,No diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Does cholesterol get higher with age?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-08-13 14:30:40 [INFO] Executing Step 3: CodeGenerator
+2024-08-13 14:30:44 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:30:44 [INFO] Prompt used:
+            <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+152,125,87,5.5,70,female,55,128,38.4,119,99,46,52,0.97,Diabetes
+271,267,40,7.3,29,male,74,224,27.7,145,84,43,60,0.98,Diabetes
+170,269,76,2.4,25,male,71,142,42.7,184,79,36,50,0.93,No diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Does cholesterol get higher with age?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+            
+2024-08-13 14:30:44 [INFO] Code generated:
+            ```
+            # TODO: import the required dependencies
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Assuming dfs is already declared and contains the DataFrame
+df = dfs[0]
+
+# Calculate the correlation between Age and Cholesterol
+correlation = df['Cholesterol'].corr(df['Age'])
+
+# Create a scatter plot to visualize the relationship
+plt.figure(figsize=(10, 6))
+plt.scatter(df['Age'], df['Cholesterol'], alpha=0.5)
+plt.title('Scatter Plot of Cholesterol vs Age')
+plt.xlabel('Age')
+plt.ylabel('Cholesterol')
+plt.grid(True)
+plt.savefig('cholesterol_vs_age.png')
+
+# Declare result var
+result = {
+    "type": "string",
+    "value": f"The correlation between age and cholesterol is {correlation:.2f}. A scatter plot has been saved as 'cholesterol_vs_age.png'."
+}
+            ```
+            
+2024-08-13 14:30:45 [INFO] Executing Step 4: CachePopulation
+2024-08-13 14:30:45 [INFO] Executing Step 5: CodeCleaning
+2024-08-13 14:30:45 [INFO] Saving charts to /var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmp0h7hqoiu/efff4f63-3128-482f-96b6-3654fc583e6a.png
+2024-08-13 14:30:45 [INFO] 
+Code running:
+```
+df = dfs[0]
+correlation = df['Cholesterol'].corr(df['Age'])
+plt.figure(figsize=(10, 6))
+plt.scatter(df['Age'], df['Cholesterol'], alpha=0.5)
+plt.title('Scatter Plot of Cholesterol vs Age')
+plt.xlabel('Age')
+plt.ylabel('Cholesterol')
+plt.grid(True)
+plt.savefig('/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmp0h7hqoiu/efff4f63-3128-482f-96b6-3654fc583e6a.png')
+result = {'type': 'string', 'value': f"The correlation between age and cholesterol is {correlation:.2f}. A scatter plot has been saved as '/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmp0h7hqoiu/efff4f63-3128-482f-96b6-3654fc583e6a.png'."}
+        ```
+2024-08-13 14:30:45 [INFO] Executing Step 6: CodeExecution
+2024-08-13 14:30:45 [INFO] Executing Step 7: ResultValidation
+2024-08-13 14:30:45 [INFO] Answer: {'type': 'string', 'value': "The correlation between age and cholesterol is 0.25. A scatter plot has been saved as '/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmp0h7hqoiu/efff4f63-3128-482f-96b6-3654fc583e6a.png'."}
+2024-08-13 14:30:45 [INFO] Executing Step 8: ResultParsing
+2024-08-13 14:30:52 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:30:52 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Understanding the Relationship**: We wanted to see if there's a connection between age and cholesterol levels. To do this, we looked at data that includes both age and cholesterol information for different people.
+
+2. **Finding the Connection**: We calculated a number that tells us how strong the relationship is between age and cholesterol. This number is called a "correlation." In our case, the correlation was 0.25, which suggests a mild positive relationship.
+
+3. **Visualizing the Data**: To make it easier to understand, we created a picture (scatter plot) where each point represents a person. On this picture, one axis shows age and the other shows cholesterol levels. By looking at this scatter plot, you can see how cholesterol levels change with age.
+
+4. **Saving the Picture**: Finally, we saved this picture so you can look at it later. The picture helps to visually confirm the relationship we found with the correlation number.
+
+In summary, we used some data to find out how age and cholesterol are related, calculated a number to describe this relationship, made a picture to show it, and saved the picture for future reference.
+                
+2024-08-13 14:32:01 [INFO] Question: Does cholesterol squared get higher with age?
+2024-08-13 14:32:01 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-13 14:32:01 [INFO] Prompt ID: 94bfa817-bf6f-4394-8a2b-b78b204e1f89
+2024-08-13 14:32:01 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-13 14:32:01 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-13 14:32:01 [INFO] Executing Step 1: CacheLookup
+2024-08-13 14:32:01 [INFO] Executing Step 2: PromptGeneration
+2024-08-13 14:32:01 [INFO] Using prompt: <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+302,99,25,2.3,21,male,62,264,21.7,172,118,30,39,1.03,Diabetes
+337,54,30,5.6,23,female,73,154,20.2,178,89,38,52,0.83,No diabetes
+260,235,47,4.1,31,female,58,179,22.2,103,48,26,42,0.88,Diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Does cholesterol squared get higher with age?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-08-13 14:32:01 [INFO] Executing Step 3: CodeGenerator
+2024-08-13 14:32:19 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:32:19 [INFO] Prompt used:
+            <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+302,99,25,2.3,21,male,62,264,21.7,172,118,30,39,1.03,Diabetes
+337,54,30,5.6,23,female,73,154,20.2,178,89,38,52,0.83,No diabetes
+260,235,47,4.1,31,female,58,179,22.2,103,48,26,42,0.88,Diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Does cholesterol squared get higher with age?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+            
+2024-08-13 14:32:19 [INFO] Code generated:
+            ```
+            # TODO: import the required dependencies
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Write code here
+
+# Load the dataframe
+dfs = [pd.DataFrame({
+    'Cholesterol': [302, 337, 260],
+    'Glucose': [99, 54, 235],
+    'HDL Chol': [25, 30, 47],
+    'Chol/HDL ratio': [2.3, 5.6, 4.1],
+    'Age': [21, 23, 31],
+    'Gender': ['male', 'female', 'female'],
+    'Height': [62, 73, 58],
+    'Weight': [264, 154, 179],
+    'BMI': [21.7, 20.2, 22.2],
+    'Systolic BP': [172, 178, 103],
+    'Diastolic BP': [118, 89, 48],
+    'waist': [30, 38, 26],
+    'hip': [39, 52, 42],
+    'Waist/hip ratio': [1.03, 0.83, 0.88],
+    'Diabetes': ['Diabetes', 'No diabetes', 'Diabetes']
+})]
+
+# Extract the dataframe
+df = dfs[0]
+
+# Calculate cholesterol squared
+df['Cholesterol_squared'] = df['Cholesterol'] ** 2
+
+# Plot cholesterol squared against age
+plt.figure(figsize=(10, 6))
+plt.scatter(df['Age'], df['Cholesterol_squared'], color='blue')
+plt.title('Cholesterol Squared vs Age')
+plt.xlabel('Age')
+plt.ylabel('Cholesterol Squared')
+plt.grid(True)
+plt.savefig('cholesterol_squared_vs_age.png')
+
+# Declare result var
+result = {
+    "type": "plot",
+    "value": "cholesterol_squared_vs_age.png"
+}
+            ```
+            
+2024-08-13 14:32:19 [INFO] Executing Step 4: CachePopulation
+2024-08-13 14:32:19 [INFO] Executing Step 5: CodeCleaning
+2024-08-13 14:32:19 [INFO] Saving charts to /var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmpd8mjdtd_/94bfa817-bf6f-4394-8a2b-b78b204e1f89.png
+2024-08-13 14:32:19 [INFO] 
+Code running:
+```
+df = dfs[0]
+df['Cholesterol_squared'] = df['Cholesterol'] ** 2
+plt.figure(figsize=(10, 6))
+plt.scatter(df['Age'], df['Cholesterol_squared'], color='blue')
+plt.title('Cholesterol Squared vs Age')
+plt.xlabel('Age')
+plt.ylabel('Cholesterol Squared')
+plt.grid(True)
+plt.savefig('/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmpd8mjdtd_/94bfa817-bf6f-4394-8a2b-b78b204e1f89.png')
+result = {'type': 'plot', 'value': '/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmpd8mjdtd_/94bfa817-bf6f-4394-8a2b-b78b204e1f89.png'}
+        ```
+2024-08-13 14:32:19 [INFO] Executing Step 6: CodeExecution
+2024-08-13 14:32:19 [INFO] Executing Step 7: ResultValidation
+2024-08-13 14:32:19 [INFO] Answer: {'type': 'plot', 'value': '/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmpd8mjdtd_/94bfa817-bf6f-4394-8a2b-b78b204e1f89.png'}
+2024-08-13 14:32:19 [INFO] Executing Step 8: ResultParsing
+2024-08-13 14:32:25 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:32:25 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Data Preparation**: First, we took the information about cholesterol levels and calculated a new value by multiplying each cholesterol number by itself. This gives us a new set of numbers that we call "Cholesterol Squared."
+
+2. **Creating a Visual**: We then made a picture (a scatter plot) where we placed dots on a graph. Each dot represents a person, with their age on one side (the horizontal axis) and their "Cholesterol Squared" value on the other side (the vertical axis).
+
+3. **Adding Details**: To make the picture easier to understand, we added a title at the top, labels on both sides, and a grid to help see the patterns more clearly.
+
+4. **Saving the Picture**: Finally, we saved this picture so it can be easily shared or viewed later.
+
+The result is a visual representation that helps us see if there's any relationship between age and the squared cholesterol values.
+                
+2024-08-13 14:32:51 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 401 Unauthorized"
+2024-08-13 14:32:53 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 401 Unauthorized"
+2024-08-13 14:32:55 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 401 Unauthorized"
+2024-08-13 14:32:57 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 401 Unauthorized"
+2024-08-13 14:32:59 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 401 Unauthorized"
+2024-08-13 14:38:42 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:38:44 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:40:36 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:40:38 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:46:18 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:46:19 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:49:58 [INFO] Question: What is the mean glucose?
+2024-08-13 14:49:58 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-13 14:49:58 [INFO] Prompt ID: dabd0c31-0d71-494c-8a07-88f4ee9809f6
+2024-08-13 14:49:58 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-13 14:49:58 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-13 14:49:58 [INFO] Executing Step 1: CacheLookup
+2024-08-13 14:49:58 [INFO] Using cached response
+2024-08-13 14:49:58 [INFO] Executing Step 2: PromptGeneration
+2024-08-13 14:49:58 [INFO] Executing Step 2: Skipping...
+2024-08-13 14:49:58 [INFO] Executing Step 3: CodeGenerator
+2024-08-13 14:49:58 [INFO] Executing Step 3: Skipping...
+2024-08-13 14:49:58 [INFO] Executing Step 4: CachePopulation
+2024-08-13 14:49:58 [INFO] Executing Step 4: Skipping...
+2024-08-13 14:49:58 [INFO] Executing Step 5: CodeCleaning
+2024-08-13 14:49:58 [INFO] 
+Code running:
+```
+data = {'Cholesterol': [269, 219, 172], 'Glucose': [233, 98, 65], 'HDL Chol': [29, 14, 51], 'Chol/HDL ratio': [2.3, 3.1, 7.6], 'Age': [48, 50, 30], 'Gender': ['female', 'male', 'female'], 'Height': [68, 61, 70], 'Weight': [162, 262, 119], 'BMI': [35.5, 32.6, 22.4], 'Systolic BP': [136, 178, 199], 'Diastolic BP': [68, 84, 118], 'waist': [55, 43, 40], 'hip': [41, 50, 35], 'Waist/hip ratio': [0.78, 0.94, 0.68], 'Diabetes': ['Diabetes', 'No diabetes', 'Diabetes']}
+mean_glucose = dfs[0]['Glucose'].mean()
+result = {'type': 'number', 'value': mean_glucose}
+print(result)
+        ```
+2024-08-13 14:49:58 [INFO] Executing Step 6: CodeExecution
+2024-08-13 14:49:58 [INFO] Executing Step 7: ResultValidation
+2024-08-13 14:49:58 [INFO] Answer: {'type': 'number', 'value': 107.33846153846154}
+2024-08-13 14:49:58 [INFO] Executing Step 8: ResultParsing
+2024-08-13 14:50:03 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:50:03 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Data Collection**: Imagine we have a small table with different health-related information for three people. This table includes things like their cholesterol levels, glucose levels, age, gender, height, weight, and some other health metrics.
+
+2. **Focus on Glucose Levels**: From this table, we are particularly interested in the glucose levels of these three individuals.
+
+3. **Finding the Average**: To understand the general glucose level among these people, we calculate the average (mean) of their glucose values. This means we add up all their glucose levels and then divide by the number of people.
+
+4. **Result**: The result we get from this calculation is the average glucose level, which is 107.34. This gives us a single number that represents the typical glucose level in our small group.
+
+So, in essence, we took the glucose information from our table, did some simple math to find the average, and got a number that tells us about the general glucose level among the people in our data.
+                
+2024-08-13 14:50:25 [INFO] Question: What is the mean glucose?
+2024-08-13 14:50:25 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-13 14:50:25 [INFO] Prompt ID: 035644a6-2088-483b-bc36-b86c89731806
+2024-08-13 14:50:25 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-13 14:50:25 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-13 14:50:25 [INFO] Executing Step 1: CacheLookup
+2024-08-13 14:50:25 [INFO] Using cached response
+2024-08-13 14:50:25 [INFO] Executing Step 2: PromptGeneration
+2024-08-13 14:50:25 [INFO] Executing Step 2: Skipping...
+2024-08-13 14:50:25 [INFO] Executing Step 3: CodeGenerator
+2024-08-13 14:50:25 [INFO] Executing Step 3: Skipping...
+2024-08-13 14:50:25 [INFO] Executing Step 4: CachePopulation
+2024-08-13 14:50:25 [INFO] Executing Step 4: Skipping...
+2024-08-13 14:50:25 [INFO] Executing Step 5: CodeCleaning
+2024-08-13 14:50:25 [INFO] 
+Code running:
+```
+data = {'Cholesterol': [269, 219, 172], 'Glucose': [233, 98, 65], 'HDL Chol': [29, 14, 51], 'Chol/HDL ratio': [2.3, 3.1, 7.6], 'Age': [48, 50, 30], 'Gender': ['female', 'male', 'female'], 'Height': [68, 61, 70], 'Weight': [162, 262, 119], 'BMI': [35.5, 32.6, 22.4], 'Systolic BP': [136, 178, 199], 'Diastolic BP': [68, 84, 118], 'waist': [55, 43, 40], 'hip': [41, 50, 35], 'Waist/hip ratio': [0.78, 0.94, 0.68], 'Diabetes': ['Diabetes', 'No diabetes', 'Diabetes']}
+mean_glucose = dfs[0]['Glucose'].mean()
+result = {'type': 'number', 'value': mean_glucose}
+print(result)
+        ```
+2024-08-13 14:50:25 [INFO] Executing Step 6: CodeExecution
+2024-08-13 14:50:25 [INFO] Executing Step 7: ResultValidation
+2024-08-13 14:50:25 [INFO] Answer: {'type': 'number', 'value': 107.33846153846154}
+2024-08-13 14:50:25 [INFO] Executing Step 8: ResultParsing
+2024-08-13 14:50:28 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:50:28 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Data Collection**: Imagine we have a small table with different health-related information for three people. This table includes things like their cholesterol levels, glucose levels, age, gender, height, weight, and so on.
+
+2. **Focus on Glucose Levels**: From this table, we are particularly interested in the glucose levels of these three individuals.
+
+3. **Finding the Average**: To understand the general trend of glucose levels among these people, we calculate the average (mean) glucose level. This is done by adding up all the glucose values and then dividing by the number of people.
+
+4. **Result**: The final result is a single number that represents the average glucose level for the group. In this case, the average glucose level is approximately 107.34.
+
+So, the code essentially helps us to quickly find out the average glucose level from the given data.
+                
+2024-08-13 14:52:43 [INFO] Question: What is the mean glucose?
+2024-08-13 14:52:43 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-13 14:52:43 [INFO] Prompt ID: 9c77cc40-1b5e-4334-8cbc-80002f96278e
+2024-08-13 14:52:43 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-13 14:52:43 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-13 14:52:43 [INFO] Executing Step 1: CacheLookup
+2024-08-13 14:52:43 [INFO] Using cached response
+2024-08-13 14:52:43 [INFO] Executing Step 2: PromptGeneration
+2024-08-13 14:52:43 [INFO] Executing Step 2: Skipping...
+2024-08-13 14:52:43 [INFO] Executing Step 3: CodeGenerator
+2024-08-13 14:52:43 [INFO] Executing Step 3: Skipping...
+2024-08-13 14:52:43 [INFO] Executing Step 4: CachePopulation
+2024-08-13 14:52:43 [INFO] Executing Step 4: Skipping...
+2024-08-13 14:52:43 [INFO] Executing Step 5: CodeCleaning
+2024-08-13 14:52:43 [INFO] 
+Code running:
+```
+data = {'Cholesterol': [269, 219, 172], 'Glucose': [233, 98, 65], 'HDL Chol': [29, 14, 51], 'Chol/HDL ratio': [2.3, 3.1, 7.6], 'Age': [48, 50, 30], 'Gender': ['female', 'male', 'female'], 'Height': [68, 61, 70], 'Weight': [162, 262, 119], 'BMI': [35.5, 32.6, 22.4], 'Systolic BP': [136, 178, 199], 'Diastolic BP': [68, 84, 118], 'waist': [55, 43, 40], 'hip': [41, 50, 35], 'Waist/hip ratio': [0.78, 0.94, 0.68], 'Diabetes': ['Diabetes', 'No diabetes', 'Diabetes']}
+mean_glucose = dfs[0]['Glucose'].mean()
+result = {'type': 'number', 'value': mean_glucose}
+print(result)
+        ```
+2024-08-13 14:52:43 [INFO] Executing Step 6: CodeExecution
+2024-08-13 14:52:43 [INFO] Executing Step 7: ResultValidation
+2024-08-13 14:52:43 [INFO] Answer: {'type': 'number', 'value': 107.33846153846154}
+2024-08-13 14:52:43 [INFO] Executing Step 8: ResultParsing
+2024-08-13 14:52:45 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:52:45 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Data Collection**: Imagine we have a small table with different health-related numbers for three people. This table includes things like their cholesterol levels, glucose levels, age, and other health metrics.
+
+2. **Focus on Glucose**: From this table, we are particularly interested in the glucose levels of these three individuals.
+
+3. **Finding the Average**: To understand the general glucose level among these people, we calculate the average (mean) of their glucose values. This means we add up all their glucose numbers and then divide by the number of people.
+
+4. **Result**: The final number we get from this calculation is the average glucose level, which is 107.34. This gives us an idea of the typical glucose level in this small group.
+
+So, the code essentially helps us to quickly find out this average value from the given data.
+                
+2024-08-13 14:54:05 [INFO] Question: What is the mean glucose?
+2024-08-13 14:54:05 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-13 14:54:05 [INFO] Prompt ID: 662437cb-98ba-452b-9e50-4d33e98f6910
+2024-08-13 14:54:05 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-13 14:54:05 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-13 14:54:05 [INFO] Executing Step 1: CacheLookup
+2024-08-13 14:54:05 [INFO] Using cached response
+2024-08-13 14:54:05 [INFO] Executing Step 2: PromptGeneration
+2024-08-13 14:54:05 [INFO] Executing Step 2: Skipping...
+2024-08-13 14:54:05 [INFO] Executing Step 3: CodeGenerator
+2024-08-13 14:54:05 [INFO] Executing Step 3: Skipping...
+2024-08-13 14:54:05 [INFO] Executing Step 4: CachePopulation
+2024-08-13 14:54:05 [INFO] Executing Step 4: Skipping...
+2024-08-13 14:54:05 [INFO] Executing Step 5: CodeCleaning
+2024-08-13 14:54:05 [INFO] 
+Code running:
+```
+data = {'Cholesterol': [269, 219, 172], 'Glucose': [233, 98, 65], 'HDL Chol': [29, 14, 51], 'Chol/HDL ratio': [2.3, 3.1, 7.6], 'Age': [48, 50, 30], 'Gender': ['female', 'male', 'female'], 'Height': [68, 61, 70], 'Weight': [162, 262, 119], 'BMI': [35.5, 32.6, 22.4], 'Systolic BP': [136, 178, 199], 'Diastolic BP': [68, 84, 118], 'waist': [55, 43, 40], 'hip': [41, 50, 35], 'Waist/hip ratio': [0.78, 0.94, 0.68], 'Diabetes': ['Diabetes', 'No diabetes', 'Diabetes']}
+mean_glucose = dfs[0]['Glucose'].mean()
+result = {'type': 'number', 'value': mean_glucose}
+print(result)
+        ```
+2024-08-13 14:54:05 [INFO] Executing Step 6: CodeExecution
+2024-08-13 14:54:05 [INFO] Executing Step 7: ResultValidation
+2024-08-13 14:54:05 [INFO] Answer: {'type': 'number', 'value': 107.33846153846154}
+2024-08-13 14:54:05 [INFO] Executing Step 8: ResultParsing
+2024-08-13 14:54:10 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:54:10 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Data Collection**: Imagine we have a table with various health-related information for three people. This table includes details like their cholesterol levels, glucose levels, age, gender, height, weight, and some other health metrics.
+
+2. **Focus on Glucose Levels**: From this table, we are particularly interested in the glucose levels of these individuals.
+
+3. **Calculate the Average**: To understand the general trend, we calculate the average (mean) of the glucose levels from the data provided.
+
+4. **Result**: The average glucose level is then presented as a single number, which helps us get an overall idea of the glucose levels in this small group.
+
+So, in essence, we took the glucose information from our data, calculated the average value, and shared that result.
+                
+2024-08-13 14:54:18 [INFO] Question: What is the mean glucose?
+2024-08-13 14:54:18 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-13 14:54:18 [INFO] Prompt ID: e3b57ee6-0cdf-4ff7-9186-fffd886a2feb
+2024-08-13 14:54:18 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-13 14:54:18 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-13 14:54:18 [INFO] Executing Step 1: CacheLookup
+2024-08-13 14:54:18 [INFO] Using cached response
+2024-08-13 14:54:18 [INFO] Executing Step 2: PromptGeneration
+2024-08-13 14:54:18 [INFO] Executing Step 2: Skipping...
+2024-08-13 14:54:18 [INFO] Executing Step 3: CodeGenerator
+2024-08-13 14:54:18 [INFO] Executing Step 3: Skipping...
+2024-08-13 14:54:18 [INFO] Executing Step 4: CachePopulation
+2024-08-13 14:54:18 [INFO] Executing Step 4: Skipping...
+2024-08-13 14:54:18 [INFO] Executing Step 5: CodeCleaning
+2024-08-13 14:54:18 [INFO] 
+Code running:
+```
+data = {'Cholesterol': [269, 219, 172], 'Glucose': [233, 98, 65], 'HDL Chol': [29, 14, 51], 'Chol/HDL ratio': [2.3, 3.1, 7.6], 'Age': [48, 50, 30], 'Gender': ['female', 'male', 'female'], 'Height': [68, 61, 70], 'Weight': [162, 262, 119], 'BMI': [35.5, 32.6, 22.4], 'Systolic BP': [136, 178, 199], 'Diastolic BP': [68, 84, 118], 'waist': [55, 43, 40], 'hip': [41, 50, 35], 'Waist/hip ratio': [0.78, 0.94, 0.68], 'Diabetes': ['Diabetes', 'No diabetes', 'Diabetes']}
+mean_glucose = dfs[0]['Glucose'].mean()
+result = {'type': 'number', 'value': mean_glucose}
+print(result)
+        ```
+2024-08-13 14:54:18 [INFO] Executing Step 6: CodeExecution
+2024-08-13 14:54:18 [INFO] Executing Step 7: ResultValidation
+2024-08-13 14:54:18 [INFO] Answer: {'type': 'number', 'value': 107.33846153846154}
+2024-08-13 14:54:18 [INFO] Executing Step 8: ResultParsing
+2024-08-13 14:54:23 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:54:23 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Data Collection**: Imagine we have a table with different health-related information for three people. This table includes things like their cholesterol levels, glucose levels, age, gender, height, weight, and so on.
+
+2. **Focus on Glucose Levels**: From this table, we are particularly interested in the glucose levels of these three individuals.
+
+3. **Calculate the Average**: To find out the average glucose level, we add up the glucose levels of all three people and then divide that total by the number of people (which is three in this case).
+
+4. **Result**: The result we get from this calculation is the average glucose level, which is 107.34 (rounded to two decimal places).
+
+So, the code essentially does these steps automatically to give us the average glucose level from the data provided.
+                
+2024-08-13 14:54:34 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-13 14:54:36 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
