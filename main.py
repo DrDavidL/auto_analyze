@@ -126,9 +126,9 @@ if "df_to_download" not in st.session_state:
     st.session_state.df_to_download = None
     
 @st.cache_resource
-def make_sweet_report(df, output_path):
-    report = sv.analyze(df)
-    report.show_html(filepath=output_path, open_browser=False, layout='vertical', scale=1.0)
+def make_sweet_report(df):
+    return sv.analyze(df)
+    
 
 
 def get_output_path():
@@ -2179,7 +2179,8 @@ with tab1:
             
             # Generate the Sweetviz report and save it to a temporary file
             report_path = temp_file.name
-            make_sweet_report(st.session_state.df, report_path)
+            report = make_sweet_report(st.session_state.df)
+            report.show_html(filepath=report_path, open_browser=False, layout='vertical', scale=1.0)
             
             # Provide a download button for the user to download the HTML report
             with open(report_path, 'rb') as file:
