@@ -3206,9 +3206,9 @@ with tab3:
                         st.image(os.path.join(temp_dir, chart_file))
                         
         if gpt_method == "More Explanations":
-            st.subheader("GPT Analyzer")
-            st.info("""Ask a large language model (gpt-4o with access to python tools) to analyze your dataset.     
-                    """)
+            # st.subheader("GPT Analyzer")
+            # st.info("""Ask a large language model (gpt-4o with access to python tools) to analyze your dataset.     
+            #         """)
 
             # chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
 
