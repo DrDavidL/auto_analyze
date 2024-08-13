@@ -1876,7 +1876,7 @@ with tab1:
             show_scatter  = st.checkbox("Scatterplot", key = "show scatter")
             view_full_df = st.checkbox("View Dataset", key = "view full df")
             binary_categ_analysis = st.checkbox("Categorical outcome analysis (Cohort or case-control datasets)", key = "binary categ analysis")
-            activate_chatbot = st.checkbox("**Activate GPT Analyzer!**", key = "activate chatbot")
+            # activate_chatbot = st.checkbox("**Activate GPT Analyzer!**", key = "activate chatbot")
             full_analysis = st.checkbox("*(Takes 1-2 minutes*) **Download a Full Analysis** (*Check **Alerts** with key findings.*)", key = "show analysis")
 
         with col2:
@@ -2074,87 +2074,8 @@ with tab1:
 
     
     
-    if activate_chatbot:
-        if hu_key == "True" or check_password():
-            st.subheader("GPT Analyzer")
-            st.info("""Ask a large language model (gpt-4o with access to python tools) to analyze your dataset.     
-                    """)
+    # if activate_chatbot:
 
-            # chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
-
-            try:
-                x = st.session_state.df
-            except NameError:
-
-                st.warning("Please upload a CSV file or choose a demo dataset")
-
-            full_gpt_analysis = st.checkbox("Full GPT Analysis (Takes a couple minutes and returns a comprehensive answer to your query.)")
-            if full_gpt_analysis:
-                csv_question = st.selectbox("Some helpful generic questions or choose free text specific for the content in your dataset.", (
-                        "Summarize the main findings of the dataframe.",
-                        "Identify useful correlations found in the dataframe.", 
-                        "Describe the population.",
-                        "Identify outliers in the data.",
-                        "Uncover any trends over time.",
-                        "Analyze the distribution of likely key variables.",
-                        "Calculate and interpret the summary statistics.",
-                        "Identify any missing data and suggest handling methods.",
-                        "Perform a correlation analysis among likely key variables.",
-                        "Compare the means of two groups for likely key variables."
-                    ))
-                if st.checkbox("Enter a free text question for a full analysis."):
-                    csv_question = st.text_area("Ask a free text question about your data, for example, describe the patient population", "")
-                
-                if st.session_state.model_output1 != "":
-                    with st.expander("Prior GPT Analysis"):
-                        st.write(st.session_state.model_output1)
-                        st.write(st.session_state.model_output2)
-                
-                if st.button("Ask GPT for the full analysis of the data for your question!"):
-                    
-                    with st.spinner("Analyzing your data..."):
-                        
-                        question1 = f"""{data_analysis_prompt} User question: {csv_question}"""
-                        question2 = f"""{plot_generation_prompt} User question: {csv_question}"""
-                        # Submit both tasks
-                        container = st.container(border=True)
-                        result1 = start_plot_gpt4(st.session_state.df, question1)
-                        st.session_state.model_output1= result1["output"]
-                        container.write(st.session_state.model_output1) # Write the output to the container
-                        
-                        
-                        
-                        result2 = start_plot_gpt4(st.session_state.df, question2)
-                        st.session_state.model_output2 = result2["output"]
-                        container.write(st.session_state.model_output2) # Write the output to the container
-                        # st.session_state.full_gpt_response = result1["output"] + result2["output"] # Save the full response
-
-                st.warning("Right click to save plots.")
-
-            else:
-                csv_question = st.text_area("Ask a focused question about your data!", help="For example, with the test diabetes dataset: Create a plot for age versus cholesterol for women with/without diabetes distinguished")
-                if st.button("Ask GPT a focused question"):
-                    
-                    with st.spinner("Analyzing your data..."):
-                        quick_answer = start_plot_gpt4(st.session_state.df, f'{quick_analysis_prompt} User question: {csv_question}')
-                        st.session_state.model_output1= quick_answer["output"]
-                        st.write(st.session_state.model_output1) # Write the output to the container
-                st.warning("Right click to save plots.")
-            
-    if st.session_state.model_output1 != "":
-        if st.button("Download Last GPT Analysis"):
-            try:
-                docx_file = markdown_to_docx("gpt_analysis", st.session_state.model_output1)
-                with open(docx_file, "rb") as file:
-                    btn = st.download_button(
-                        label="Download DOCX",
-                        data=file,
-                        file_name="gpt_analysis.docx",
-                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    )
-                os.remove(docx_file)  # Clean up the file after offering download
-            except Exception as e:
-                st.error(f"An error occurred while creating the DOCX file: {str(e)}")
 
             
             
@@ -3249,30 +3170,118 @@ with tab3:
                 else:
                     st.session_state.df = pd.read_excel(uploaded_file_gpt)
             
-        if data_source == "Use existing dataframe":
+        # if data_source == "Use existing dataframe":
             # Display the dataframe
+        
+        gpt_method=st.radio("Choose the method for GPT based analyses", ("Brief", "More Explanations"), horizontal=True)
+        with st.expander("View the current dataframe", expanded=True):
             st.write("### Current Data Frame")
             st.dataframe(st.session_state.df, height=200)
             
-        with tempfile.TemporaryDirectory() as temp_dir:
-            agent_question = st.text_input("Ask a question to the AI agent:")
-            if agent_question:
-                with st.spinner("Evaluating data structures..."):
-                    response, explanation, code_used = generate_agent_response(st.session_state.df, agent_question, temp_dir)
+        
+        
+        if gpt_method == "Brief":
                 
-                if code_used:
-                    st.write("### Code used to generate the response:")
-                    st.code(code_used)
-                
-                if isinstance(response, float):
-                    st.write(f'Answer: **{round(response, 2)}**')
+            with tempfile.TemporaryDirectory() as temp_dir:
+                agent_question = st.text_input("Ask a question to the AI agent:")
+                if agent_question:
+                    with st.spinner("Evaluating data structures..."):
+                        response, explanation, code_used = generate_agent_response(st.session_state.df, agent_question, temp_dir)
+                    
+                    if code_used:
+                        st.write("### Code used to generate the response:")
+                        st.code(code_used)
+                    
+                    if isinstance(response, float):
+                        st.write(f'Answer: **{round(response, 2)}**')
 
-                # Check if the first four characters start with "/var"
-                elif response.startswith("/var"):
-                    st.write(f"Plot saved in temporary directory: {response}")
-                else:
-                    st.write(response)
+                    # Check if the first four characters start with "/var"
+                    elif response.startswith("/var"):
+                        st.write(f"Plot saved in temporary directory: {response}")
+                    else:
+                        st.write(response)
+                    
+                    chart_files = os.listdir(temp_dir)
+                    for chart_file in chart_files:
+                        st.image(os.path.join(temp_dir, chart_file))
+                        
+        if gpt_method == "More Explanations":
+            st.subheader("GPT Analyzer")
+            st.info("""Ask a large language model (gpt-4o with access to python tools) to analyze your dataset.     
+                    """)
+
+            # chat_context = st.radio("Choose an approach", ("Ask questions about your data (no plots)", "Generate Plots"))
+
+            try:
+                x = st.session_state.df
+            except NameError:
+
+                st.warning("Please upload a CSV file or choose a demo dataset")
+
+            full_gpt_analysis = st.checkbox("Full GPT Analysis (Takes a couple minutes and returns a comprehensive answer to your query.)")
+            if full_gpt_analysis:
+                csv_question = st.selectbox("Some helpful generic questions or choose free text specific for the content in your dataset.", (
+                        "Summarize the main findings of the dataframe.",
+                        "Identify useful correlations found in the dataframe.", 
+                        "Describe the population.",
+                        "Identify outliers in the data.",
+                        "Uncover any trends over time.",
+                        "Analyze the distribution of likely key variables.",
+                        "Calculate and interpret the summary statistics.",
+                        "Identify any missing data and suggest handling methods.",
+                        "Perform a correlation analysis among likely key variables.",
+                        "Compare the means of two groups for likely key variables."
+                    ))
+                if st.checkbox("Enter a free text question for a full analysis."):
+                    csv_question = st.text_area("Ask a free text question about your data, for example, describe the patient population", "")
                 
-                chart_files = os.listdir(temp_dir)
-                for chart_file in chart_files:
-                    st.image(os.path.join(temp_dir, chart_file))
+                if st.session_state.model_output1 != "":
+                    with st.expander("Prior GPT Analysis"):
+                        st.write(st.session_state.model_output1)
+                        st.write(st.session_state.model_output2)
+                
+                if st.button("Ask GPT for the full analysis of the data for your question!"):
+                    
+                    with st.spinner("Analyzing your data..."):
+                        
+                        question1 = f"""{data_analysis_prompt} User question: {csv_question}"""
+                        question2 = f"""{plot_generation_prompt} User question: {csv_question}"""
+                        # Submit both tasks
+                        container = st.container(border=True)
+                        result1 = start_plot_gpt4(st.session_state.df, question1)
+                        st.session_state.model_output1= result1["output"]
+                        container.write(st.session_state.model_output1) # Write the output to the container
+                        
+                        
+                        
+                        result2 = start_plot_gpt4(st.session_state.df, question2)
+                        st.session_state.model_output2 = result2["output"]
+                        container.write(st.session_state.model_output2) # Write the output to the container
+                        # st.session_state.full_gpt_response = result1["output"] + result2["output"] # Save the full response
+
+                st.warning("Right click to save plots.")
+
+            else:
+                csv_question = st.text_area("Ask a question about your data!", help="For example, with the test diabetes dataset: Create a plot for age versus cholesterol for women with/without diabetes distinguished")
+                if st.button("Ask GPT a question"):
+                    
+                    with st.spinner("Analyzing your data..."):
+                        quick_answer = start_plot_gpt4(st.session_state.df, f'{quick_analysis_prompt} User question: {csv_question}')
+                        st.session_state.model_output1= quick_answer["output"]
+                        st.write(st.session_state.model_output1) # Write the output to the container
+                st.warning("Right click to save plots.")
+            
+    if st.session_state.model_output1 != "":
+        if st.button("Download Last GPT Analysis"):
+            try:
+                docx_file = markdown_to_docx("gpt_analysis", st.session_state.model_output1)
+                with open(docx_file, "rb") as file:
+                    btn = st.download_button(
+                        label="Download DOCX",
+                        data=file,
+                        file_name="gpt_analysis.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    )
+                os.remove(docx_file)  # Clean up the file after offering download
+            except Exception as e:
+                st.error(f"An error occurred while creating the DOCX file: {str(e)}")

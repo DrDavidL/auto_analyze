@@ -10235,3 +10235,469 @@ result = {'type': 'plot', 'value': '/var/folders/f8/tlfj8y0j00x50st8zv23lnl40000
 
 This way, you get a clear picture of how age might influence cholesterol levels, with a helpful trend line to guide your understanding.
                 
+2024-08-12 19:58:23 [INFO] Question: What's the mean age?
+2024-08-12 19:58:23 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-12 19:58:23 [INFO] Prompt ID: c761f90d-2871-4043-9660-8db44d0dfafa
+2024-08-12 19:58:23 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-12 19:58:23 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-12 19:58:23 [INFO] Executing Step 1: CacheLookup
+2024-08-12 19:58:23 [INFO] Executing Step 2: PromptGeneration
+2024-08-12 19:58:23 [INFO] Using prompt: <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+306,57,61,5.2,78,female,69,110,20.6,212,102,45,56,1.06,No diabetes
+169,177,62,8.7,28,male,73,183,31.1,176,78,53,32,0.89,Diabetes
+226,197,81,3.4,44,female,58,155,17.7,159,74,33,47,0.84,No diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ What's the mean age?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-08-12 19:58:23 [INFO] Executing Step 3: CodeGenerator
+2024-08-12 19:58:29 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 19:58:29 [INFO] Prompt used:
+            <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+306,57,61,5.2,78,female,69,110,20.6,212,102,45,56,1.06,No diabetes
+169,177,62,8.7,28,male,73,183,31.1,176,78,53,32,0.89,Diabetes
+226,197,81,3.4,44,female,58,155,17.7,159,74,33,47,0.84,No diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ What's the mean age?
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+            
+2024-08-12 19:58:29 [INFO] Code generated:
+            ```
+            # TODO: import the required dependencies
+import pandas as pd
+
+# Sample data provided in the question
+data = {
+    "Cholesterol": [306, 169, 226],
+    "Glucose": [57, 177, 197],
+    "HDL Chol": [61, 62, 81],
+    "Chol/HDL ratio": [5.2, 8.7, 3.4],
+    "Age": [78, 28, 44],
+    "Gender": ["female", "male", "female"],
+    "Height": [69, 73, 58],
+    "Weight": [110, 183, 155],
+    "BMI": [20.6, 31.1, 17.7],
+    "Systolic BP": [212, 176, 159],
+    "Diastolic BP": [102, 78, 74],
+    "waist": [45, 53, 33],
+    "hip": [56, 32, 47],
+    "Waist/hip ratio": [1.06, 0.89, 0.84],
+    "Diabetes": ["No diabetes", "Diabetes", "No diabetes"]
+}
+
+# Create DataFrame
+dfs = [pd.DataFrame(data)]
+
+# Calculate the mean age
+mean_age = dfs[0]['Age'].mean()
+
+# Declare result var
+result = { "type": "number", "value": mean_age }
+
+# Print result for verification
+print(result)
+            ```
+            
+2024-08-12 19:58:29 [INFO] Executing Step 4: CachePopulation
+2024-08-12 19:58:29 [INFO] Executing Step 5: CodeCleaning
+2024-08-12 19:58:29 [INFO] 
+Code running:
+```
+data = {'Cholesterol': [306, 169, 226], 'Glucose': [57, 177, 197], 'HDL Chol': [61, 62, 81], 'Chol/HDL ratio': [5.2, 8.7, 3.4], 'Age': [78, 28, 44], 'Gender': ['female', 'male', 'female'], 'Height': [69, 73, 58], 'Weight': [110, 183, 155], 'BMI': [20.6, 31.1, 17.7], 'Systolic BP': [212, 176, 159], 'Diastolic BP': [102, 78, 74], 'waist': [45, 53, 33], 'hip': [56, 32, 47], 'Waist/hip ratio': [1.06, 0.89, 0.84], 'Diabetes': ['No diabetes', 'Diabetes', 'No diabetes']}
+mean_age = dfs[0]['Age'].mean()
+result = {'type': 'number', 'value': mean_age}
+print(result)
+        ```
+2024-08-12 19:58:29 [INFO] Executing Step 6: CodeExecution
+2024-08-12 19:58:29 [INFO] Executing Step 7: ResultValidation
+2024-08-12 19:58:29 [INFO] Answer: {'type': 'number', 'value': 46.774358974358975}
+2024-08-12 19:58:29 [INFO] Executing Step 8: ResultParsing
+2024-08-12 19:58:33 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 19:58:33 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Data Collection**: We have a set of information about different people, including their age, cholesterol levels, glucose levels, and other health-related data.
+
+2. **Focus on Age**: From this collection, we specifically look at the ages of the individuals.
+
+3. **Calculate the Average**: To find out the mean age, we add up all the ages and then divide by the number of people. This gives us the average age.
+
+4. **Result**: The average age of the people in our data is approximately 46.77 years.
+
+So, the code essentially gathers the ages, performs the calculation to find the average, and then presents this average age as the result.
+                
+2024-08-12 19:59:03 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 19:59:05 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 20:01:30 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 20:01:32 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 20:02:09 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 20:02:13 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 20:15:26 [INFO] Question: Plot age versus height
+2024-08-12 20:15:26 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-12 20:15:26 [INFO] Prompt ID: e986ccf5-8877-4979-a0e4-7fbf9fe706d7
+2024-08-12 20:15:26 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-12 20:15:26 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-12 20:15:26 [INFO] Executing Step 1: CacheLookup
+2024-08-12 20:15:26 [INFO] Executing Step 2: PromptGeneration
+2024-08-12 20:15:26 [INFO] Using prompt: <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+217,262,31,5.9,26,female,52,148,34.1,165,114,47,46,0.9,No diabetes
+148,90,35,4.8,80,female,61,123,41.0,159,95,39,32,0.75,Diabetes
+210,177,84,6.4,58,male,64,143,44.6,172,86,48,56,0.95,Diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Plot age versus height
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-08-12 20:15:26 [INFO] Executing Step 3: CodeGenerator
+2024-08-12 20:15:31 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 20:15:31 [INFO] Prompt used:
+            <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+217,262,31,5.9,26,female,52,148,34.1,165,114,47,46,0.9,No diabetes
+148,90,35,4.8,80,female,61,123,41.0,159,95,39,32,0.75,Diabetes
+210,177,84,6.4,58,male,64,143,44.6,172,86,48,56,0.95,Diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Plot age versus height
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+            
+2024-08-12 20:15:31 [INFO] Code generated:
+            ```
+            # TODO: import the required dependencies
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Write code here
+dfs = [pd.DataFrame({
+    'Cholesterol': [217, 148, 210],
+    'Glucose': [262, 90, 177],
+    'HDL Chol': [31, 35, 84],
+    'Chol/HDL ratio': [5.9, 4.8, 6.4],
+    'Age': [26, 80, 58],
+    'Gender': ['female', 'female', 'male'],
+    'Height': [52, 61, 64],
+    'Weight': [148, 123, 143],
+    'BMI': [34.1, 41.0, 44.6],
+    'Systolic BP': [165, 159, 172],
+    'Diastolic BP': [114, 95, 86],
+    'waist': [47, 39, 48],
+    'hip': [46, 32, 56],
+    'Waist/hip ratio': [0.9, 0.75, 0.95],
+    'Diabetes': ['No diabetes', 'Diabetes', 'Diabetes']
+})]
+
+# Extract the relevant columns
+df = dfs[0]
+age = df['Age']
+height = df['Height']
+
+# Plot age versus height
+plt.figure(figsize=(10, 6))
+plt.scatter(age, height, color='blue')
+plt.title('Age vs Height')
+plt.xlabel('Age')
+plt.ylabel('Height')
+plt.grid(True)
+plt.savefig('age_vs_height.png')
+
+# Declare result var
+result = { "type": "plot", "value": "age_vs_height.png" }
+            ```
+            
+2024-08-12 20:15:31 [INFO] Executing Step 4: CachePopulation
+2024-08-12 20:15:31 [INFO] Executing Step 5: CodeCleaning
+2024-08-12 20:15:31 [INFO] Saving charts to /var/folders/f8/tlfj8y0j00x50st8zv23lnl40000gn/T/tmpys2xoty4/e986ccf5-8877-4979-a0e4-7fbf9fe706d7.png
+2024-08-12 20:15:31 [INFO] 
+Code running:
+```
+df = dfs[0]
+age = df['Age']
+height = df['Height']
+plt.figure(figsize=(10, 6))
+plt.scatter(age, height, color='blue')
+plt.title('Age vs Height')
+plt.xlabel('Age')
+plt.ylabel('Height')
+plt.grid(True)
+plt.savefig('/var/folders/f8/tlfj8y0j00x50st8zv23lnl40000gn/T/tmpys2xoty4/e986ccf5-8877-4979-a0e4-7fbf9fe706d7.png')
+result = {'type': 'plot', 'value': '/var/folders/f8/tlfj8y0j00x50st8zv23lnl40000gn/T/tmpys2xoty4/e986ccf5-8877-4979-a0e4-7fbf9fe706d7.png'}
+        ```
+2024-08-12 20:15:31 [INFO] Executing Step 6: CodeExecution
+2024-08-12 20:15:31 [INFO] Executing Step 7: ResultValidation
+2024-08-12 20:15:31 [INFO] Answer: {'type': 'plot', 'value': '/var/folders/f8/tlfj8y0j00x50st8zv23lnl40000gn/T/tmpys2xoty4/e986ccf5-8877-4979-a0e4-7fbf9fe706d7.png'}
+2024-08-12 20:15:31 [INFO] Executing Step 8: ResultParsing
+2024-08-12 20:15:33 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 20:15:33 [INFO] Explanation:  Sure! Imagine you have a list of people's ages and another list of their heights. To see if there's any interesting pattern or relationship between age and height, we can create a visual representation. 
+
+First, we take the ages and heights and put them on a graph. Each person is represented by a dot, where their age determines the position along the bottom (horizontal) line, and their height determines the position along the side (vertical) line. 
+
+We make sure the graph is big enough to see clearly and add labels so you know which line represents age and which one represents height. We also add a title to the graph to explain what it shows. Finally, we save this graph as an image so you can look at it anytime.
+
+This way, you can easily see if there's a trend, like whether people tend to get taller as they get older, or if there's no clear pattern.
+                
+2024-08-12 20:15:44 [INFO] Question: Plot age versus height with a regression line
+2024-08-12 20:15:44 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-12 20:15:44 [INFO] Prompt ID: edbfe822-cb9f-44bc-aa90-adaf213183ac
+2024-08-12 20:15:44 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-12 20:15:44 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-12 20:15:44 [INFO] Executing Step 1: CacheLookup
+2024-08-12 20:15:44 [INFO] Executing Step 2: PromptGeneration
+2024-08-12 20:15:44 [INFO] Using prompt: <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+190,97,91,7.3,61,female,64,99,19.2,122,95,44,51,0.88,No diabetes
+178,270,59,2.0,38,female,74,220,28.2,134,69,39,42,0.75,Diabetes
+283,52,45,12.2,52,male,56,130,28.0,144,97,30,39,0.97,Diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Plot age versus height with a regression line
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-08-12 20:15:44 [INFO] Executing Step 3: CodeGenerator
+2024-08-12 20:15:50 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 20:15:50 [INFO] Prompt used:
+            <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+190,97,91,7.3,61,female,64,99,19.2,122,95,44,51,0.88,No diabetes
+178,270,59,2.0,38,female,74,220,28.2,134,69,39,42,0.75,Diabetes
+283,52,45,12.2,52,male,56,130,28.0,144,97,30,39,0.97,Diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ Plot age versus height with a regression line
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+            
+2024-08-12 20:15:50 [INFO] Code generated:
+            ```
+            # Import the required dependencies
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Assuming dfs is already declared and contains the dataframes
+dfs = [
+    pd.DataFrame({
+        'Cholesterol': [190, 178, 283],
+        'Glucose': [97, 270, 52],
+        'HDL Chol': [91, 59, 45],
+        'Chol/HDL ratio': [7.3, 2.0, 12.2],
+        'Age': [61, 38, 52],
+        'Gender': ['female', 'female', 'male'],
+        'Height': [64, 74, 56],
+        'Weight': [99, 220, 130],
+        'BMI': [19.2, 28.2, 28.0],
+        'Systolic BP': [122, 134, 144],
+        'Diastolic BP': [95, 69, 97],
+        'waist': [44, 39, 30],
+        'hip': [51, 42, 39],
+        'Waist/hip ratio': [0.88, 0.75, 0.97],
+        'Diabetes': ['No diabetes', 'Diabetes', 'Diabetes']
+    })
+]
+
+# Extract the first dataframe
+df = dfs[0]
+
+# Plot age versus height with a regression line
+plt.figure(figsize=(10, 6))
+sns.regplot(x='Age', y='Height', data=df)
+plt.title('Age vs Height with Regression Line')
+plt.xlabel('Age')
+plt.ylabel('Height')
+plt.savefig('age_vs_height_regression.png')
+
+# Declare result variable
+result = { "type": "plot", "value": "age_vs_height_regression.png" }
+            ```
+            
+2024-08-12 20:15:50 [INFO] Executing Step 4: CachePopulation
+2024-08-12 20:15:50 [INFO] Executing Step 5: CodeCleaning
+2024-08-12 20:15:50 [INFO] Saving charts to /var/folders/f8/tlfj8y0j00x50st8zv23lnl40000gn/T/tmp10y0bfg1/edbfe822-cb9f-44bc-aa90-adaf213183ac.png
+2024-08-12 20:15:50 [INFO] 
+Code running:
+```
+df = dfs[0]
+plt.figure(figsize=(10, 6))
+sns.regplot(x='Age', y='Height', data=df)
+plt.title('Age vs Height with Regression Line')
+plt.xlabel('Age')
+plt.ylabel('Height')
+plt.savefig('/var/folders/f8/tlfj8y0j00x50st8zv23lnl40000gn/T/tmp10y0bfg1/edbfe822-cb9f-44bc-aa90-adaf213183ac.png')
+result = {'type': 'plot', 'value': '/var/folders/f8/tlfj8y0j00x50st8zv23lnl40000gn/T/tmp10y0bfg1/edbfe822-cb9f-44bc-aa90-adaf213183ac.png'}
+        ```
+2024-08-12 20:15:50 [INFO] Executing Step 6: CodeExecution
+2024-08-12 20:15:50 [INFO] Executing Step 7: ResultValidation
+2024-08-12 20:15:50 [INFO] Answer: {'type': 'plot', 'value': '/var/folders/f8/tlfj8y0j00x50st8zv23lnl40000gn/T/tmp10y0bfg1/edbfe822-cb9f-44bc-aa90-adaf213183ac.png'}
+2024-08-12 20:15:50 [INFO] Executing Step 8: ResultParsing
+2024-08-12 20:15:52 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-12 20:15:52 [INFO] Explanation:  Sure! Imagine you have a list of people's ages and their corresponding heights. To understand how height changes with age, we can create a visual representation. 
+
+First, we take the ages and heights and plot them on a graph, where each point represents a person. The horizontal axis (left to right) shows the ages, and the vertical axis (up and down) shows the heights.
+
+Next, we draw a line that best fits through all these points. This line helps us see the general trend: whether people tend to get taller as they get older, or if there's no clear pattern.
+
+Finally, we add some labels to make the graph easy to understand. We give it a title, and label the axes so you know which one represents age and which one represents height. Then, we save this graph as an image so you can look at it whenever you want.
+
+This way, you can quickly see the relationship between age and height without having to look at all the individual numbers.
+                

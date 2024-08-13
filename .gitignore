@@ -18,3 +18,5 @@ pandasai.log
 __pycache__/markdown_to_docx.cpython-311.pyc
 __pycache__/prompts.cpython-311.pyc
 pandasai.log
+pandasai.log
+cache/cache_db_0.11.db
