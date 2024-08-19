@@ -81,6 +81,7 @@ from pandasai import SmartDataframe, Agent
 from pandasai.llm import AzureOpenAI
 import sweetviz as sv
 import streamlit.components.v1 as components
+from ydata_profiling import ProfileReport
 
 
 
@@ -129,7 +130,9 @@ if "df_to_download" not in st.session_state:
 def make_sweet_report(df):
     return sv.analyze(df)
     
-
+@st.cache_resource
+def make_pandas_report(df, title):
+    return ProfileReport(df, title=title)
 
 def get_output_path():
     tmpdirname = tempfile.mkdtemp(prefix= "output_")
@@ -2095,29 +2098,64 @@ with tab1:
 
 
     if full_analysis:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
-            st.info("Full analysis of data using [*Sweetviz*](https://github.com/fbdesignpro/sweetviz)")
-            
-            # Generate the Sweetviz report and save it to a temporary file
-            report_path = temp_file.name
-            report = make_sweet_report(st.session_state.df)
-            report.show_html(filepath=report_path, open_browser=False, layout='vertical', scale=1.0)
-            
-            # Provide a download button for the user to download the HTML report
-            with open(report_path, 'rb') as file:
-                st.download_button(
-                    label="Download Sweetviz Report",
-                    data=file,
-                    file_name="SWEETVIZ_REPORT.html",
-                    mime="text/html"
-                )
+        
+        full_analysis_method = st.radio("Choose a method for full analysis", ("Pandas Profiling", "Sweetviz"))
+        
+        if full_analysis_method == "Sweetviz":
+        
+        
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
+                
+                st.info("Full analysis of data using [*Sweetviz*](https://github.com/fbdesignpro/sweetviz)")
+                
+                # Generate the Sweetviz report and save it to a temporary file
+                report_path = temp_file.name
+                report = make_sweet_report(st.session_state.df)
+                report.show_html(filepath=report_path, open_browser=False, layout='vertical', scale=1.0)
+                
+                # Provide a download button for the user to download the HTML report
+                with open(report_path, 'rb') as file:
+                    st.download_button(
+                        label="Download Sweetviz Report",
+                        data=file,
+                        file_name="SWEETVIZ_REPORT.html",
+                        mime="text/html"
+                    )
 
-            # Read the report from the temp directory for display in Streamlit
-            with open(report_path, 'r', encoding='utf-8') as display:
-                source_code = display.read()
+                # Read the report from the temp directory for display in Streamlit
+                with open(report_path, 'r', encoding='utf-8') as display:
+                    source_code = display.read()
 
-            # Display the report in the Streamlit app
-            components.html(source_code, height=1200, scrolling=True)
+                # Display the report in the Streamlit app
+                components.html(source_code, height=1200, scrolling=True)
+                
+        if full_analysis_method == "Pandas Profiling":
+            st.info("Full analysis of data using [*Pandas Profiling*](https://github.com/ydataai/ydata-profiling). Check out *alerts*!")
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
+                
+                # Generate the Sweetviz report and save it to a temporary file
+                report_path = temp_file.name
+                with st.spinner("Generating the report..."):
+                    report = make_pandas_report(st.session_state.df, title="Pandas Profiling Report")
+                    report.to_file(report_path)
+                
+                # Provide a download button for the user to download the HTML report
+                with open(report_path, 'rb') as file:
+                    st.download_button(
+                        label="Pandas Profiling Report",
+                        data=file,
+                        file_name="Pandas_Profile.html",
+                        mime="text/html"
+                    )
+
+                # Read the report from the temp directory for display in Streamlit
+                with open(report_path, 'r', encoding='utf-8') as display:
+                    source_code = display.read()
+
+                # Display the report in the Streamlit app
+                components.html(source_code, height=1200, scrolling=True)
+            
 
             
     if histogram: 
@@ -2765,23 +2803,26 @@ In the medical field, logistic regression can be a helpful tool to predict outco
                 
                 for c, feature in zip(coeff, features):
                     equation += " + " + str(c) + " * " + feature
-
+                    
                 st.write("The equation of the logistic regression model is:")
                 st.write(equation)
-                
-                if perform_shapley == True:                     # shapley explanation
-                
+
+                if perform_shapley == True:  # shapley explanation
+                    
                     # Scale the features
                     with st.expander("What is a Shapley Force Plot?"):
                         st.markdown(shapley_explanation)  
+                    
                     with st.spinner("Performing Analysis for the Shapley Force Plot..."):
                         # Standardize the features
                         scaler = StandardScaler()
                         X_train_scaled = scaler.fit_transform(X_train)
                         X_test_scaled = scaler.transform(X_test)
 
-                        # shapley explanation using KernelExplainer
-                        explainer = shap.KernelExplainer(model.predict_proba, shap.sample(X_train_scaled, 100))
+                        # Shapley explanation using KernelExplainer
+                        # Set l1_reg='num_features(10)' to ensure at least 10 features are considered
+                        explainer = shap.KernelExplainer(model.predict_proba, shap.sample(X_train_scaled, 100), l1_reg="num_features(10)")
+                        
                         shap_values = explainer.shap_values(X_test_scaled)
 
                         # Sort features by absolute contribution for the first instance in the test set
@@ -2789,20 +2830,32 @@ In the medical field, logistic regression can be a helpful tool to predict outco
                         sorted_shap_values = shap_values[1][0][sorted_indices]
                         sorted_feature_names = X_test.columns[sorted_indices]
 
-                        # Create a DataFrame to display sorted features and their shapley values
+                        # Create a DataFrame to display sorted features and their Shapley values
                         sorted_features_df = pd.DataFrame({
                             'Feature': sorted_feature_names,
                             'Shapley_Value': sorted_shap_values
                         })
 
                         # Display the sorted features DataFrame in Streamlit
-                        st.table(sorted_features_df)
+                        st.table(sorted_features_df)  # Ensure all features are displayed in the table
 
                         # Generate and display the sorted force plot
-                        shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
-                        with open("sorted_shap_plot.html", "r") as f:
+                        force_plot = shap.plots.force(
+                            explainer.expected_value[1],
+                            sorted_shap_values,
+                            sorted_feature_names
+                        )
+
+                        # Use tempfile to create a temporary file
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
+                            shap.save_html(temp_file.name, force_plot)
+                            temp_file_path = temp_file.name
+
+                        # Read and display the temporary HTML file in Streamlit
+                        with open(temp_file_path, "r") as f:
                             st.components.v1.html(f.read(), height=500)
+
+
 
 
             elif model_option == "Decision Tree":
@@ -2865,8 +2918,13 @@ Overall, decision trees can be an excellent tool for understanding and predictin
 
                         # Generate and display the sorted force plot
                         shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
-                        with open("sorted_shap_plot.html", "r") as f:
+                        # Use tempfile to create a temporary file
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
+                            shap.save_html(temp_file.name, shap_html)
+                            temp_file_path = temp_file.name
+
+                        # Read and display the temporary HTML file in Streamlit
+                        with open(temp_file_path, "r") as f:
                             st.components.v1.html(f.read(), height=500)
 
             elif model_option == "Random Forest":
@@ -2922,8 +2980,13 @@ However, it's important to note that while Random Forest often performs well, it
 
                         # Generate and display the sorted force plot
                         shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
-                        with open("sorted_shap_plot.html", "r") as f:
+                        # Use tempfile to create a temporary file
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
+                            shap.save_html(temp_file.name, shap_html)
+                            temp_file_path = temp_file.name
+
+                        # Read and display the temporary HTML file in Streamlit
+                        with open(temp_file_path, "r") as f:
                             st.components.v1.html(f.read(), height=500)
                                 
                 
@@ -2997,8 +3060,13 @@ Just like with any model, it's crucial to validate the model's predictions with 
 
                         # Generate and display the sorted force plot
                         shap_html = shap.force_plot(explainer.expected_value, sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
-                        with open("sorted_shap_plot.html", "r") as f:
+                        # Use tempfile to create a temporary file
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
+                            shap.save_html(temp_file.name, shap_html)
+                            temp_file_path = temp_file.name
+
+                        # Read and display the temporary HTML file in Streamlit
+                        with open(temp_file_path, "r") as f:
                             st.components.v1.html(f.read(), height=500)
 
 
@@ -3063,8 +3131,13 @@ As with any machine learning model, while an SVM can make predictions about pati
 
                         # Generate and display the sorted force plot
                         shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
-                        with open("sorted_shap_plot.html", "r") as f:
+                        # Use tempfile to create a temporary file
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
+                            shap.save_html(temp_file.name, shap_html)
+                            temp_file_path = temp_file.name
+
+                        # Read and display the temporary HTML file in Streamlit
+                        with open(temp_file_path, "r") as f:
                             st.components.v1.html(f.read(), height=500)
                 
             elif model_option == "Neural Network":
@@ -3099,21 +3172,35 @@ However, it's important to note that neural networks are computationally intensi
                         st.markdown(shapley_explanation)  
                     
                     with st.spinner("Performing Shapley Analysis..."):
-                    
-                        # shapley explanation using KernelExplainer for MLP
+                        
+                        # Shapley explanation using KernelExplainer for MLP
                         explainer = shap.KernelExplainer(model.predict_proba, shap.sample(X_train, 100))
                         shap_values = explainer.shap_values(X_test)
 
                         # Check if shap_values is a list (multi-class) or a single array (binary classification or regression)
                         if isinstance(shap_values, list):
-                            shap_values_for_class = shap_values[1]  # Assuming you're interested in the second class
+                            # Assuming you're interested in the second class; Adjust if needed
+                            shap_values_for_class = shap_values[1]  
                         else:
                             shap_values_for_class = shap_values
 
+                        # Handling multi-dimensional SHAP values (if it's a 3D array)
+                        # Select the first instance and collapse any unnecessary dimensions
+                        shap_values_for_class = shap_values_for_class[0]  # Assuming first instance
+                        if shap_values_for_class.ndim > 1:
+                            shap_values_for_class = shap_values_for_class[:, 0]  # Adjust slicing as necessary
+
                         # Sort features by absolute contribution for the first instance in the test set
-                        sorted_indices = np.argsort(np.abs(shap_values_for_class[0]))[::-1]
-                        sorted_shap_values = shap_values_for_class[0][sorted_indices]
-                        sorted_feature_names = X_test.columns[sorted_indices]
+                        sorted_indices = np.argsort(np.abs(shap_values_for_class))[::-1]
+                        sorted_shap_values = shap_values_for_class[sorted_indices]
+                        sorted_feature_names = np.array(X_test.columns)[sorted_indices]  # Convert to numpy array
+
+                        # Ensure arrays are 1-dimensional and have the same length
+                        sorted_shap_values = sorted_shap_values.ravel()
+                        sorted_feature_names = sorted_feature_names.ravel()
+
+                        # Double-check that the lengths are now equal
+                        assert len(sorted_shap_values) == len(sorted_feature_names), "Mismatch in lengths of SHAP values and feature names."
 
                         # Create a DataFrame to display sorted features and their shapley values
                         sorted_features_df = pd.DataFrame({
@@ -3126,9 +3213,17 @@ However, it's important to note that neural networks are computationally intensi
 
                         # Generate and display the sorted force plot
                         shap_html = shap.force_plot(explainer.expected_value[1], sorted_shap_values, sorted_feature_names, show=False)
-                        shap.save_html(f"./{st.session_state.outputs_path}/sorted_shap_plot.html", shap_html)
-                        with open("sorted_shap_plot.html", "r") as f:
+                        # Use tempfile to create a temporary file
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as temp_file:
+                            shap.save_html(temp_file.name, shap_html)
+                            temp_file_path = temp_file.name
+
+                        # Read and display the temporary HTML file in Streamlit
+                        with open(temp_file_path, "r") as f:
                             st.components.v1.html(f.read(), height=500)
+
+
+
 
                 
 with tab3:

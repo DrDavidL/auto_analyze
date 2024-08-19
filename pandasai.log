@@ -11354,3 +11354,447 @@ So, the code essentially does these steps automatically to give us the average g
                 
 2024-08-13 14:54:34 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
 2024-08-13 14:54:36 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-19 15:14:06 [INFO] Question: What is the mean cholesterol
+2024-08-19 15:14:06 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-19 15:14:06 [INFO] Prompt ID: 15f4a368-e970-4606-9f05-9f964036db6c
+2024-08-19 15:14:06 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-19 15:14:06 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-19 15:14:06 [INFO] Executing Step 1: CacheLookup
+2024-08-19 15:14:06 [INFO] Executing Step 2: PromptGeneration
+2024-08-19 15:14:06 [INFO] Using prompt: <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+284,87,36,6.0,63,male,76,162,17.8,121,71,49,42,0.74,No diabetes
+255,174,31,2.9,54,female,60,170,24.7,112,122,41,56,0.97,No diabetes
+173,48,74,5.7,48,male,63,135,24.3,130,68,44,64,0.7,Diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ What is the mean cholesterol
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-08-19 15:14:06 [INFO] Executing Step 3: CodeGenerator
+2024-08-19 15:14:10 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-19 15:14:10 [INFO] Prompt used:
+            <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+284,87,36,6.0,63,male,76,162,17.8,121,71,49,42,0.74,No diabetes
+255,174,31,2.9,54,female,60,170,24.7,112,122,41,56,0.97,No diabetes
+173,48,74,5.7,48,male,63,135,24.3,130,68,44,64,0.7,Diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ What is the mean cholesterol
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+            
+2024-08-19 15:14:10 [INFO] Code generated:
+            ```
+            # TODO: import the required dependencies
+import pandas as pd
+
+# Assuming dfs is already declared and contains the dataframes
+dfs = [pd.DataFrame({
+    'Cholesterol': [284, 255, 173],
+    'Glucose': [87, 174, 48],
+    'HDL Chol': [36, 31, 74],
+    'Chol/HDL ratio': [6.0, 2.9, 5.7],
+    'Age': [63, 54, 48],
+    'Gender': ['male', 'female', 'male'],
+    'Height': [76, 60, 63],
+    'Weight': [162, 170, 135],
+    'BMI': [17.8, 24.7, 24.3],
+    'Systolic BP': [121, 112, 130],
+    'Diastolic BP': [71, 122, 68],
+    'waist': [49, 41, 44],
+    'hip': [42, 56, 64],
+    'Waist/hip ratio': [0.74, 0.97, 0.7],
+    'Diabetes': ['No diabetes', 'No diabetes', 'Diabetes']
+})]
+
+# Calculate the mean cholesterol
+mean_cholesterol = dfs[0]['Cholesterol'].mean()
+
+# Declare result var
+result = { "type": "number", "value": mean_cholesterol }
+
+# Print the result for verification
+print(result)
+            ```
+            
+2024-08-19 15:14:10 [INFO] Executing Step 4: CachePopulation
+2024-08-19 15:14:10 [INFO] Executing Step 5: CodeCleaning
+2024-08-19 15:14:10 [INFO] 
+Code running:
+```
+mean_cholesterol = dfs[0]['Cholesterol'].mean()
+result = {'type': 'number', 'value': mean_cholesterol}
+print(result)
+        ```
+2024-08-19 15:14:10 [INFO] Executing Step 6: CodeExecution
+2024-08-19 15:14:10 [INFO] Executing Step 7: ResultValidation
+2024-08-19 15:14:10 [INFO] Answer: {'type': 'number', 'value': 207.23076923076923}
+2024-08-19 15:14:10 [INFO] Executing Step 8: ResultParsing
+2024-08-19 15:14:11 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-19 15:14:11 [INFO] Explanation:  Sure! Imagine you have a list of cholesterol levels from different people. To find the average cholesterol level, you would add up all the cholesterol values and then divide that total by the number of people in the list. 
+
+In simpler terms, the code I provided does exactly that: it looks at all the cholesterol numbers, adds them together, and then divides by the number of entries to find the average. Finally, it packages this average value in a way that's easy to understand and prints it out.
+                
+2024-08-19 15:14:26 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-19 15:14:29 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-19 15:58:37 [INFO] Question: create a heatmap
+2024-08-19 15:58:37 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-19 15:58:37 [INFO] Prompt ID: a6dc9f2f-d2c2-4700-99c1-0a0a8548c2f1
+2024-08-19 15:58:37 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-19 15:58:37 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-19 15:58:37 [INFO] Executing Step 1: CacheLookup
+2024-08-19 15:58:37 [INFO] Executing Step 2: PromptGeneration
+2024-08-19 15:58:37 [INFO] Using prompt: <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+174,79,38,2.2,32,male,70,200,40.5,220,65,28,49,0.74,Diabetes
+138,203,100,5.7,76,female,76,110,28.3,148,56,50,36,1.04,Diabetes
+227,58,45,2.7,55,female,59,257,29.0,250,115,40,55,1.14,No diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ create a heatmap
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-08-19 15:58:37 [INFO] Executing Step 3: CodeGenerator
+2024-08-19 15:58:49 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-19 15:58:49 [INFO] Prompt used:
+            <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+174,79,38,2.2,32,male,70,200,40.5,220,65,28,49,0.74,Diabetes
+138,203,100,5.7,76,female,76,110,28.3,148,56,50,36,1.04,Diabetes
+227,58,45,2.7,55,female,59,257,29.0,250,115,40,55,1.14,No diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ create a heatmap
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+            
+2024-08-19 15:58:49 [INFO] Code generated:
+            ```
+            # TODO: import the required dependencies
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Write code here
+dfs = [pd.DataFrame({
+    'Cholesterol': [174, 138, 227],
+    'Glucose': [79, 203, 58],
+    'HDL Chol': [38, 100, 45],
+    'Chol/HDL ratio': [2.2, 5.7, 2.7],
+    'Age': [32, 76, 55],
+    'Gender': ['male', 'female', 'female'],
+    'Height': [70, 76, 59],
+    'Weight': [200, 110, 257],
+    'BMI': [40.5, 28.3, 29.0],
+    'Systolic BP': [220, 148, 250],
+    'Diastolic BP': [65, 56, 115],
+    'waist': [28, 50, 40],
+    'hip': [49, 36, 55],
+    'Waist/hip ratio': [0.74, 1.04, 1.14],
+    'Diabetes': ['Diabetes', 'Diabetes', 'No diabetes']
+})]
+
+# Select numerical columns for the heatmap
+numerical_cols = ['Cholesterol', 'Glucose', 'HDL Chol', 'Chol/HDL ratio', 'Age', 'Height', 'Weight', 'BMI', 'Systolic BP', 'Diastolic BP', 'waist', 'hip', 'Waist/hip ratio']
+
+# Create a heatmap
+plt.figure(figsize=(12, 8))
+heatmap = sns.heatmap(dfs[0][numerical_cols].corr(), annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+plt.savefig('heatmap.png')
+
+# Declare result var
+result = { "type": "plot", "value": "heatmap.png" }
+            ```
+            
+2024-08-19 15:58:49 [INFO] Executing Step 4: CachePopulation
+2024-08-19 15:58:49 [INFO] Executing Step 5: CodeCleaning
+2024-08-19 15:58:49 [INFO] Saving charts to /var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmpyq64_vco/a6dc9f2f-d2c2-4700-99c1-0a0a8548c2f1.png
+2024-08-19 15:58:49 [INFO] 
+Code running:
+```
+numerical_cols = ['Cholesterol', 'Glucose', 'HDL Chol', 'Chol/HDL ratio', 'Age', 'Height', 'Weight', 'BMI', 'Systolic BP', 'Diastolic BP', 'waist', 'hip', 'Waist/hip ratio']
+plt.figure(figsize=(12, 8))
+heatmap = sns.heatmap(dfs[0][numerical_cols].corr(), annot=True, cmap='coolwarm')
+plt.title('Correlation Heatmap')
+plt.savefig('/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmpyq64_vco/a6dc9f2f-d2c2-4700-99c1-0a0a8548c2f1.png')
+result = {'type': 'plot', 'value': '/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmpyq64_vco/a6dc9f2f-d2c2-4700-99c1-0a0a8548c2f1.png'}
+        ```
+2024-08-19 15:58:49 [INFO] Executing Step 6: CodeExecution
+2024-08-19 15:58:49 [INFO] Executing Step 7: ResultValidation
+2024-08-19 15:58:49 [INFO] Answer: {'type': 'plot', 'value': '/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmpyq64_vco/a6dc9f2f-d2c2-4700-99c1-0a0a8548c2f1.png'}
+2024-08-19 15:58:49 [INFO] Executing Step 8: ResultParsing
+2024-08-19 15:58:52 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-19 15:58:52 [INFO] Explanation:  Sure! Let's break it down in simple terms:
+
+1. **Choosing Important Factors**: We started by picking a list of important health-related factors like cholesterol levels, blood pressure, age, height, weight, and a few others.
+
+2. **Creating a Visual Representation**: We then created a visual chart that shows how these factors are related to each other. This chart uses colors to represent the strength of the relationships, making it easy to see which factors are closely linked.
+
+3. **Adding Details**: To make the chart more informative, we added numbers on it that show the exact strength of the relationships between the factors.
+
+4. **Saving the Chart**: Finally, we saved this chart as an image file so it can be easily shared or included in reports.
+
+The end result is a colorful and informative chart that helps us understand the connections between different health factors at a glance.
+                
+2024-08-19 15:59:37 [INFO] Question: create a heatmap using something other than sns
+2024-08-19 15:59:37 [INFO] Running PandasAI with azure-openai LLM...
+2024-08-19 15:59:37 [INFO] Prompt ID: 9c9e7243-f2ac-423c-a723-f3b8159560e7
+2024-08-19 15:59:37 [INFO] Executing Pipeline: GenerateChatPipeline
+2024-08-19 15:59:37 [INFO] Executing Step 0: ValidatePipelineInput
+2024-08-19 15:59:37 [INFO] Executing Step 1: CacheLookup
+2024-08-19 15:59:37 [INFO] Executing Step 2: PromptGeneration
+2024-08-19 15:59:37 [INFO] Using prompt: <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+305,62,48,3.5,64,male,71,174,30.1,98,61,45,43,1.06,Diabetes
+443,92,40,2.6,29,female,64,114,36.1,118,50,48,64,0.86,No diabetes
+162,121,29,8.9,54,male,63,209,19.1,130,110,53,55,0.89,No diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ create a heatmap using something other than sns
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+2024-08-19 15:59:37 [INFO] Executing Step 3: CodeGenerator
+2024-08-19 15:59:44 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-19 15:59:44 [INFO] Prompt used:
+            <dataframe>
+dfs[0]:390x15
+Cholesterol,Glucose,HDL Chol,Chol/HDL ratio,Age,Gender,Height,Weight,BMI,Systolic BP,Diastolic BP,waist,hip,Waist/hip ratio,Diabetes
+305,62,48,3.5,64,male,71,174,30.1,98,61,45,43,1.06,Diabetes
+443,92,40,2.6,29,female,64,114,36.1,118,50,48,64,0.86,No diabetes
+162,121,29,8.9,54,male,63,209,19.1,130,110,53,55,0.89,No diabetes
+</dataframe>
+
+
+
+
+Update this initial code:
+```python
+# TODO: import the required dependencies
+import pandas as pd
+
+# Write code here
+
+# Declare result var: 
+type (possible values "string", "number", "dataframe", "plot"). Examples: { "type": "string", "value": f"The highest salary is {highest_salary}." } or { "type": "number", "value": 125 } or { "type": "dataframe", "value": pd.DataFrame({...}) } or { "type": "plot", "value": "temp_chart.png" }
+
+```
+
+
+
+### QUERY
+ create a heatmap using something other than sns
+
+Variable `dfs: list[pd.DataFrame]` is already declared.
+
+At the end, declare "result" variable as a dictionary of type and value.
+
+If you are asked to plot a chart, use "matplotlib" for charts, save as png.
+
+
+Generate python code and return full updated code:
+            
+2024-08-19 15:59:44 [INFO] Code generated:
+            ```
+            # TODO: import the required dependencies
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Assuming dfs is already declared and contains the dataframe
+df = dfs[0]
+
+# Create a correlation matrix
+corr = df.corr()
+
+# Plotting the heatmap using matplotlib
+fig, ax = plt.subplots(figsize=(10, 8))
+cax = ax.matshow(corr, cmap='coolwarm')
+
+# Adding color bar
+plt.colorbar(cax)
+
+# Setting ticks and labels
+ticks = np.arange(0, len(corr.columns), 1)
+ax.set_xticks(ticks)
+ax.set_yticks(ticks)
+ax.set_xticklabels(corr.columns, rotation=90)
+ax.set_yticklabels(corr.columns)
+
+# Saving the plot
+plt.savefig('heatmap.png')
+
+# Declare result var
+result = { "type": "plot", "value": "heatmap.png" }
+            ```
+            
+2024-08-19 15:59:44 [INFO] Executing Step 4: CachePopulation
+2024-08-19 15:59:44 [INFO] Executing Step 5: CodeCleaning
+2024-08-19 15:59:44 [INFO] Saving charts to /var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmprofdlvj3/9c9e7243-f2ac-423c-a723-f3b8159560e7.png
+2024-08-19 15:59:44 [INFO] 
+Code running:
+```
+df = dfs[0]
+corr = df.corr()
+fig, ax = plt.subplots(figsize=(10, 8))
+cax = ax.matshow(corr, cmap='coolwarm')
+plt.colorbar(cax)
+ticks = np.arange(0, len(corr.columns), 1)
+ax.set_xticks(ticks)
+ax.set_yticks(ticks)
+ax.set_xticklabels(corr.columns, rotation=90)
+ax.set_yticklabels(corr.columns)
+plt.savefig('/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmprofdlvj3/9c9e7243-f2ac-423c-a723-f3b8159560e7.png')
+result = {'type': 'plot', 'value': '/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmprofdlvj3/9c9e7243-f2ac-423c-a723-f3b8159560e7.png'}
+        ```
+2024-08-19 15:59:44 [INFO] Executing Step 6: CodeExecution
+2024-08-19 15:59:44 [INFO] Executing Step 7: ResultValidation
+2024-08-19 15:59:44 [INFO] Answer: {'type': 'plot', 'value': '/var/folders/g9/80p91rb56n79g22s7_78l4rdx502s4/T/tmprofdlvj3/9c9e7243-f2ac-423c-a723-f3b8159560e7.png'}
+2024-08-19 15:59:44 [INFO] Executing Step 8: ResultParsing
+2024-08-19 15:59:46 [INFO] HTTP Request: POST https://autoanalyzer-key.openai.azure.com//openai/deployments/auto-analyzer-deploy/chat/completions?api-version=2024-02-01 "HTTP/1.1 200 OK"
+2024-08-19 15:59:46 [INFO] Explanation:  Sure! Imagine you have a table full of numbers, and you want to see how these numbers relate to each other in a visual way. Think of it like a colorful map where each color tells you how strong or weak the relationship is between different sets of numbers.
+
+Here's what we did:
+
+1. **Understanding Relationships**: First, we looked at how each set of numbers in the table relates to every other set. This helps us understand if changes in one set are linked to changes in another.
+
+2. **Creating the Map**: We then created a visual map where each square represents the relationship between two sets of numbers. The color of each square shows whether the relationship is strong, weak, or somewhere in between.
+
+3. **Adding Details**: To make the map easy to read, we added labels along the top and side so you can see which sets of numbers you're comparing. We also included a color guide to help you understand what each color means.
+
+4. **Saving the Map**: Finally, we saved this colorful map as an image so you can look at it anytime you want.
+
+This way, you get a clear and easy-to-understand picture of how all the numbers in your table are connected!
+                
